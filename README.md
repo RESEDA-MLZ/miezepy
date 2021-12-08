@@ -1,3 +1,4 @@
+[![Nosetests](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml/badge.svg)](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml)
 # Mieze data management and reduction tool
 Neutron Spin Echo software package
 
