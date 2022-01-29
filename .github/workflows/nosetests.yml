@@ -2,9 +2,9 @@ name: Nosetests
 
 on:
   push:
-    branches: [ develop]
+    branches: [develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop ]
 
 jobs:
   build:

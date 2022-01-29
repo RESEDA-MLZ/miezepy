@@ -95,6 +95,7 @@ class PageScriptWidget(Ui_script_widget):
             None,
 
             self.script_button_import_gui,
+            self.script_button_set_fit_gui,
             self.script_button_phase_gui,
             self.script_button_reduction_gui]
 
@@ -302,6 +303,8 @@ class PageScriptWidget(Ui_script_widget):
         self.button_widgets[14].clicked.connect(
             partial(self.link, None))
         self.button_widgets[15].clicked.connect(
+            partial(self.link, None))
+        self.button_widgets[16].clicked.connect(
             partial(self.link, None))
 
         self.text_widgets[0].textChanged.connect(
@@ -585,7 +588,7 @@ class PageScriptWidget(Ui_script_widget):
                  for val in self.env.current_data.get_axis('Parameter')]
         self.process_box_refs_fit.clear()
         self.process_box_refs_fit.addItems(array)
-
+        
     def _setVisualFit(self):
         '''
         Set the widget values depending on the input of the
@@ -636,6 +639,14 @@ class PageScriptWidget(Ui_script_widget):
             except:
                 pass
 
+        # sum foils checkbox
+        try:
+            print("HEY THERE", self.container['sum_foils'])
+            self.fit_sum_foils.setChecked(self.container['sum_foils']=='True')
+        except:
+            pass
+  
+
     def _setVisualFitSelected(self):
         '''
         Set the widget values depending on the input of the
@@ -679,6 +690,7 @@ class PageScriptWidget(Ui_script_widget):
         Connect all the elements after the value has been
         set in the set routine.
         '''
+        self.fit_sum_foils.clicked.connect(self._synthesizeFit)
         self.process_box_back_fit.currentIndexChanged.connect(
             self._synthesizeFit)
         self.process_box_refs_fit.currentIndexChanged.connect(
@@ -690,6 +702,7 @@ class PageScriptWidget(Ui_script_widget):
         Disconnect all the elements after the value has been
         set in the set routine.
         '''
+        self.fit_sum_foils.clicked.disconnect(self._synthesizeFit)
         self.process_box_back_fit.currentIndexChanged.disconnect(
             self._synthesizeFit)
         self.process_box_refs_fit.currentIndexChanged.disconnect(
@@ -912,11 +925,15 @@ class PageScriptWidget(Ui_script_widget):
         # get the exposure
         container['exposure'] = str(self.process_radio_exposure.isChecked())
 
+        # get the time channels
         time_channels = []
         for i, item in enumerate(self.time_channel_items):
             if item.checkState() == QtCore.Qt.Checked:
                 time_channels.append(int(i))
         container['time_channels'] = sorted(time_channels)
+
+        # get the sum_foild options
+        container['sum_foils'] = str(self.fit_sum_foils.isChecked())
 
         self.env.scripts.synthesizeFitScript(container)
         self._refresh()
