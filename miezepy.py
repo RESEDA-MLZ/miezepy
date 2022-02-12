@@ -5,8 +5,10 @@ import traceback
 from time import sleep
 try:
     if __name__ == '__main__':
-        # sys.exit(Mieze(True))
-        os.system('python -m miezepy.mieze')
+        print()
+        os.system(
+            'python -m miezepy.mieze '
+            + (' '.join(sys.argv[1:]) if len(sys.argv[1:]) > 1 else ''))
 
 except:
     print(sys.exc_info()[0])

@@ -27,6 +27,40 @@ from .core.core_handler             import CoreHandler
 from .gui.py_gui.window_handlers    import WindowHandler
 import os
 
+import argparse
+parser = argparse.ArgumentParser(description='Miezepy data analysis software for MIEZE measurements.')
+parser.add_argument(
+    "-p", 
+    "--project_path",
+    type=str,
+    help="The location fo the project folder.",
+    default=None)
+parser.add_argument(
+    "-d",
+    "--data_paths",
+    action='append',
+    help="The location to look up data if not found in the initial paths.",
+    default=[])
+parser.add_argument(
+    "-lm",
+    "--load_masks",
+    type=bool,
+    help="Load the project associated data.",
+    default=True)
+parser.add_argument(
+    "-ld",
+    "--load_data",
+    type=bool,
+    help="Load the project associated masks.",
+    default=True)
+parser.add_argument(
+    "-ls",
+    "--load_scripts",
+    type=bool,
+    help="Load the project associated scripts.",
+    default=True)
+args = parser.parse_args()
+
 class Mieze(CoreHandler):
     '''
     Here lies the main NSE tool manager class. It can be
@@ -50,6 +84,18 @@ class Mieze(CoreHandler):
             self.gui.initialize(self)
 
         self.success = True
+        
+        if args.project_path is not None:
+            self.prepSessionLoad(
+                args.project_path,
+                data_bool=args.load_data,
+                mask_bool=args.load_masks,
+                script_bool=args.load_scripts,
+                folder_list=args.data_paths
+            )
+            self.sessionLoad(False)
+            self.gui.main_window.target.widgetClasses[0].refreshList()
+             
 
     def checkRessources(self):
         '''
