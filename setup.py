@@ -22,6 +22,7 @@
 # *****************************************************************************
 
 from setuptools import setup, find_packages
+import subprocess
 import miezepy
 import pip
 import os
@@ -32,7 +33,8 @@ with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirement
     lines = [line.rstrip() for line in lines]
 
 for line in lines:
-    pip.main(['install', line])
+    subprocess.run(['python', '-m', 'pip', 'install', line])
+    #pip.main(['install', line]) deprecated?
 
 try:
     import simpleplot
