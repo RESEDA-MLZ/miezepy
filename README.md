@@ -7,7 +7,7 @@ Neutron Spin Echo software package
 We present installation directions for installation in a conda virtual environment, which works analogously between
 linux and windows:
 
-First extract the folder and navigate to it. The execute the following commands.
+First extract the folder and navigate to it. Then execute the following commands. It should be noted that the code requires python 3.7 in windows. Newer versions also require the installation of additional libraries.
 - Linux:
 ```
 conda create --name miezepyenv python==3.7
