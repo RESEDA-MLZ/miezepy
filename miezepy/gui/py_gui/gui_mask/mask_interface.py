@@ -23,16 +23,17 @@
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from simpleplot.models.session_node          import SessionNode
-from simpleplot.models.parameter_class       import ParameterHandler
-from simpleplot.models.delegates             import ParameterDelegate
-from simpleplot.models.widget_constructors   import comboBoxConstructor
+from simpleplot.models.session_node import SessionNode
+from simpleplot.models.parameter_class import ParameterHandler
+from simpleplot.models.delegates import ParameterDelegate
+from simpleplot.models.widget_constructors import comboBoxConstructor
 
-from .mask_tree_view    import MaskTreeView
-from .mask_model        import MaskModel
-from .mask_node         import MaskNode
+from .mask_tree_view import MaskTreeView
+from .mask_model import MaskModel
+from .mask_node import MaskNode
 
 import sys
+
 
 class MaskInterface(QtCore.QObject):
     mask_updated = QtCore.pyqtSignal()
@@ -45,22 +46,22 @@ class MaskInterface(QtCore.QObject):
         '''
         '''
         QtCore.QObject.__init__(self)
-        self._rootNode      = SessionNode('Mask')
-        self._mask_model    = MaskModel(self._rootNode)
-        self._item_model    = QtGui.QStandardItemModel()
-        self.combo_ptrs_signal  = []
-        self.combo_ptrs_silent  = []
-        self._mask_core      = None
+        self._rootNode = SessionNode('Mask')
+        self._mask_model = MaskModel(self._rootNode)
+        self._item_model = QtGui.QStandardItemModel()
+        self.combo_ptrs_signal = []
+        self.combo_ptrs_silent = []
+        self._mask_core = None
         self._connect()
 
     def link(self, mask_core):
         self._mask_core = mask_core
         self._refreshItemModel()
         self._refreshMaskModel(self._mask_core.current_mask)
-        
+
     def _refreshItemModel(self):
         '''
-        Refresh the models used by the 
+        Refresh the models used by the
         comboboxes.
         '''
         for combo in self.combo_ptrs_signal:
@@ -70,12 +71,12 @@ class MaskInterface(QtCore.QObject):
             combo.blockSignals(True)
 
         self._item_model.clear()
-        
+
         string_items = [
-            key for key in 
+            key for key in
             self._mask_core.mask_dict.keys()]
 
-        for i,string in enumerate(string_items):
+        for i, string in enumerate(string_items):
             self._item_model.insertRow(
                 i, QtGui.QStandardItem(string))
 
@@ -91,17 +92,17 @@ class MaskInterface(QtCore.QObject):
         '''
         if idx >= 0 and idx <= self._item_model.rowCount()-1:
             self._refreshMaskModel([
-            key for key in 
-            self._mask_core.mask_dict.keys()][idx])
-        else: 
+                key for key in
+                self._mask_core.mask_dict.keys()][idx])
+        else:
             self._refreshMaskModel([
-            key for key in 
-            self._mask_core.mask_dict.keys()][0])
+                key for key in
+                self._mask_core.mask_dict.keys()][0])
 
     def insertNewMask(self, key):
         '''
         Upon completion the combobox
-        will return the text as a key to 
+        will return the text as a key to
         create a new mask
         '''
         if not key == '':
@@ -113,13 +114,13 @@ class MaskInterface(QtCore.QObject):
 
     def _refreshMaskModel(self, key):
         '''
-        Refresh the models used by the 
+        Refresh the models used by the
         comboboxes.
         '''
         self.about_to_add.emit()
         self._setAllCombos(key)
         self._mask_core.setMask(key)
-        
+
         if not self._rootNode.childCount() == 0:
             self._mask_model.removeRows(
                 0, self._rootNode.childCount(),
@@ -132,7 +133,7 @@ class MaskInterface(QtCore.QObject):
         mask_list = self._mask_core.mask_dict[key]
         for mask_item in mask_list:
             model_item = MaskNode()
-            self._mask_model.insertRows(0,1,[model_item], self._rootNode)
+            self._mask_model.insertRows(0, 1, [model_item], self._rootNode)
             self._mask_model.referenceModel()
             model_item._value = mask_item['Type']
             model_item.typeChanged()
@@ -225,7 +226,7 @@ class MaskInterface(QtCore.QObject):
         self.about_to_add.emit()
 
         model_item = MaskNode()
-        self._mask_model.insertRows(0,1,[model_item], self._rootNode)
+        self._mask_model.insertRows(0, 1, [model_item], self._rootNode)
         self._mask_model.referenceModel()
         model_item.typeChanged()
 
@@ -245,7 +246,7 @@ class MaskInterface(QtCore.QObject):
         self._generateMaskDict()
 
         self.finished_modifications.emit()
-        
+
     def removeCurrentMask(self):
         '''
         Add a major node item representing the
@@ -269,7 +270,7 @@ class MaskInterface(QtCore.QObject):
 
         return tree_view
 
-    def getComboBox(self, connect = True):
+    def getComboBox(self, connect=True):
         '''
         return a predefined and connected
         custom treeview
@@ -289,13 +290,13 @@ class MaskInterface(QtCore.QObject):
         return combobox
 
     def _checkBeforeProcess(self, index):
-        if not self._mask_model.data(index, role = QtCore.Qt.DisplayRole) == None:
+        if not self._mask_model.data(index, role=QtCore.Qt.DisplayRole) == None:
             self._generateMaskDict()
 
     def _generateMaskDict(self):
         '''
-        grab all data form the dictionaries and 
-        then send it to the mas class 
+        grab all data form the dictionaries and
+        then send it to the mas class
         '''
         if self._mask_model._update:
             masks_dictionaries = []
@@ -303,6 +304,7 @@ class MaskInterface(QtCore.QObject):
                 masks_dictionaries.append(child.synthesize())
             self._mask_core.mask_dict[self._mask_core.current_mask] = masks_dictionaries
             self.mask_updated.emit()
+
 
 if __name__ == '__main__':
     from ....core.module_mask import MaskStructure

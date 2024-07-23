@@ -29,14 +29,15 @@ from .pie import Pie
 from .triangle import Triangle
 from .ellipse import Ellipse
 
+
 class MaskGenerator:
-    
+
     def __init__(self):
         '''
         This class is an instance to translate the
         information of the Mask class into
-        information that can be used by the mask 
-        modules. 
+        information that can be used by the mask
+        modules.
         '''
         self.resetElementClasses()
         self.dummies = [
@@ -47,15 +48,15 @@ class MaskGenerator:
 
     def resetElementClasses(self):
         '''
-        This method will grab the mask dialogue 
+        This method will grab the mask dialogue
         and then translate it to the proper mask
         class system.
         '''
         self.element_classes = []
 
-    def grabMask(self, mask_dialogue, recreate = True):
+    def grabMask(self, mask_dialogue, recreate=True):
         '''
-        This method will grab the mask dialogue 
+        This method will grab the mask dialogue
         and then translate it to the proper mask
         class system.
         '''
@@ -95,12 +96,12 @@ class MaskGenerator:
         self.mask = np.zeros((size_x, size_y)).astype(np.int16)
         for element in self.element_classes:
             temp_mask = np.array(element.generate(size_x, size_y))
-            temp_mask[temp_mask>0] += np.amax(self.mask) 
-            self.mask +=  temp_mask
+            temp_mask[temp_mask > 0] += np.amax(self.mask)
+            self.mask += temp_mask
 
         for i in range(np.amax(self.mask)):
             if np.sum(self.mask[self.mask == i]) == 0:
                 self.mask[self.mask < i] += 1
-        
+
         self.mask == np.amin(self.mask)
         self.mask = self.mask.transpose()

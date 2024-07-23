@@ -40,20 +40,20 @@ def generateSingleName(title, title_list):
     found_str : str
         The found string not in the list that we can use
     '''
-    #check if the title is in the list (if yes return)
+    # check if the title is in the list (if yes return)
     if not title in title_list:
         return title
 
-    #initialise
+    # initialise
     present = True
-    index   = 0
+    index = 0
     if title.split('_')[-1].isdigit():
         index = int(title.split('_')[-1])
         title = '_'.join(title.split('_')[0:-1])
     else:
         index = 0
 
-    #loop
+    # loop
     while present:
         if title+'_'+str(index) in title_list:
             index += 1
@@ -61,4 +61,3 @@ def generateSingleName(title, title_list):
             present = False
 
     return title+'_'+str(index)
-

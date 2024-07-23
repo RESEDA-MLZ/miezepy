@@ -23,8 +23,6 @@
 
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-import sys
-import optparse
 from functools import partial
 
 from ..qt_gui.mainwindow_ui                     import Ui_MIEZETool 

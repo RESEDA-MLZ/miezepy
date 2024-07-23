@@ -23,16 +23,11 @@
 
 #############################
 #import general components
-import iminuit
 import numpy as np
-import scipy
-import warnings
-import copy
-import math
 
-from .fit_general import Fit_Handler
+from .fit_general import FitHandler
 
-class Fit_SANS(Fit_Handler):
+class Fit_SANS(FitHandler):
 
     def __init__(self):
         '''
@@ -40,7 +35,7 @@ class Fit_SANS(Fit_Handler):
         within. It will also initialize the superclass
         containing the generalized methods.
         '''
-        Fit_Handler.__init__(self)
+        FitHandler.__init__(self)
 
         self.ptr_dict = {}
         self.ptr_dict['intensity']      = self.intensity_vs_parameter
@@ -49,7 +44,7 @@ class Fit_SANS(Fit_Handler):
 
     def set_defaults(self):
         '''
-        This function will build the default 
+        This function will build the default
         dictionary of function dict that will link
         the functions to the selected method
         '''
@@ -90,7 +85,7 @@ class Fit_SANS(Fit_Handler):
         ##############################################
         #loop over and process
         for idx_0 in range(len(target.axes.axes[0])):
-            
+
             #set the key for data saving
             key  = target.axes.axes[0][idx_0]
 
@@ -117,9 +112,9 @@ class Fit_SANS(Fit_Handler):
                     intensity_error[key][idx_1] = np.sqrt(np.sum(data[idx_1]*mask))/monitor/np.sum(mask)
 
                 else:
-                
+
                     if data[0].shape[0] == data[idx_1].shape[0]:
-                        
+
                         #process the instensity
                         intensity[key][idx_1] = np.sum(data[idx_1]*mask)/monitor/np.sum(mask) - np.sum(BG_target[0]*mask)/monitor_BG/np.sum(mask)
 
@@ -132,29 +127,29 @@ class Fit_SANS(Fit_Handler):
                         intensity[key][idx_1] = (
                             np.sum(data[idx_1] * mask)
                             / monitor
-                            /np.sum(mask) 
+                            /np.sum(mask)
                             - np.sum(BG_target[0]*mask)
                             /monitor_BG
                             /np.sum(mask))
-                        
+
                         #process its error
                         intensity_error[key][idx_1] = (np.sqrt(
-                            np.sum(data[idx_1]*mask)/monitor**2/np.sum(mask)**2 
+                            np.sum(data[idx_1]*mask)/monitor**2/np.sum(mask)**2
                             + np.sum(BG_target[0]*mask)/monitor_BG**2/np.sum(mask)**2))
 
-        
+
         ##############################################
         #finalize result and send it out
         local_results['Intensity']       = intensity
         local_results['Intensity_error'] = intensity_error
         local_results['Axis']            = axis
-    
+
         #write the dictionary entries
         local_results.add_log('info', 'Computation of the intensity was a success')
         local_results.set_complete()
 
         #tell fit handler what happened
         self.log.add_log(
-            'Info', 
+            'Info',
             'Computation of the intensity was a success')
 

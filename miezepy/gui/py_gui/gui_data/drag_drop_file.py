@@ -22,19 +22,20 @@
 # *****************************************************************************
 
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-import os
+from PyQt5 import QtWidgets, QtCore
 from functools import partial
 
-#inspired from https://stackoverflow.com/questions/29888959/pyqt4-drag-and-drop-files-in-qlistview
+# inspired from https://stackoverflow.com/questions/29888959/pyqt4-drag-and-drop-files-in-qlistview
 
-class DropListView(QtWidgets.QListView): 
+
+class DropListView(QtWidgets.QListView):
     drop_success = QtCore.pyqtSignal(list)
     '''
-    Thi method is a custom modification of the 
-    QListView widget that supports drag and 
+    Thi method is a custom modification of the
+    QListView widget that supports drag and
     drop.
-    '''        
+    '''
+
     def __init__(self, parent, drop_type):
         super(DropListView, self).__init__(parent)
         self.setAcceptDrops(True)
@@ -44,7 +45,7 @@ class DropListView(QtWidgets.QListView):
 
         if drop_type == 'tof_file_drop':
             self.dropEvent = partial(tofFileDrop, self)
-            self.check     = tofFileCheck
+            self.check = tofFileCheck
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -58,28 +59,28 @@ class DropListView(QtWidgets.QListView):
     def dragMoveEvent(self, event):
         super(DropListView, self).dragMoveEvent(event)
 
+
 def tofFileDrop(generator_class, event):
     '''
     This is the drop method and will support the
-    drop of the files into the list. 
+    drop of the files into the list.
     '''
     if event.mimeData().hasUrls():
         if tofFileCheck(event):
             event.acceptProposedAction()
-            generator_class.drop_success.emit([url.path() for url in event.mimeData().urls()])
+            generator_class.drop_success.emit(
+                [url.path() for url in event.mimeData().urls()])
+
 
 def tofFileCheck(event):
     '''
     check if the file are tof
     '''
-    urls        = [url for url in event.mimeData().urls()]
-    bool_tof    = [False for e in urls]
+    urls = [url for url in event.mimeData().urls()]
+    bool_tof = [False for e in urls]
 
     for i, url in enumerate(urls):
         if url.path().split('.')[-1] == "tof":
             bool_tof[i] = True
 
-    if all(bool_tof):
-        return True
-    else:
-        return False
+    return all(bool_tof)

@@ -21,7 +21,8 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets,QtGui, QtCore
+from PyQt5 import QtWidgets, QtGui, QtCore
+
 
 class DraggableButton(QtWidgets.QPushButton):
     def mousePressEvent(self, event):
@@ -41,13 +42,13 @@ class DraggableButton(QtWidgets.QPushButton):
             icon = QtGui.QIcon(":/Ressources/plot_result.ico")
             identifier = 'results'
 
-        self.pixmap = icon.pixmap(QtCore.QSize(30,30))
+        self.pixmap = icon.pixmap(QtCore.QSize(30, 30))
         self.mimedata = QtCore.QMimeData()
         self.mimedata.setText(
             self.parent().findChild(
                 QtWidgets.QLineEdit, 'env_input_name').text()
-            +'|'
-            +identifier)
+            + '|'
+            + identifier)
 
         self.drag = QtGui.QDrag(self)
         self.drag.setMimeData(self.mimedata)
@@ -75,6 +76,7 @@ class DraggableButton(QtWidgets.QPushButton):
         self.drag.setHotSpot(event.pos())
         self.drag.exec_(QtCore.Qt.CopyAction | QtCore.Qt.MoveAction)
 
+
 class DropLabel(QtWidgets.QLabel):
     def __init__(self, *args, **kwargs):
         QtWidgets.QLabel.__init__(self, *args, **kwargs)
@@ -83,6 +85,7 @@ class DropLabel(QtWidgets.QLabel):
     def dragEnterEvent(self, event):
         if event.mimeData().hasText():
             event.acceptProposedAction()
+
 
 class DropWidget(QtWidgets.QWidget):
     dropAccepted = QtCore.pyqtSignal(str)
@@ -102,13 +105,12 @@ class DropWidget(QtWidgets.QWidget):
         if event.mimeData().hasText():
             event.accept()
             drag_operation = (
-                event.mimeData().text() 
+                event.mimeData().text()
                 + '|'
                 + self.findChild(
-                QtWidgets.QLineEdit, 'env_input_name').text())
+                    QtWidgets.QLineEdit, 'env_input_name').text())
             self.dropAccepted.emit(drag_operation)
         self.setStyleSheet('#env_frame{background-color: transparent;}')
 
     def dragLeaveEvent(self, event):
         self.setStyleSheet('#env_frame{background-color: transparent;}')
-

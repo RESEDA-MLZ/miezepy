@@ -22,18 +22,16 @@
 # *****************************************************************************
 
 #############################
-#import general components
-import numpy as np
-import copy
-
+# import general components
 from .mask_shape import MaskShape
+
 
 class Ellipse(MaskShape):
 
     def __init__(self):
         '''
-        This is the grid mode of the element. 
-        Note that this composition can only 
+        This is the grid mode of the element.
+        Note that this composition can only
         be set to close gaps if the subelement
         is of rectangular shape.
         '''
@@ -42,12 +40,12 @@ class Ellipse(MaskShape):
 
     def initialize(self):
         '''
-        This routine will edit the inherited 
+        This routine will edit the inherited
         dictionary of parameters.
         '''
-        self.parameters['Type']         = 'Ellipse'
-        self.parameters['Diameters']   = [10.,10.]
-        self.parameters['Increment']    = True
+        self.parameters['Type'] = 'Ellipse'
+        self.parameters['Diameters'] = [10., 10.]
+        self.parameters['Increment'] = True
 
     def setDirectly(self, **kwargs):
         '''
@@ -56,10 +54,10 @@ class Ellipse(MaskShape):
         and will therefore send it to the mask
         element to be anaged.
         '''
-        for key in kwargs.keys():
+        for key in kwargs:
             if key in ['Type', 'Name']:
                 continue
-            elif key in self.parameters.keys():
+            elif key in self.parameters:
                 if isinstance(kwargs[key], list):
                     self.parameters[key] = kwargs[key][-1]
                 else:
@@ -69,8 +67,9 @@ class Ellipse(MaskShape):
 
     def generate(self, size_x, size_y):
         '''
-        Generate the mask element by calling the 
+        Generate the mask element by calling the
         setup and then patching the masks
         '''
-        self.mask = self.processEllipse(self.parameters['Diameters'], size_x, size_y)
+        self.mask = self.processEllipse(
+            self.parameters['Diameters'], size_x, size_y)
         return self.mask

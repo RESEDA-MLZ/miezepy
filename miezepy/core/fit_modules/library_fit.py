@@ -21,19 +21,20 @@
 #
 # *****************************************************************************
 
+import math
 import numpy as np
+from scipy import constants as co
 from scipy import integrate as integrate
 from scipy import special as sp
-from scipy import constants as co
-import math
 
 from .library_iminuit import CosineMinuit
 from ..module_result import ResultStructure
 
+
 def fitGoodness(chi2, N_dof):
-    ''' 
-    Calculates the goodness of a leastsquare fit 
-    according to 'Everything you want to know 
+    '''
+    Calculates the goodness of a leastsquare fit
+    according to 'Everything you want to know
     about Data Analysis and Fitting'.
 
     Parameters
@@ -45,14 +46,18 @@ def fitGoodness(chi2, N_dof):
     -------
     Q
     '''
-    Gamma           = sp.gamma(N_dof/2.)
-    func            = lambda y: y**(N_dof/2. - 1.) * math.exp(-y)
-    integral,error  = integrate.quad(func, chi2/2., np.inf)
-    Q               = 1.0 / Gamma * integral
+    Gamma = sp.gamma(N_dof / 2.)
+
+    def func(y):
+        return y ** (N_dof / 2. - 1.) * math.exp(-y)
+
+    integral, error = integrate.quad(func, chi2 / 2., np.inf)
+    Q = 1.0 / Gamma * integral
 
     return Q
 
-def fitDataSinus(results, data, data_error, Q_min = 0, time_chan = 16, time_select = []):
+
+def fitDataSinus(results, data, data_error, Q_min=0, time_chan=16, time_select=[]):
     '''
     This routine will fit the data sinus elements
 
@@ -63,7 +68,7 @@ def fitDataSinus(results, data, data_error, Q_min = 0, time_chan = 16, time_sele
     - Q_min is the goodness of fit minimal value
 
     Returns
-    ------- 
+    -------
     return : boolean
         This value is true if the result is set:
         'amplitude'
@@ -77,46 +82,47 @@ def fitDataSinus(results, data, data_error, Q_min = 0, time_chan = 16, time_sele
         'mean_error'
         'ampl_error'
     '''
-    #Initialize the output dictionary with all def.
-    local_results = results.generateResult( name = 'Fit Data Sinus')
+    # Initialize the output dictionary with all def.
+    local_results = results.generateResult(name='Fit Data Sinus')
 
-    #there is no Data so no fit...
+    # there is no Data so no fit...
     if np.sum(data) == 0.:
         local_results.addLog('warning', 'Fit failed: No counts present.')
         local_results.setComplete()
         return False
 
     # Fit the data
-    freq = (2.*np.pi ) / time_chan
+    freq = (2. * np.pi) / time_chan
     fit_structure = CosineMinuit()
 
     if not len(time_select) == 0:
         fit = fit_structure.fitCosine(
-            np.array(data)[np.array(time_select)], 
-            np.arange(len(data), dtype=float)[np.array(time_select)], 
-            freq, 
+            np.array(data, dtype=np.uint64)[np.array(time_select)],
+            np.arange(len(data), dtype=np.float64)[np.array(time_select)],
+            freq,
             np.array(data_error)[np.array(time_select)])
     else:
         fit = fit_structure.fitCosine(
-            data,np.arange(len(data), dtype=float), 
-            freq, data_error)        
+            np.array(data, dtype=np.uint64), np.arange(
+                len(data), dtype=np.float64),
+            freq, data_error)
 
-    # minuit failed
+        # minuit failed
     if fit == None:
         local_results.addLog('error', 'minuit failed')
         local_results.setComplete()
         return False
 
     # covariance inaccurate
-    if not fit.matrix_accurate():
+    if not fit.accurate:
         local_results.addLog('error', 'cov_failed')
         local_results.setComplete()
         return False
 
     # evaluate goodness
-    params  = fit.values
-    chi2    = fit.fval
-    Q       = fitGoodness(chi2, len(data))
+    params = fit.values
+    chi2 = fit.fval
+    Q = fitGoodness(chi2, len(data))
 
     if not Q >= Q_min:
         local_results.addLog('info', 'Q_min_bigger_Q')
@@ -124,50 +130,52 @@ def fitDataSinus(results, data, data_error, Q_min = 0, time_chan = 16, time_sele
         return False
 
     # Everything in order proceed
-    len_data        = len(data)
-    Cov             = np.array(fit.np_matrix()).reshape([3,3])
-    amplitude       = params['amplitude']
+    len_data = len(data)
+    Cov = np.array(fit.covariance).reshape([3, 3])
+    amplitude = params['amplitude']
     amplitude_error = np.sqrt(Cov[2][2])
-    offset          = params['offset']
-    offset_error    = np.sqrt(Cov[1][1])
-    phase_error     = np.sqrt(Cov[0][0])
-    errCov          = np.sqrt(Cov[2][2]/(offset)**2+Cov[1][1]*(amplitude/((offset)**2))**2)
-    fit_error_Cov   = np.sqrt(
-        Cov[0][0] * ( params['amplitude'] 
-            * np.sin(freq * np.arange(len_data) + params['phase']) ) ** 2 
-        + Cov[1][1] * ( params['amplitude']
-            * np.sin(freq * np.arange(len_data) + params['phase']) + 1 ) ** 2 
-        + Cov[2][2] * ( 1
-            * np.sin(freq * np.arange(len_data) + params['phase']) ) ** 2 )
+    offset = params['offset']
+    offset_error = np.sqrt(Cov[1][1])
+    phase_error = np.sqrt(Cov[0][0])
+    errCov = np.sqrt(Cov[2][2] / (offset) ** 2 + Cov[1][1]
+                     * (amplitude / ((offset) ** 2)) ** 2)
+    fit_error_Cov = np.sqrt(
+        Cov[0][0] * (params['amplitude']
+                     * np.sin(freq * np.arange(len_data) + params['phase'])) ** 2
+        + Cov[1][1] * (params['amplitude']
+                       * np.sin(freq * np.arange(len_data) + params['phase']) + 1) ** 2
+        + Cov[2][2] * (1
+                       * np.sin(freq * np.arange(len_data) + params['phase'])) ** 2)
 
     # populate result dictionary
-    local_results['amplitude']      = amplitude
-    local_results['amplitude_error']= amplitude_error
+    local_results['amplitude'] = amplitude
+    local_results['amplitude_error'] = amplitude_error
 
-    local_results['phase']          = params['phase']
-    local_results['phase_error']    = phase_error
+    local_results['phase'] = params['phase'] % (2 * np.pi)
+    local_results['phase_error'] = phase_error
 
-    local_results['mean']           = params['offset']
-    local_results['mean_error']     = offset_error
+    local_results['mean'] = params['offset']
+    local_results['mean_error'] = offset_error
 
-    local_results['pol']          = abs(amplitude/(params['offset']))
-    local_results['pol_error']    = {'Cov': errCov}
+    local_results['pol'] = abs(amplitude / (params['offset']))
+    local_results['pol_error'] = {'Cov': errCov}
 
-    local_results['sine_error']   = {'Cov': fit_error_Cov}
-    local_results['chi_2']        = chi2/10.**5
+    local_results['sine_error'] = {'Cov': fit_error_Cov}
+    local_results['chi_2'] = chi2 / 10. ** 5
 
-    #write the dictionary entries
+    # write the dictionary entries
     local_results.addLog('info', 'success')
     local_results.setComplete()
 
     return True
 
-def phaseExposure(idx, data_input, index_map, loop, foil_axis, cha_axis, result_dict) :
+
+def phaseExposure(idx, data_input, index_map, loop, foil_axis, cha_axis, result_dict):
     '''
-    This function will manage the run over the echo 
-    times for the set echo time. Note that the 
-    result_dict is a shared dictionary instance by 
-    the python process manager.
+    This function will manage the run over the echo
+    times for the set echo time. Note that the
+    result_dict is a shared dictionary instance by
+    the python process manager
 
     Parameters
     ----------
@@ -176,9 +184,9 @@ def phaseExposure(idx, data_input, index_map, loop, foil_axis, cha_axis, result_
 
     index_map : np.ndarray
         This indexes to be shifted
-        
+
     loop : int arrays
-        This is the loop to be performed over the 
+        This is the loop to be performed over the
         mask and the foils. It is processed before
         to avoid to much arguments
 
@@ -196,31 +204,32 @@ def phaseExposure(idx, data_input, index_map, loop, foil_axis, cha_axis, result_
     temp_reorganized = np.zeros(data_input.shape)
 
     for foil, cha in loop:
-        #set indexes
-        foil_idx    = foil_axis.index(foil)
-        cha_idx    = cha_axis.index(cha)
+        # set indexes
+        foil_idx = foil_axis.index(foil)
+        cha_idx = cha_axis.index(cha)
 
-        #select only those pixels and timechannels, where the shifting index matches the timechannel.
+        # select only those pixels and timechannels, where the shifting index matches the timechannel.
         temp = np.where(
-            index_map[foil_idx] == cha_idx, 
-            data_input[foil_idx,:,:,:], 0) 
+            index_map[foil_idx] == cha_idx,
+            data_input[foil_idx, :, :, :], 0)
 
         # shift these pixels by the required amount of timechannels
-        temp_2 = np.roll(temp[:,:, :],-cha_idx, 0) 
+        temp_2 = np.roll(temp[:, :, :], -cha_idx, 0)
 
         # fill the "shifted" array with the correctly shifted timechannels and pixels
-        temp_reorganized[foil_idx] += temp_2 
+        temp_reorganized[foil_idx] += temp_2
 
     result_dict[idx] = temp_reorganized
 
+
 def phaseMaskFunction(
-    idx, foil, result_dimension, loop, 
-    foil_axis,reference_meas, chan_num, premask, 
-    time_select,result_dict ):
+        idx, foil, result_dimension, loop,
+        foil_axis, reference_meas, chan_num, premask,
+        time_select, result_dict):
     '''
-    This function will manage the run over the echo 
-    times for the set echo time. Note that the 
-    result_dict is a shared dictionary instance by 
+    This function will manage the run over the echo
+    times for the set echo time. Note that the
+    result_dict is a shared dictionary instance by
     the python process manager.
 
     Parameters
@@ -229,11 +238,11 @@ def phaseMaskFunction(
         This is the dimensionality of the array that
         will be computed and sent as output
 
-    echo : float 
+    echo : float
         This is the echo time
 
     loop : int arrays
-        This is the loop to be performed over the 
+        This is the loop to be performed over the
         mask and the foils. It is processed before
         to avoid to much arguments
 
@@ -254,18 +263,19 @@ def phaseMaskFunction(
 
     '''
     results = ResultStructure()
-    foil_idx    = foil_axis.index(foil)
-    output  = np.zeros(result_dimension)
+    foil_idx = foil_axis.index(foil)
+    output = np.zeros(result_dimension)
     for mask_num in loop:
-        proc_mask   = premask == mask_num
+        proc_mask = premask == mask_num
         output[:, :] += phaseFit(
-            proc_mask, foil_idx, 
-            chan_num, reference_meas, 
-            results, time_select = time_select)
+            proc_mask, foil_idx,
+            chan_num, reference_meas,
+            results, time_select=time_select)
 
     result_dict[idx] = output
 
-def phaseFit(proc_mask, foil_idx, chan_num, reference_meas, results, time_select = []):
+
+def phaseFit(proc_mask, foil_idx, chan_num, reference_meas, results, time_select=[]):
     '''
     Processing the phase
 
@@ -288,42 +298,46 @@ def phaseFit(proc_mask, foil_idx, chan_num, reference_meas, results, time_select
 
     '''
     counts = [
-        (np.multiply(reference_meas[foil_idx, timechannel],proc_mask)).sum()
+        (np.multiply(reference_meas[foil_idx, timechannel], proc_mask)).sum()
         for timechannel in range(chan_num)]
     count_error = np.sqrt([float(count) for count in counts])
-    success     = fitDataSinus(
+    success = fitDataSinus(
         results,
-        data        = counts, 
-        data_error  = count_error, 
-        Q_min       = 0.,
-        time_chan   = chan_num,
-        time_select = time_select)
+        data=counts,
+        data_error=count_error,
+        Q_min=0.,
+        time_chan=chan_num,
+        time_select=time_select)
 
-    message = results.getLastResult('Fit Data Sinus').log.returnLastLog('error')
+    message = results.getLastResult(
+        'Fit Data Sinus').log.returnLastLog('error')
     if not success and message == 'cov_failed':
-        counts      = counts[1:]
+        counts = counts[1:]
         count_error = np.sqrt([float(count) for count in counts])
-        success     = fitDataSinus(
+        success = fitDataSinus(
             results,
-            data        = counts, 
-            data_error  = count_error, 
-            Q_min        = 0.,
-            time_chan   = chan_num,
-            time_select = time_select)
+            data=counts,
+            data_error=count_error,
+            Q_min=0.,
+            time_chan=chan_num,
+            time_select=time_select)
 
-        message = results.getLastResult('Fit Data Sinus').log.returnLastLog('error')
+        message = results.getLastResult(
+            'Fit Data Sinus').log.returnLastLog('error')
         if not success and message == 'cov_failed':
-            return  -1*proc_mask
+            return -1 * proc_mask
 
-    return((
-        results.getLastResult('Fit Data Sinus')['phase'] 
-        + (np.pi if results.getLastResult('Fit Data Sinus')['amplitude'] < 0 else 0 ))% (2. * np.pi))*proc_mask
+    return ((
+        results.getLastResult('Fit Data Sinus')['phase']
+        + (np.pi if results.getLastResult('Fit Data Sinus')['amplitude'] < 0 else 0)) % (
+        2. * np.pi)) * proc_mask
 
-def correctPhaseParaMeas(index_array, idx,  data_meas, cha_num, echo_axis, foil_axis, premask, loop, phase, output_dict):
+
+def correctPhaseParaMeas(index_array, idx, data_meas, cha_num, echo_axis, foil_axis, premask, loop, phase, output_dict):
     '''
-    This function will manage the run over the echo 
-    times for the set echo time. Note that the 
-    result_dict is a shared dictionary instance by 
+    This function will manage the run over the echo
+    times for the set echo time. Note that the
+    result_dict is a shared dictionary instance by
     the python process manager.
 
     Parameters
@@ -332,11 +346,11 @@ def correctPhaseParaMeas(index_array, idx,  data_meas, cha_num, echo_axis, foil_
         This is the dimensionality of the array that
         will be computed and sent as output
 
-    echo : float 
+    echo : float
         This is the echo time
 
     loop : int arrays
-        This is the loop to be performed over the 
+        This is the loop to be performed over the
         mask and the foils. It is processed before
         to avoid to much arguments
 
@@ -366,50 +380,50 @@ def correctPhaseParaMeas(index_array, idx,  data_meas, cha_num, echo_axis, foil_
         This is the variable used to save the result
 
     '''
-    cha_num_int    = cha_num
-    cha_num_float  = float(cha_num)
-    output = {}
+    cha_num_int = cha_num
+    cha_num_float = float(cha_num)
 
-    #print the processing step
+    # print the processing step
     print(
-        'Processing shift for ' + str(index_array[0]) 
-        +' measurement ' + str(index_array[1])
-        +' echo ' + str(index_array[2]))
+        'Processing shift for ' + str(index_array[0])
+        + ' measurement ' + str(index_array[1])
+        + ' echo ' + str(index_array[2]))
 
-    #initialise variables
-    shifted_element = np.zeros((data_meas.shape))    
+    # initialise variables
+    shifted_element = np.zeros((data_meas.shape))
     current_mask = None
 
-    #cycle over the elements
+    # cycle over the elements
     for mask_num, foil in loop:
         if not mask_num == current_mask:
-            #select only one mask
-            proc_mask       = premask == mask_num
-            mask_sum        = np.sum(proc_mask)
-            current_mask    = int(mask_num)
-        
-        #select only one mask
+            # select only one mask
+            proc_mask = premask == mask_num
+            mask_sum = np.sum(proc_mask)
+            current_mask = int(mask_num)
+
+        # select only one mask
         index = np.arange(
             int((
-                2*np.pi-np.sum(phase[foil]*proc_mask)/mask_sum)
-                /(2*np.pi/cha_num_float)+np.pi/2.),
+                2 * np.pi - np.sum(phase[foil] * proc_mask) / mask_sum)
+                / (2 * np.pi / cha_num_float) + np.pi / 2.),
             int((
-                2*np.pi-np.sum(phase[foil]*proc_mask)/mask_sum)
-                /(2*np.pi/cha_num_float)+np.pi/2.+cha_num_float)
-            ,1)
+                2 * np.pi - np.sum(phase[foil] * proc_mask) / mask_sum)
+                / (2 * np.pi / cha_num_float) + np.pi / 2. + cha_num_float), 1)
         index = np.asarray(
-            [index[i]%cha_num_int 
-            for i in range(cha_num_int)])
-        shifted_element[foil,:, :, :] += data_meas[foil, index,:,:]*proc_mask
+            [index[i] % cha_num_int
+             for i in range(cha_num_int)])
+        shifted_element[foil, :, :, :] += data_meas[foil,
+                                                    index, :, :] * proc_mask
 
-    #process the result
+    # process the result
     output_dict[idx] = shifted_element
+
 
 def miezeTauProcessing(metadata_object, target):
     '''
     Processes the MIEZE time from a dataset
-    This will later go through the instrument 
-    definition. 
+    This will later go through the instrument
+    definition.
 
     Parameters
     ----------
@@ -420,43 +434,44 @@ def miezeTauProcessing(metadata_object, target):
         This is the structure storing the dat
 
     Returns
-    ------- 
-    the resulting tau value with all the parameters used to 
+    -------
+    the resulting tau value with all the parameters used to
     generate it
     '''
-    #unpack the container
-    wavelength          = metadata_object['Wavelength']
-    freq_0              = metadata_object['Freq. first']
-    freq_1              = metadata_object['Freq. second']
-    lsd                 = metadata_object['lsd']
-    wavelength_error    = target.metadata_class['Wavelength error']
-    lsd_error           = target.metadata_class['Distance error']
+    # unpack the container
+    wavelength = metadata_object['Wavelength']
+    freq_0 = metadata_object['Freq. first']
+    freq_1 = metadata_object['Freq. second']
+    lsd = metadata_object['lsd']
+    wavelength_error = target.metadata_class['Wavelength error']
+    lsd_error = target.metadata_class['Distance error']
 
-    #process tau and the error of tau
+    # process tau and the error of tau
     tau, tau_error = miezeTauCalculation(
         wavelength,
         freq_0,
         freq_1,
         lsd,
-        wavelength_error = wavelength_error,
-        lsd_error = lsd_error)
+        wavelength_error=wavelength_error,
+        lsd_error=lsd_error)
 
-    #send it out to the metadata class
-    metadata_object.addMetadata('tau', value = tau)
-    metadata_object.addMetadata('tau_error', value = tau_error)
+    # send it out to the metadata class
+    metadata_object.addMetadata('tau', value=tau)
+    metadata_object.addMetadata('tau_error', value=tau_error)
 
     return [
-        tau, 
+        tau,
         {
-            'tau_error': tau_error, 
-            'wavelength': wavelength, 
+            'tau_error': tau_error,
+            'wavelength': wavelength,
             'wavelength_error': wavelength_error,
-            'freq_0': freq_0, 
-            'freq_1': freq_1, 
-            'lsd' :lsd,
+            'freq_0': freq_0,
+            'freq_1': freq_1,
+            'lsd': lsd,
             'lsd_error': lsd_error}]
 
-def miezeTauCalculation(wavelength, freq_0, freq_1, lsd, wavelength_error = 0 ,lsd_error = 0):
+
+def miezeTauCalculation(wavelength, freq_0, freq_1, lsd, wavelength_error=0, lsd_error=0):
     '''
     Processes the MIEZE time
 
@@ -475,21 +490,22 @@ def miezeTauCalculation(wavelength, freq_0, freq_1, lsd, wavelength_error = 0 ,l
         The distance between the sample and the detector
 
     Returns
-    ------- 
+    -------
     the resulting tau  and the error
     '''
-    delta_freq  = freq_1 - freq_0
-    para        = ( 2. * co.m_n ** 2 ) / (co.h ** 2) 
-    tau         = para * wavelength ** 3 * delta_freq * lsd 
-    tau_error   = para * ( 
-        ( wavelength_error * wavelength * 3 * wavelength ** 2 * delta_freq * lsd )
-        + ( lsd_error * lsd * wavelength ** 3 * delta_freq ))
+    delta_freq = freq_1 - freq_0
+    para = (2. * co.m_n ** 2) / (co.h ** 2)
+    tau = para * wavelength ** 3 * delta_freq * lsd
+    tau_error = para * (
+        (wavelength_error * wavelength * 3 * wavelength ** 2 * delta_freq * lsd)
+        + (lsd_error * lsd * wavelength ** 3 * delta_freq))
 
     return tau, tau_error
 
+
 def contrastEquation(target, BG_target):
     '''
-    Contrast equation separating the case of 
+    Contrast equation separating the case of
     background or not in a smart way
 
     Parameters
@@ -499,14 +515,15 @@ def contrastEquation(target, BG_target):
     BG_target : float array
         This is the contrast for the background
     '''
-    if target[2]-BG_target[2] == 0:
+    if target[2] - BG_target[2] == 0:
         return 0
     else:
-        return ((abs(target[0])-abs(BG_target[0]))/(target[2]-BG_target[2]))
+        return ((abs(target[0]) - abs(BG_target[0])) / (target[2] - BG_target[2]))
+
 
 def contrastErrorEquation(target, BG_target):
     '''
-    Contrast error equation separating the case of 
+    Contrast error equation separating the case of
     background or not in a smart way
 
     Parameters
@@ -516,16 +533,17 @@ def contrastErrorEquation(target, BG_target):
     BG_target : float array
         This is the contrast for the background
     '''
-    if target[2]-BG_target[2] == 0:
+    if target[2] - BG_target[2] == 0:
         return 0
     else:
         return np.sqrt(
-        (target[1] / (target[2] - BG_target[2])) ** 2
-        + (BG_target[1] / (target[2]-BG_target[2])) ** 2
-        + ( (abs(target[0]) - abs(BG_target[0]))
-            /(target[2]-BG_target[2]) ** 2 * target[3]) ** 2
-        + ( (abs(target[0])-abs(BG_target[0])) 
-            /(target[2]-BG_target[2]) ** 2 * BG_target[3]) ** 2)
+            (target[1] / (target[2] - BG_target[2])) ** 2
+            + (BG_target[1] / (target[2] - BG_target[2])) ** 2
+            + ((abs(target[0]) - abs(BG_target[0]))
+               / (target[2] - BG_target[2]) ** 2 * target[3]) ** 2
+            + ((abs(target[0]) - abs(BG_target[0]))
+               / (target[2] - BG_target[2]) ** 2 * BG_target[3]) ** 2)
+
 
 def loopLibrary(fit, target, name):
     '''
@@ -534,7 +552,7 @@ def loopLibrary(fit, target, name):
 
     Parameters
     ----------
-    fit : fit instance 
+    fit : fit instance
         The fit instance that is asking for the loop
 
     target : datastructure
@@ -548,44 +566,45 @@ def loopLibrary(fit, target, name):
     loop : array of values
     '''
 
-    para_name   = fit.para_dict['para_name']
-    meas_name   = fit.para_dict['meas_name']
-    echo_name   = fit.para_dict['echo_name']
-    foil_name   = fit.para_dict['foil_name']
-    tcha_name   = fit.para_dict['tcha_name']
+    para_name = fit.para_dict['para_name']
+    meas_name = fit.para_dict['meas_name']
+    echo_name = fit.para_dict['echo_name']
+    foil_name = fit.para_dict['foil_name']
+    tcha_name = fit.para_dict['tcha_name']
 
-    para_axis   = target.get_axis(para_name) 
-    meas_axis   = target.get_axis(meas_name) 
-    echo_axis   = target.get_axis(echo_name) 
-    foil_axis   = target.get_axis(foil_name) 
-    cha_axis    = target.get_axis(tcha_name)
+    para_axis = target.get_axis(para_name)
+    meas_axis = target.get_axis(meas_name)
+    echo_axis = target.get_axis(echo_name)
+    foil_axis = target.get_axis(foil_name)
+    cha_axis = target.get_axis(tcha_name)
 
     if name == 'loop_main':
         loop = [
-            (e1, e2, e3) 
+            (e1, e2, e3)
             for e1 in para_axis
             for e2 in meas_axis
             for e3 in echo_axis]
 
     elif name == 'loop_para':
-        loop  = [
-            (e0,e1) 
-            for e0 in echo_axis 
+        loop = [
+            (e0, e1)
+            for e0 in echo_axis
             for e1 in foil_axis]
 
     elif name == 'loop_pixel':
-        loop  = [
-            (x,y) 
-            for x in range(128) 
+        loop = [
+            (x, y)
+            for x in range(128)
             for y in range(128)]
 
     elif name == 'loop_final':
-        loop  = [
-            (e1,e2)
+        loop = [
+            (e1, e2)
             for e1 in foil_axis
             for e2 in cha_axis]
 
     return loop
+
 
 def reorganizeResult(temp, index_array, loop):
     '''
@@ -617,17 +636,17 @@ def reorganizeResult(temp, index_array, loop):
 
             if not para in temp_reorganized.keys():
                 temp_reorganized[para] = {}
-            
+
             if not meas in temp_reorganized[para].keys():
                 temp_reorganized[para][meas] = {}
 
             temp_reorganized[para][meas][echo] = temp[idx]
-        idx +=1
+        idx += 1
 
     return temp_reorganized
 
 
-def contrastLogicRef(target, local_results):
+def contrastLogicRef(target, local_results, foil_weights: list = []):
     '''
     This function was built to ease readability
     and to provide the contrast calculation
@@ -637,53 +656,66 @@ def contrastLogicRef(target, local_results):
     ----------
     target : DataStructure
         The current dataset with all metadata
-    
-    local_results : ResultStructure 
+
+    local_results : ResultStructure
 
     Returns
-    ------- 
+    -------
     contrast : list of float
         The Contrast and its error
     '''
-    #initialise the contrast result
-    contrast_ref        = {}
-    contrast_ref_error  = {}
+    # initialise the contrast result
+    contrast_ref = {}
+    contrast_ref_error = {}
 
-    #Process the result
-    for echo in target.keys():
+    # Process the result
+    for j, echo in enumerate(target.keys()):
 
-        #do a check of the value and throw an error if 0
-        if target[echo][0] == 0 or target[echo][2] == 0:
-            if target[echo][0] == 0:
-                local_results.addLog(
-                    'warning', 
-                    'The amplitude from the reference fit is 0. Please investigate...')
-                local_results.addLog(
-                    'error', 
-                    'Setting the value to 1')
-            elif target[echo][2] == 0:
-                local_results.addLog(
-                    'error', 
-                    'The mean from the reference fit is 0. Please investigate...')
-                local_results.addLog(
-                    'error', 
-                    'Setting the value to 1')
+        if foil_weights:
+            contrast_ref[echo] = []
+            contrast_ref_error[echo] = []
+            for i in range(len(target[echo])):
+                contrast_ref[echo].append(
+                    float(contrastEquation(target[echo][i], [0, 0, 0, 0]))
+                    * foil_weights[j][i])
+                contrast_ref_error[echo].append(
+                    float(contrastErrorEquation(target[echo][i], [0, 0, 0, 0]))
+                    * foil_weights[j][i])
+        else:
+            # do a check of the value and throw an error if 0
+            if target[echo][0] == 0 or target[echo][2] == 0:
+                if target[echo][0] == 0:
+                    local_results.addLog(
+                        'warning',
+                        'The amplitude from the reference fit is 0. Please investigate...')
+                    local_results.addLog(
+                        'error',
+                        'Setting the value to 1')
+                elif target[echo][2] == 0:
+                    local_results.addLog(
+                        'error',
+                        'The mean from the reference fit is 0. Please investigate...')
+                    local_results.addLog(
+                        'error',
+                        'Setting the value to 1')
 
-            target[echo][0] = 1.
-            target[echo][1] = 1.
+                target[echo][0] = 1.
+                target[echo][1] = 1.
 
-        #set output
-        contrast_ref[echo] = contrastEquation(
-            target[echo],    
-            [0,0,0,0])
+            # set output
+            contrast_ref[echo] = contrastEquation(
+                target[echo],
+                [0, 0, 0, 0])
 
-        contrast_ref_error[echo] = contrastErrorEquation(
-            target[echo], 
-            [0,0,0,0])
+            contrast_ref_error[echo] = contrastErrorEquation(
+                target[echo],
+                [0, 0, 0, 0])
 
-    return [contrast_ref, contrast_ref_error]
+    return contrast_ref, contrast_ref_error
 
-def contrastLogicMain(positions, contrast_results, BG_result, local_results):
+
+def contrastLogicMain(positions: list, contrast_results: list, BG_result, local_results: ResultStructure,
+                      foil_weights: list = []):
     '''
     This function was built to ease readability
     and to provide the contrast calculation
@@ -696,38 +728,55 @@ def contrastLogicMain(positions, contrast_results, BG_result, local_results):
 
     BG_result : array of float
         The result of the background processing
-    
-    local_results : ResultStructure 
+
+    local_results : ResultStructure
+
+    sum_foils: boolean
 
     Returns
-    ------- 
+    -------
     contrast : list of float
         The Contrast and its error
     '''
     ############################################
-    #initialise the contrast result
-    contrast        = []
-    contrast_error  = []
+    # initialise the contrast result
+    contrast_main = {}
+    contrast_main_error = {}
 
-    for meas, echo in positions:
-        
+    for j, (meas, echo) in enumerate(positions):
+
         target = contrast_results[meas][echo]
 
         if not BG_result == None:
             BG_target = BG_result[echo]
         else:
-            BG_target = [0,0,0,0]
+            if foil_weights:
+                BG_target = [[0, 0, 0, 0] for i in range(len(target))]
+            else:
+                BG_target = [0, 0, 0, 0]
 
-        contrast.append(
-            float(contrastEquation(target, BG_target)))
-        contrast_error.append(
-            float(contrastErrorEquation(target, BG_target)))
+        if foil_weights:
+            temp = []
+            temp_error = []
+            for i, target_i in enumerate(target):
+                temp.append(
+                    float(contrastEquation(target_i, BG_target[i])) * foil_weights[j][i])
+                temp_error.append(
+                    float(contrastErrorEquation(target_i, BG_target[i])) * foil_weights[j][i])
 
-    return [contrast, contrast_error]
+            contrast_main[echo] = temp
+            contrast_main_error[echo] = temp_error
+        else:
+            contrast_main[echo] = float(contrastEquation(target, BG_target))
+            contrast_main_error[echo] = float(
+                contrastErrorEquation(target, BG_target))
+
+    return contrast_main, contrast_main_error
+
 
 def multiAxis(select, target):
     '''
-    This function performs axis modifications 
+    This function performs axis modifications
     to allow the compression of measurements
     for different parameters
 
@@ -737,13 +786,13 @@ def multiAxis(select, target):
         The selected elements
 
     target : DataStructure
-        The current active datastructure 
+        The current active datastructure
 
     Returns
-    ------- 
+    -------
     axis and position of the elements
     '''
-    #grab meta
+    # grab meta
     para_name = target.axes.names[0]
     meas_name = target.axes.names[1]
     echo_name = target.axes.names[2]
@@ -752,26 +801,26 @@ def multiAxis(select, target):
     meas_axis = target.get_axis(meas_name)
     echo_axis = target.get_axis(echo_name)
 
-    data_map  = target.map
-    axis      = {}
+    data_map = target.map
+    axis = {}
     positions = {}
 
-    #set the loop
+    # set the loop
     loop = [
-        (e1, e2, e3) 
-        for e1 in select 
+        (e1, e2, e3)
+        for e1 in select
         for e2 in meas_axis
         for e3 in echo_axis]
 
-    #loop
+    # loop
     for para, meas, echo in loop:
         if not data_map[
-            para_axis.index(para),
-            meas_axis.index(meas),
-            echo_axis.index(echo),0,0] == -1:
+                para_axis.index(para),
+                meas_axis.index(meas),
+                echo_axis.index(echo), 0, 0] == -1:
 
             if not para in axis.keys():
-                axis[para]      = []
+                axis[para] = []
                 positions[para] = []
 
             axis[para].append(echo)

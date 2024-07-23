@@ -22,44 +22,45 @@
 # *****************************************************************************
 
 #############################
-#import general components
+# import general components
 import time
 import datetime
 import pprint
 
 from .module_log import LogHandler
 
+
 class ResultStructure:
     '''
-    The result handler will manage the the input 
-    output of a mathematical process. This can be 
+    The result handler will manage the the input
+    output of a mathematical process. This can be
     a fit fir example. Each result will then be
-    saved in a Result_object class. 
+    saved in a Result_object class.
     '''
 
-    def __init__(self, mode = 'List'):
+    def __init__(self, mode='List'):
         '''
-        This is the initializer of the fit results 
+        This is the initializer of the fit results
         handler class
         '''
-        self.mode       = mode
+        self.mode = mode
         if self.mode == 'List':
-            self.results  =  []
+            self.results = []
         elif self.mode == 'Dict':
-            self.results  =  {}
-        self.log        = LogHandler()
+            self.results = {}
+        self.log = LogHandler()
 
     def reset(self):
         '''
-        Reset the result handler class by deleting 
-        all results. 
+        Reset the result handler class by deleting
+        all results.
         '''
         self.results.clear()
 
     def generateResult(self, name):
         '''
         This class will create a new result object and
-        then return it onto the owner. 
+        then return it onto the owner.
         '''
         if self.mode == 'Dict':
             self.results[name] = ResultObject(name)
@@ -68,39 +69,39 @@ class ResultStructure:
             self.results.append(ResultObject(name))
             return self.results[-1]
 
-    def getLastResult(self, name = '', key = None):
+    def getLastResult(self, name='', key=None):
         '''
-        This will go through the results in reverse 
+        This will go through the results in reverse
         and return the whole result dictionary in full
         or the value if key has been set and declared
-        Input: 
+        Input:
         - target (str) the target method keyword
         - identifier (str) the method to select
         '''
-        #log it
+        # log it
         self.log.addLog(
-            'info', 
+            'info',
             'The user is asking for result name: '
             + str(name)
             + ' and key: '
             + str(key))
 
         ##############################################
-        #dictionary mode
+        # dictionary mode
         if self.mode == 'Dict':
             if name not in self.results.keys():
                 return None
             if key == None:
-                #log it
+                # log it
                 self.log.addLog(
-                    'info', 
+                    'info',
                     'Successfully returning result with name: '
                     + str(name))
                 return self.results[name]
             elif not key == None and key not in self.results[name].result_dict:
-                #log it
+                # log it
                 self.log.addLog(
-                    'error', 
+                    'error',
                     'Could not find the result with name: '
                     + str(name)
                     + ' and key: '
@@ -109,7 +110,7 @@ class ResultStructure:
                 return self.results[name][key]
 
         ##############################################
-        #list mode
+        # list mode
         if name == '':
             return self.results[-1]
 
@@ -117,47 +118,47 @@ class ResultStructure:
             for i in range(len(self.results) - 1, -1, -1):
                 if self.results[i]['name'] == name:
                     if key == None:
-                        #log it
+                        # log it
                         self.log.addLog(
-                            'info', 
+                            'info',
                             'Successfully returning result with name: '
                             + str(name))
                         return self.results[i]
                     elif not key == None and key not in self.results[i].result_dict:
-                        #log it
+                        # log it
                         self.log.addLog(
-                            'error', 
+                            'error',
                             'Could not find the result with name: '
                             + str(name)
                             + ' and key: '
                             + str(key))
                     else:
                         return self.results[i][key]
-            #log it
+            # log it
             self.log.addLog(
-                'error', 
+                'error',
                 'Could not find result with name: '
                 + str(name))
 
             return None
 
-    def setResult(self, name = '' , position = ['None'], value = None):
+    def setResult(self, name='', position=['None'], value=None):
         '''
         This will set a value for a given result. This
-        can be used to manually inject a value. 
+        can be used to manually inject a value.
         '''
         ##############################################
-        #dictionary mode
+        # dictionary mode
         if self.mode == 'Dict':
             eval_string = "self.results['" + str(name) + "']"
 
         ##############################################
-        #List mode
+        # List mode
         else:
             eval_string = "self.results[i]"
 
         ##############################################
-        #Common part
+        # Common part
         for element in position:
             if isinstance(element, str):
                 eval_string += "['"+str(element)+"']"
@@ -168,43 +169,44 @@ class ResultStructure:
         eval_string += " = value"
 
         ##############################################
-        #dictionary mode
+        # dictionary mode
         if self.mode == 'Dict':
             exec(eval_string)
 
         ##############################################
-        #List mode
+        # List mode
         else:
             for i in range(len(self.results) - 1, -1, -1):
                 if self.results[i]['name'] == name:
                     exec(eval_string)
                     return 0
 
+
 class ResultObject:
     '''
     A result object gets initialised at the
-    beginning of a mathematical operation and 
+    beginning of a mathematical operation and
     then populated with information. As the process
-    is completed the result is closed closed. 
+    is completed the result is closed closed.
     '''
 
     def __init__(self, name):
         '''
         Initialise a Result_object. Note that the
         caller refers to the method that called the
-        creation of the present Result. 
+        creation of the present Result.
         '''
-        #set the complete
-        self.complete   = False
-        self.log        = LogHandler()
+        # set the complete
+        self.complete = False
+        self.log = LogHandler()
 
-        #initialise the dictionaries
-        self.metadata_dict   = {}
-        self.result_dict     = {}
-        self.input_dict      = {}
-        self.parameter_dict  = {}
+        # initialise the dictionaries
+        self.metadata_dict = {}
+        self.result_dict = {}
+        self.input_dict = {}
+        self.parameter_dict = {}
 
-        #set first metadata
+        # set first metadata
         self.addMetadata('Date',   str(time.ctime()))
         self.addMetadata('Start',  datetime.datetime.now())
         self.addMetadata('name',   name)
@@ -213,9 +215,9 @@ class ResultObject:
         '''
         The print class method. Will return the current
         class as a string to be displayed in a print
-        call. 
-        ''' 
-        output ="\n##########################################################\n"
+        call.
+        '''
+        output = "\n##########################################################\n"
         output += "################## RESULT STRUCTURE ######################\n"
         output += "##########################################################\n"
         output += "- METADATA:\n"
@@ -235,57 +237,58 @@ class ResultObject:
     def __getitem__(self, key):
         '''
         The getitem will get the element associated to
-        the key. 
-        ''' 
+        the key.
+        '''
         try:
             return self.result_dict[key]
         except:
             pointers = [
-                self.metadata_dict, 
-                self.parameter_dict, 
-                self.input_dict, 
+                self.metadata_dict,
+                self.parameter_dict,
+                self.input_dict,
                 self.result_dict]
 
             for dictionary in pointers:
                 if key in dictionary:
                     return dictionary[key]
-                    
+
             self.log.addLog(
-                'error', 
+                'error',
                 'Could not find the key: '+str(key)+', returning 0')
 
             return 0
 
     def __setitem__(self, key, value):
         '''
-        The setitem method will automatically 
-        reference to the result dictionary.  
-        ''' 
-        #call the method
-        self.addResult( key, value)
-        
+        The setitem method will automatically
+        reference to the result dictionary.
+        '''
+        # call the method
+        self.addResult(key, value)
+
     def setComplete(self):
         '''
         The result has been provided and the class is
         now being locked to forbid overwriting of the
-        data. 
-        ''' 
+        data.
+        '''
         self.addMetadata('End',  datetime.datetime.now())
         self.addMetadata('Duration',  self['Start'] - self['End'])
-        
+
         if not 'name' in self.metadata_dict.keys():
-            self.log.addLog('error', 'Each result object needs a name... Fix please.')
+            self.log.addLog(
+                'error', 'Each result object needs a name... Fix please.')
 
         self.complete = True
 
     def addMetadata(self, name, value):
         '''
-        Add a metadata to the metadata dictionary. 
-        ''' 
+        Add a metadata to the metadata dictionary.
+        '''
         self.metadata_dict[name] = value
 
         self.log.addLog(
-            'info', 
+            'info',
             "Added the entry'"
             + name
             + "' to the metadata")
@@ -293,35 +296,35 @@ class ResultObject:
     def addParameter(self, name, value):
         '''
         Add a parameter to the parameter dictionary.
-        ''' 
+        '''
         self.parameter_dict[name] = value
 
         self.log.addLog(
-            'info', 
+            'info',
             "Added the entry'"
             + name
             + "' to the parameters")
 
     def addInput(self, name, value):
         '''
-        Add a parameter to the parameter dictionary. 
-        ''' 
+        Add a parameter to the parameter dictionary.
+        '''
         self.input_dict[name] = value
 
         self.log.addLog(
-            'info', 
+            'info',
             "Added the entry'"
             + name
             + "' to the inputs")
 
     def addResult(self, name, value):
         '''
-        Add a result to the result dictionary. 
-        ''' 
+        Add a result to the result dictionary.
+        '''
         self.result_dict[name] = value
 
         self.log.addLog(
-            'info', 
+            'info',
             "Added the entry'"
             + name
             + "' to the results")
@@ -329,6 +332,5 @@ class ResultObject:
     def addLog(self, name, value):
         '''
 
-        ''' 
+        '''
         self.log.addLog(name, value)
-

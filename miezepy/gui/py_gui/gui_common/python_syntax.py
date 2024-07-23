@@ -1,8 +1,8 @@
-#from https://wiki.python.org/moin/PyQt/Python%20syntax%20highlighting
+# from https://wiki.python.org/moin/PyQt/Python%20syntax%20highlighting
 
-import sys
 
 from PyQt5 import QtCore, QtGui
+
 
 def format(color, style=''):
     """Return a QtGui.QTextCharFormat with the given attributes.
@@ -29,9 +29,9 @@ STYLES = {
     'string':       format('darkMagenta'),
     'string2':      format('darkMagenta'),
     'comment':      format('darkGreen',   'bold'),
-    'self':         format('darkBlue','bold'),
+    'self':         format('darkBlue', 'bold'),
     'numbers':      format('brown'),
-    'text'      :   format('black')
+    'text':   format('black')
 }
 
 
@@ -65,6 +65,7 @@ class PythonHighlighter (QtGui.QSyntaxHighlighter):
     braces = [
         '\{', '\}', '\(', '\)', '\[', '\]',
     ]
+
     def __init__(self, document):
         QtGui.QSyntaxHighlighter.__init__(self, document)
 
@@ -78,11 +79,11 @@ class PythonHighlighter (QtGui.QSyntaxHighlighter):
 
         # Keyword, operator, and brace rules
         rules += [(r'\b%s\b' % w, 0, STYLES['keyword'])
-            for w in PythonHighlighter.keywords]
+                  for w in PythonHighlighter.keywords]
         rules += [(r'%s' % o, 0, STYLES['operator'])
-            for o in PythonHighlighter.operators]
+                  for o in PythonHighlighter.operators]
         rules += [(r'%s' % b, 0, STYLES['brace'])
-            for b in PythonHighlighter.braces]
+                  for b in PythonHighlighter.braces]
 
         # All other rules
         rules += [
@@ -105,13 +106,13 @@ class PythonHighlighter (QtGui.QSyntaxHighlighter):
             # Numeric literals
             (r'\b[+-]?[0-9]+[lL]?\b', 0, STYLES['numbers']),
             (r'\b[+-]?0[xX][0-9A-Fa-f]+[lL]?\b', 0, STYLES['numbers']),
-            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b', 0, STYLES['numbers']),
+            (r'\b[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\b',
+             0, STYLES['numbers']),
         ]
 
         # Build a QtCore.QRegExp for each pattern
         self.rules = [(QtCore.QRegExp(pat), index, fmt)
-            for (pat, index, fmt) in rules]
-
+                      for (pat, index, fmt) in rules]
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
@@ -134,7 +135,6 @@ class PythonHighlighter (QtGui.QSyntaxHighlighter):
         in_multiline = self.match_multiline(text, *self.tri_single)
         if not in_multiline:
             in_multiline = self.match_multiline(text, *self.tri_double)
-
 
     def match_multiline(self, text, delimiter, in_state, style):
         """Do highlighting of multi-line strings. ``delimiter`` should be a

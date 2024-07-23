@@ -23,42 +23,43 @@
 
 import os
 
+
 class ScriptStructure:
 
     def __init__(self):
         '''
-        The script part was initially implanted into 
+        The script part was initially implanted into
         the process module but found to confuse its
         purpose. This is why a separate structure
         will now handle it.
         '''
         self.default_scripts = []
         with open(
-            os.path.dirname(os.path.realpath(__file__))
-            + '/script_modules/import_process.py','r') as f:
+                os.path.dirname(os.path.realpath(__file__))
+                + '/script_modules/import_process.py', 'r') as f:
             self.default_scripts.append(f.read())
         with open(
-            os.path.dirname(os.path.realpath(__file__))
-            + '/script_modules/set_fit_process.py','r') as f:
+                os.path.dirname(os.path.realpath(__file__))
+                + '/script_modules/set_fit_process.py', 'r') as f:
             self.default_scripts.append(f.read())
         with open(
-            os.path.dirname(os.path.realpath(__file__))
-            + '/script_modules/phase_process.py','r') as f:
+                os.path.dirname(os.path.realpath(__file__))
+                + '/script_modules/phase_process.py', 'r') as f:
             self.default_scripts.append(f.read())
         with open(
-            os.path.dirname(os.path.realpath(__file__))
-            + '/script_modules/reduction_process.py','r') as f:
+                os.path.dirname(os.path.realpath(__file__))
+                + '/script_modules/reduction_process.py', 'r') as f:
             self.default_scripts.append(f.read())
         with open(os.path.dirname(
-            os.path.realpath(__file__))
-            + '/script_modules/post_process.py','r') as f:
+                os.path.realpath(__file__))
+                + '/script_modules/post_process.py', 'r') as f:
             self.default_scripts.append(f.read())
 
         self.editable_scripts = list(self.default_scripts)
 
-    def resetScript(self,idx):
+    def resetScript(self, idx):
         '''
-        Reset a script given by his index 
+        Reset a script given by his index
         value as integer.
 
         Parameters
@@ -70,8 +71,8 @@ class ScriptStructure:
 
     def grabFromOther(self, other):
         '''
-        This method is to allow cross 
-        environnement transfer of the 
+        This method is to allow cross
+        environnement transfer of the
         elements.
 
         Parameters
@@ -83,7 +84,7 @@ class ScriptStructure:
 
     def loadScripts(self, path):
         '''
-        Initialize the default python scipts so that 
+        Initialize the default python scipts so that
         the system can be set.
 
         Parameters
@@ -91,7 +92,7 @@ class ScriptStructure:
         path : string
             The path of the file
         '''
-        with open(path,'r') as f:
+        with open(path, 'r') as f:
             text = f.read()
 
         if 'metadata_class.add_metadata' in text:
@@ -111,7 +112,7 @@ class ScriptStructure:
                 'environnement = self.env\n'+text.split('##--PHASE--##')[1].split(
                     'value = foils_in_echo)')[1],
                 text.split('##--REDUCTION--##')[1],
-                text.split('##--POST--##')[1] ]
+                text.split('##--POST--##')[1]]
         elif file_type == 'new':
             strings = [
                 text.split('##--IMPORT--##')[1],
@@ -123,7 +124,7 @@ class ScriptStructure:
 
     def saveScripts(self, path):
         '''
-        Initialize the default python scipts so that 
+        Initialize the default python scipts so that
         the system can be set.
 
         Parameters
@@ -167,7 +168,7 @@ class ScriptStructure:
             The formated text to be formater
 
         Returns
-        ------- 
+        -------
         text : string
             The formated text to returned to the text importer
         '''
@@ -179,16 +180,16 @@ class ScriptStructure:
         text = text.replace('calculate_contrast', 'calcContrastMain')
         text = text.replace('environnement.process.remove_foils()\n', '')
         text = text.replace(
-            "environnement.fit.set_parameter( name = 'foils_in_echo', value = foils_in_echo)\n", 
+            "environnement.fit.set_parameter( name = 'foils_in_echo', value = foils_in_echo)\n",
             "environnement.fit.set_parameter( name = 'foils_in_echo', value = foils_in_echo)\n"
-            +"environnement.fit.set_parameter( name = 'exposure', value = exposure)\n"
-            +"environnement.instrument.setDetector(instrument, detector)\n")
+            + "environnement.fit.set_parameter( name = 'exposure', value = exposure)\n"
+            + "environnement.instrument.setDetector(instrument, detector)\n")
         text = text.replace(
             "environnement.fit.set_parameter( name = 'Select',",
             "instrument = 'Reseda'\n"
-            +"detector = None\n\n"
-            +"exposure = False\n\n"
-            +"environnement.fit.set_parameter( name = 'Select',")
+            + "detector = None\n\n"
+            + "exposure = False\n\n"
+            + "environnement.fit.set_parameter( name = 'Select',")
 
         return text
 
@@ -201,10 +202,10 @@ class ScriptStructure:
         #----------------------------------------#
         text_array = self.editable_scripts[0].split("\n")
 
-        #Foils to consider
+        # Foils to consider
         filtered_text_array = [
-            element if "metadata_class.addMetadata('Selected foils'" in element 
-            else '' 
+            element if "metadata_class.addMetadata('Selected foils'" in element
+            else ''
             for element in text_array]
         foil_check = []
         for element in filtered_text_array:
@@ -215,86 +216,96 @@ class ScriptStructure:
         #----------------------------------------#
         text_array = self.editable_scripts[1].split("\n")
 
-        #Foils
+        # Foils
         filtered_text_array = [
-            element if 'foils_in_echo.append(' in element else '' 
+            element if 'foils_in_echo.append(' in element else ''
             for element in text_array]
         foils_in_echo = []
         for element in filtered_text_array:
             if not element == '':
                 exec(element.strip())
-            
-        #Selected
+
+        # Selected
         filtered_text_array = [
-            element if 'Selected = [' in element else '' 
+            element if 'Selected = [' in element else ''
             for element in text_array]
         Selected = []
         for element in filtered_text_array:
             if not element == '':
-                Selected = eval(element.split('Selected =' )[1])
+                Selected = eval(element.split('Selected =')[1])
 
-        #Reference
+        # Reference
         filtered_text_array = [
-            element if 'Reference = [' in element else '' 
+            element if 'Reference = [' in element else ''
             for element in text_array]
         Reference = None
         for element in filtered_text_array:
             if not element == '':
-                Reference = eval(element.split('Reference = ' )[1])
+                Reference = eval(element.split('Reference = ')[1])
 
-        #Background
+        # Background
         filtered_text_array = [
-            element if 'Background = ' in element else '' 
+            element if 'Background = ' in element else ''
             for element in text_array]
         Background = None
         for element in filtered_text_array:
             if not element == '':
-                Background = eval(element.split('Background = ' )[1])
+                Background = eval(element.split('Background = ')[1])
 
-        #instrument
+        # instrument
         filtered_text_array = [
-            element if 'instrument = ' in element else '' 
+            element if 'instrument = ' in element else ''
             for element in text_array]
         instrument = None
         for element in filtered_text_array:
             if not element == '':
-                instrument = eval(element.split('instrument = ' )[1])
+                instrument = eval(element.split('instrument = ')[1])
 
-        #detector
+        # detector
         filtered_text_array = [
-            element if 'detector = ' in element else '' 
+            element if 'detector = ' in element else ''
             for element in text_array]
         detector = None
         for element in filtered_text_array:
             if not element == '':
-                detector = eval(element.split('detector = ' )[1])
+                detector = eval(element.split('detector = ')[1])
 
-        #exposure
+        # exposure
         filtered_text_array = [
-            element if 'exposure = ' in element else '' 
+            element if 'exposure = ' in element else ''
             for element in text_array]
         exposure = False
         for element in filtered_text_array:
             if not element == '':
-                exposure = eval(element.split('exposure = ' )[1])
+                exposure = eval(element.split('exposure = ')[1])
 
-        #time_channels
+        # time_channels
         filtered_text_array = [
-            element if 'TimeChannels = ' in element else '' 
+            element if 'TimeChannels = ' in element else ''
             for element in text_array]
         time_channels = False
         for element in filtered_text_array:
             if not element == '':
-                time_channels = eval(element.split('TimeChannels = ' )[1])
+                time_channels = eval(element.split('TimeChannels = ')[1])
+
+        # sum the foils
+        filtered_text_array = [
+            element if "sum_foils = " in element
+            else ''
+            for element in text_array]
+        sum_foils = True
+        for element in filtered_text_array:
+            if not element == '':
+                sum_foils = eval(element.split("sum_foils = ")[1])
 
         del text_array
         #----------------------------------------#
         text_array = self.editable_scripts[2].split("\n")
 
-        #masks
+        # masks
         filtered_text_array = [
-            element if "mask.setMask(" in element 
-            else '' 
+            element if "mask.setMask(" in element
+            else ''
             for element in text_array]
         phase_mask = []
         for element in filtered_text_array:
@@ -305,10 +316,10 @@ class ScriptStructure:
         #----------------------------------------#
         text_array = self.editable_scripts[3].split("\n")
 
-        #Foils to consider
+        # Foils to consider
         filtered_text_array = [
-            element if "mask.setMask(" in element 
-            else '' 
+            element if "mask.setMask(" in element
+            else ''
             for element in text_array]
         reduction_mask = []
         for element in filtered_text_array:
@@ -316,19 +327,21 @@ class ScriptStructure:
                 reduction_mask = eval(element.split('(')[1].split(')')[0])
 
         del text_array
+
         container = {}
         container['foils_in_echo'] = foils_in_echo
-        container['Selected']      = Selected
-        container['Reference']     = Reference
-        container['Background']    = Background
-        container['foil_check']    = foil_check
-        container['phase_mask']    = phase_mask
-        container['reduction_mask']= reduction_mask
-        container['instrument']    = instrument
-        container['detector']      = detector
-        container['exposure']      = exposure
+        container['Selected'] = Selected
+        container['Reference'] = Reference
+        container['Background'] = Background
+        container['foil_check'] = foil_check
+        container['phase_mask'] = phase_mask
+        container['reduction_mask'] = reduction_mask
+        container['instrument'] = instrument
+        container['detector'] = detector
+        container['exposure'] = exposure
         container['time_channels'] = time_channels
-        
+        container['sum_foils'] = sum_foils
+
         return container
 
     def setEditable(self, index, code):
@@ -349,7 +362,7 @@ class ScriptStructure:
 
         self.editable_scripts[index] = str(code)
 
-    def _cleanLines(self,text):
+    def _cleanLines(self, text):
         '''
         Remove all the surplus of blank lines
         at the start and then end of the script
@@ -359,10 +372,10 @@ class ScriptStructure:
         text : string
             The code of the script to be set in
         '''
-        text_array  = text.split('\n')
-        start       = 0
+        text_array = text.split('\n')
+        start = 0
         start_found = False
-        end         = 0
+        end = 0
 
         for i, line in enumerate(text_array):
             if not start_found:
@@ -388,7 +401,7 @@ class ScriptStructure:
             The formated text to be formater
 
         Returns
-        ------- 
+        -------
         text : string
             The formated text to returned to the text importer
         '''
@@ -399,7 +412,7 @@ class ScriptStructure:
 
     def _parseCode(self, code):
         '''
-        This function will break down the code into smaller 
+        This function will break down the code into smaller
         parts to allow interpretation of the failed sequence
         as well as a meaningfull understanding of the progress.
 
@@ -409,9 +422,9 @@ class ScriptStructure:
             The text to be formater
         '''
         temp_code_array = []
-        indentation     = False
-        comment_bool    = False
-        code_lines      = code.split('\n') 
+        indentation = False
+        comment_bool = False
+        code_lines = code.split('\n')
 
         for line in code_lines:
             if line == '' or line[0] == '#':
@@ -445,8 +458,8 @@ class ScriptStructure:
 
     def _parseMeta(self, code_array):
         '''
-        This function will try to identify the individual 
-        function parts to provide nice insight on what is 
+        This function will try to identify the individual
+        function parts to provide nice insight on what is
         being processed at the moment.
         '''
         meta_array = []
@@ -458,7 +471,7 @@ class ScriptStructure:
                 meta_array.append(
                     "'function' "+element.split('(')[0]+' with the parameters ('+''.join(element.split('(')[1].split(')')[0])[0:30]+')')
             else:
-                 meta_array.append(element[0:40])
+                meta_array.append(element[0:40])
 
         return meta_array
 
@@ -471,17 +484,18 @@ class ScriptStructure:
         ----------
         container : misc items in dictionary
             The text to be formater
-        '''         
-        #find area to edit
+        '''
+        # find area to edit
         text = self.editable_scripts[0]
         text_array = text.split("\n")
 
-        for i,element in enumerate(text_array):
+        for i, element in enumerate(text_array):
             if "metadata_class.add_metadata('Selected foils'" in element:
-                text_array[i] = element.split(".current_data.metadata_class.add_metadata(")[0]+".current_data.metadata_class.add_metadata('Selected foils', value = '"+str(container['checked'])+"' , logical_type = 'int_array', unit = '-')"
+                text_array[i] = element.split(".current_data.metadata_class.add_metadata(")[
+                    0]+".current_data.metadata_class.add_metadata('Selected foils', value = '"+str(container['checked'])+"' , logical_type = 'int_array', unit = '-')"
                 break
 
-        #find strings
+        # find strings
         self.setEditable(0, self._concatenateText([text_array]))
 
     def synthesizeFitScript(self, container):
@@ -493,62 +507,68 @@ class ScriptStructure:
         ----------
         container : misc items in dictionary
             The text to be formater
-        '''         
+        '''
         python_string_init = ""
 
-        #set the foils
+        # set the foils
         python_string_init += "\n#Set the foils (edit in GUI)\n"
         python_string_init += "foils_in_echo = []\n"
-        for i,item in enumerate(container['foils_in_echo']):
+        for i, item in enumerate(container['foils_in_echo']):
             python_string_init += "foils_in_echo.append("+str(item)+")\n"
 
-        #set the selected
+        # set the selected
         python_string_init += "\n#Set the selected (edit in GUI)\n"
         if not len(container['selected']) == 0:
             python_string_init += "Selected = [ "
             for i, item in enumerate(container['selected']):
                 try:
-                    python_string_init += str(float(item))+ ", "
+                    python_string_init += str(float(item)) + ", "
                 except:
-                    python_string_init += "'"+str(item)+ "', "
+                    python_string_init += "'"+str(item) + "', "
 
             python_string_init = python_string_init[:-2]
             python_string_init += "]\n"
         else:
             python_string_init += "Selected = []\n"
 
-        #set the time channels
+        # set the time channels
         python_string_init += "\n#Set the time channels to use(edit in GUI)\n"
-        python_string_init += "TimeChannels = "+str(container['time_channels'])+"\n"
+        python_string_init += "TimeChannels = " + \
+            str(container['time_channels'])+"\n"
 
-        #set the background
+        # set the background
         python_string_init += "\n#Set the background (edit in GUI)\n"
         python_string_init += "Background = "+container['Background']+"\n"
 
-        #set the reference
+        # set the reference
         python_string_init += "\n#Set the reference (edit in GUI)\n"
         python_string_init += "Reference = "+container['Reference']+"\n"
 
-        #set the instrument
+        # set the instrument
         python_string_init += "\n#Instrument (edit in GUI)\n"
         python_string_init += "instrument = '"+container['Instrument']+"'\n"
 
-        #set the detector
+        # set the detector
         python_string_init += "\n#Detector(edit in GUI)\n"
         python_string_init += "detector = "+container['detector']+"\n"
 
-        #set the exposure setting
+        # set the exposure setting
         python_string_init += "\n#Use the high exposure setting (edit in GUI)\n"
         python_string_init += "exposure = "+container['exposure']+"\n"
 
-        #find area to edit
+        # set the exposure setting
+        python_string_init += "\n#Use the foil summation methodology\n"
+        python_string_init += "sum_foils = " + \
+            container.get('sum_foils', 'True')+"\n"
+
+        # find area to edit
         text = self.editable_scripts[1]
         text_array = text.split("\n")
 
         edit_start = 0
         edit_end = len(text_array)
 
-        for i,line in enumerate(text_array):
+        for i, line in enumerate(text_array):
             if "self.env" in line:
                 edit_start = i
             if ".fit.set_parameter( " in line:
@@ -571,17 +591,18 @@ class ScriptStructure:
         ----------
         container : misc items in dictionary
             The text to be formater
-        '''         
-        #find area to edit
+        '''
+        # find area to edit
         text = self.editable_scripts[2]
         text_array = text.split("\n")
 
-        for i,element in enumerate(text_array):
+        for i, element in enumerate(text_array):
             if "mask.setMask(" in element:
-                text_array[i] = element.split(".mask.setMask(")[0]+".mask.setMask('"+container['mask']+"')"
+                text_array[i] = element.split(
+                    ".mask.setMask(")[0]+".mask.setMask('"+container['mask']+"')"
                 break
 
-        #find strings
+        # find strings
         self.setEditable(2, self._concatenateText([text_array]))
 
     def synthesizeReductionScript(self, container):
@@ -593,22 +614,23 @@ class ScriptStructure:
         ----------
         container : misc items in dictionary
             The text to be formater
-        '''         
-        #find area to edit
+        '''
+        # find area to edit
         text = self.editable_scripts[3]
         text_array = text.split("\n")
 
-        for i,element in enumerate(text_array):
+        for i, element in enumerate(text_array):
             if "mask.setMask(" in element:
-                text_array[i] = element.split(".mask.setMask(")[0]+".mask.setMask('"+container['mask']+"')"
+                text_array[i] = element.split(
+                    ".mask.setMask(")[0]+".mask.setMask('"+container['mask']+"')"
                 break
 
-        #find strings
+        # find strings
         self.setEditable(3, self._concatenateText([text_array]))
 
     def _concatenateText(self, element_arrays):
         '''
-        Sticks the array together into a single 
+        Sticks the array together into a single
         string item
         '''
         output = ''

@@ -21,17 +21,16 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-
 from simpleplot.ploting.graph_items.pie_item import PieItem
 from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
 from simpleplot.ploting.graph_items.triangle_item import TriangleItem
 from simpleplot.ploting.graph_items.ellipse_item import EllipseItem
 
+
 class RectangleHandler(RectangleItem):
     def __init__(self):
         super().__init__('Rectangle')
-    
+
     def refresh(self):
         '''
         Overwrite the refresh
@@ -55,6 +54,7 @@ class RectangleHandler(RectangleItem):
         Overwrite the refresh
         '''
         pass
+
 
 class TriangleHandler(TriangleItem):
     def __init__(self):
@@ -84,6 +84,7 @@ class TriangleHandler(TriangleItem):
         '''
         pass
 
+
 class PieHandler(PieItem):
     def __init__(self):
         super().__init__('Pie')
@@ -111,6 +112,7 @@ class PieHandler(PieItem):
         Overwrite the refresh
         '''
         pass
+
 
 class EllipseHandler(EllipseItem):
     def __init__(self):

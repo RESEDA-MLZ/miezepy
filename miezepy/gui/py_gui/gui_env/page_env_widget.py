@@ -24,22 +24,23 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from functools import partial
 
-from ...qt_gui.main_env_widget_ui   import Ui_main_env_widget
-from .env_widget                    import EnvWidget
+from ...qt_gui.main_env_widget_ui import Ui_main_env_widget
+from .env_widget import EnvWidget
+
 
 class PageEnvWidget(Ui_main_env_widget):
-    
+
     def __init__(self, stack, parent):
         Ui_main_env_widget.__init__(self)
-        self.parent         = parent
-        self.stack          = stack
-        self.local_widget   = QtWidgets.QWidget() 
+        self.parent = parent
+        self.stack = stack
+        self.local_widget = QtWidgets.QWidget()
         self.setup()
         self.connect()
 
     def setup(self):
         '''
-        This is the initial setup method that will 
+        This is the initial setup method that will
         build the layout and introduce the graphics
         area
         '''
@@ -58,10 +59,10 @@ class PageEnvWidget(Ui_main_env_widget):
 
     def link(self, handler):
         '''
-        link the class that will manage the current 
+        link the class that will manage the current
         input output.
         '''
-        self.handler = handler 
+        self.handler = handler
         self.initialize()
         self.refreshList()
 
@@ -73,7 +74,7 @@ class PageEnvWidget(Ui_main_env_widget):
         self.main_widget_env.clear()
         self.envs_widgets = []
         self.envs = []
-        
+
     def refreshList(self):
         '''
         refresh and rebuild the view
@@ -121,10 +122,10 @@ class PageEnvWidget(Ui_main_env_widget):
 
             self.setCurrentElement(index - 1)
 
-    def setCurrentElement(self, row = None):
+    def setCurrentElement(self, row=None):
         '''
         On clicking an element the system will set the
-        classes linked to the current element 
+        classes linked to the current element
         '''
         if isinstance(row, int):
             index = row
@@ -132,15 +133,16 @@ class PageEnvWidget(Ui_main_env_widget):
             index = self.main_widget_env.currentRow()
 
         if index == len(self.envs):
-            index -=1
+            index -= 1
         elif index == -1 and not len(self.envs) == 0:
-            index =0
+            index = 0
         elif len(self.envs) == 0:
             self.parent.window.setWindowTitle('MIEZEPY')
             return
 
-        self.handler.setCurrentEnv(idx = index)
-        self.parent.window.setWindowTitle('MIEZEPY ('+str(self.handler.current_env.name)+')')
+        self.handler.setCurrentEnv(idx=index)
+        self.parent.window.setWindowTitle(
+            'MIEZEPY ('+str(self.handler.current_env.name)+')')
         self.envs[index].widget.setFocus()
         self.parent.mask_interface.link(self.handler.current_env.mask)
 
@@ -153,7 +155,7 @@ class PageEnvWidget(Ui_main_env_widget):
 
     def openLoad(self, env):
         '''
-        open the load window through the current 
+        open the load window through the current
         button system
         '''
         self.main_widget_env.setCurrentRow(self.handler.getIdx(env.name))
@@ -161,7 +163,7 @@ class PageEnvWidget(Ui_main_env_widget):
 
     def openMask(self, env):
         '''
-        open the load window through the current 
+        open the load window through the current
         button system
         '''
         self.main_widget_env.setCurrentRow(self.handler.getIdx(env.name))
@@ -169,7 +171,7 @@ class PageEnvWidget(Ui_main_env_widget):
 
     def openScript(self, env):
         '''
-        open the load window through the current 
+        open the load window through the current
         button system
         '''
         self.main_widget_env.setCurrentRow(self.handler.getIdx(env.name))
@@ -186,12 +188,11 @@ class PageEnvWidget(Ui_main_env_widget):
             The source environnement
         to_env : Environnement
             The source environnement
-            
+
         '''
         self.handler.processOperation(*drop_intructions.split('|'))
         self.main_widget_env.setCurrentRow(self.handler.getIdx(
-                self.handler.getEnv(drop_intructions.split('|')[-1]).name))
+            self.handler.getEnv(drop_intructions.split('|')[-1]).name))
 
         for i in range(3):
             self.parent.widgetClasses[i+1].unlink()
-        

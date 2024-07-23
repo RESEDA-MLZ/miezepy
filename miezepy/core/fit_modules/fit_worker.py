@@ -22,7 +22,6 @@
 # *****************************************************************************
 
 import multiprocessing as mp
-from time import sleep
 
 class WorkerPool():
     '''
@@ -45,7 +44,7 @@ class WorkerPool():
         '''
         add a worker to the list
         '''
-        if self.processes == 1: 
+        if self.processes == 1:
             args = worker[1:] + [self.result_dict]
             worker[0](*args)
         else:
@@ -64,12 +63,11 @@ class WorkerPool():
                 self.workers[idx].start()
                 temp.append(idx)
                 idx += 1
-            
+
             for i in temp:
                 self.workers[i].join()
 
         return dict(self.result_dict)
-            
-            
 
-        
+
+

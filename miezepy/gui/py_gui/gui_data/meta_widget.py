@@ -22,29 +22,28 @@
 # *****************************************************************************
 
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-import sys
-import os
+from PyQt5 import QtWidgets, QtCore
 
 from ...qt_gui.meta_widget_ui import Ui_meta_widget
 
-class MetaWidget(Ui_meta_widget,QtCore.QObject):
+
+class MetaWidget(Ui_meta_widget, QtCore.QObject):
     '''
-    This class will manage the raw import 
-    machinery. the UI is inherited through 
+    This class will manage the raw import
+    machinery. the UI is inherited through
     Ui_main_window from the Qt designer anf then
     converted through pyuic5
     '''
-    #set up the edit signal
+    # set up the edit signal
     edited = QtCore.pyqtSignal(list)
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtCore.QObject.__init__(self)
         Ui_meta_widget.__init__(self)
 
         self.parent = parent
         self.widget = QtWidgets.QWidget()
-        self.item   = QtWidgets.QListWidgetItem(parent)
+        self.item = QtWidgets.QListWidgetItem(parent)
 
         self.setupUi(self.widget)
         self.initialize()
@@ -73,7 +72,7 @@ class MetaWidget(Ui_meta_widget,QtCore.QObject):
 
     def eventFilter(self, in_object, event):
         '''
-        The event filter to manage clicks on all 
+        The event filter to manage clicks on all
         '''
         if event.type() == QtCore.QEvent.MouseButtonPress:
             self.item.setSelected(True)
@@ -108,7 +107,7 @@ class MetaWidget(Ui_meta_widget,QtCore.QObject):
 
         self.connect()
 
-    def getValues(self, index = None):
+    def getValues(self, index=None):
         '''
         initialize the widget and set the stage
         '''
@@ -121,5 +120,3 @@ class MetaWidget(Ui_meta_widget,QtCore.QObject):
         ]
 
         self.edited.emit(self.parent_list)
-
-        

@@ -22,8 +22,6 @@
 # *****************************************************************************
 
 
-import sys
-import io
 import os
 import re
 import glob
@@ -34,23 +32,25 @@ from .io_modules.import_sans_pad import Import_SANS_PAD
 from .module_data import DataStructure
 from .fit_modules.library_fit import miezeTauCalculation
 
-def loadData(env,gui):
+
+def loadData(env, gui):
     return ''
+
 
 class IOStructure:
 
     def __init__(self, env):
 
-        self.verbose        = True
-        self.env            = env
-        self.generator      = Generator()
+        self.verbose = True
+        self.env = env
+        self.generator = Generator()
         self.import_objects = []
-        self.extra_folders  = []
-    
+        self.extra_folders = []
+
     def grabFromOther(self, other):
         '''
-        This method is to allow cross 
-        environnement transfer of the 
+        This method is to allow cross
+        environnement transfer of the
         elements.
 
         Parameters
@@ -68,9 +68,9 @@ class IOStructure:
 
     def reset(self):
         self.import_objects = []
-        self.extra_folders  = []
+        self.extra_folders = []
 
-    def load(self,path, gui = None):
+    def load(self, path, gui=None):
         '''
         The load dispatcher
         '''
@@ -88,31 +88,40 @@ class IOStructure:
         indent = 1
 
         script += "def loadData(env, gui = None):\n"
-        script += indent * "    " +"if not gui == None:\n"
-        script += (indent+1) * "    " +"for i in range("+str(len(self.import_objects))+"):\n"
-        script += (indent+2) * "    " +"gui.addElement()\n"
-        script += indent * "    " +"else:\n"
-        script += (indent+1) * "    " +"for i in range("+str(len(self.import_objects))+"):\n"
-        script += (indent+2) * "    " +"env.io.addObject()\n"
+        script += indent * "    " + "if not gui == None:\n"
+        script += (indent+1) * "    " + "for i in range(" + \
+            str(len(self.import_objects))+"):\n"
+        script += (indent+2) * "    " + "gui.addElement()\n"
+        script += indent * "    " + "else:\n"
+        script += (indent+1) * "    " + "for i in range(" + \
+            str(len(self.import_objects))+"):\n"
+        script += (indent+2) * "    " + "env.io.addObject()\n"
 
-        script += indent * "    " + "import_result  = [None]*"+str(len(self.import_objects))+"\n"
+        script += indent * "    " + \
+            "import_result  = [None]*"+str(len(self.import_objects))+"\n"
 
-        for i,element in enumerate(self.import_objects):
-            script += indent * "    " +"import_result["+str(i)+"] = loadData_"+str(i)+"(env.io.import_objects["+str(i)+"])\n"
+        for i, element in enumerate(self.import_objects):
+            script += indent * "    " + \
+                "import_result["+str(i)+"] = loadData_"+str(i) + \
+                "(env.io.import_objects["+str(i)+"])\n"
 
-        script += indent * "    " + "passed = all([all([subelement[0] for subelement in element]) for element in import_result])\n"
-        script += indent * "    " +"if not gui == None:\n"
-        script += (indent+1) * "    " +"for i in range("+str(len(self.import_objects))+"):\n"
-        script += (indent+2) * "    " +"gui.setCurrentElement(i)\n"
-        script += (indent+2) * "    " +"if passed:\n"  
-        script += (indent+3) * "    " +"gui.populate()\n"
-        script += indent * "    " +"else:\n"
-        script += (indent+1) * "    " +"for i in range("+str(len(self.import_objects))+"):\n"  
-        script += (indent+2) * "    " +"if passed:\n"  
-        script += (indent+3) * "    " +"env.io.import_objects[i].processObject()\n"
-        script += indent * "    " +"return import_result\n"
+        script += indent * "    " + \
+            "passed = all([all([subelement[0] for subelement in element]) for element in import_result])\n"
+        script += indent * "    " + "if not gui == None:\n"
+        script += (indent+1) * "    " + "for i in range(" + \
+            str(len(self.import_objects))+"):\n"
+        script += (indent+2) * "    " + "gui.setCurrentElement(i)\n"
+        script += (indent+2) * "    " + "if passed:\n"
+        script += (indent+3) * "    " + "gui.populate()\n"
+        script += indent * "    " + "else:\n"
+        script += (indent+1) * "    " + "for i in range(" + \
+            str(len(self.import_objects))+"):\n"
+        script += (indent+2) * "    " + "if passed:\n"
+        script += (indent+3) * "    " + \
+            "env.io.import_objects[i].processObject()\n"
+        script += indent * "    " + "return import_result\n"
 
-        for i,element in enumerate(self.import_objects):
+        for i, element in enumerate(self.import_objects):
             script += "\ndef loadData_"+str(i)+"(import_object):\n"
             script += indent * "    " + "#################################\n"
             script += indent * "    " + "########## add element ##########\n"
@@ -125,17 +134,17 @@ class IOStructure:
         f.write(script)
         f.close()
 
-    def loadFromPython(self, path, gui = None, extra_folder = []):
+    def loadFromPython(self, path, gui=None, extra_folder=[]):
         '''
-        load from a python script generated by 
+        load from a python script generated by
         the previous self.saveToPython
         '''
         self.reset()
         self.extra_folders = extra_folder
-         
+
         with open(path) as f:
             code = compile(f.read(), path, 'exec')
-            exec(code,globals())
+            exec(code, globals())
 
         result = loadData(self.env, gui)
 
@@ -146,9 +155,9 @@ class IOStructure:
 
         return result
 
-    def loadFromText(self, path, gui = None):
+    def loadFromText(self, path, gui=None):
         '''
-        load from a python script generated by 
+        load from a python script generated by
         the previous self.saveToPython
         '''
         print('I am a text')
@@ -156,7 +165,7 @@ class IOStructure:
     def generate(self):
         '''
         This is the method that will create a data
-        structure populate it and then send it's 
+        structure populate it and then send it's
         content to the main environment handler.
         '''
         data, sanity = self.generator.generate(self.import_objects)
@@ -167,62 +176,64 @@ class IOStructure:
             self.env.setCurrentData(0)
             return sanity
 
-    def load_MIEZE_TOF(self,load_path):
+    def load_MIEZE_TOF(self, load_path):
         '''
         This function will manage the load of tof
         files through different smaller import
         components
         '''
-        Import_MIEZE_TOF(load_path,self.env.current_data)
+        Import_MIEZE_TOF(load_path, self.env.current_data)
 
-    def load_MIEZE_HD5(self,load_path):
+    def load_MIEZE_HD5(self, load_path):
         '''
         This function will manage the load of tof
         files through different smaller import
         components
         '''
-        pass
 
-    def load_SANS_PAD(self,load_path):
+    def load_SANS_PAD(self, load_path):
         '''
-        This function will import the data from the 
-        PAD format. 
+        This function will import the data from the
+        PAD format.
         '''
-        Import_SANS_PAD(load_path,self.env.current_data)
+        Import_SANS_PAD(load_path, self.env.current_data)
+
 
 class Generator:
 
     def generate(self, import_objects):
         '''
-        Main generator function that will manage the 
+        Main generator function that will manage the
         import of all the required elements
         '''
-        axes,idx    = self._getAxes(import_objects)
-        data        = self._populateData(axes, idx, import_objects)
-        data        = self._setAxes(data,axes)
-        sanity      = self._axesSanityCheck(axes, import_objects)
+        axes, idx = self._getAxes(import_objects)
+        data = self._populateData(axes, idx, import_objects)
+        data = self._setAxes(data, axes)
+        sanity = self._axesSanityCheck(axes, import_objects)
         return data, sanity
 
     def _axesSanityCheck(self, axes, import_objects):
         '''
         Check the sanity of the axes and all definitions
         '''
-        reference   = self._getReference(import_objects)
+        reference = self._getReference(import_objects)
         if reference is None:
-            return ['No reference',None]
-        
-        reference_axis = import_objects[[import_object.data_handler.parameter for import_object in import_objects].index(reference)].getAxes()[2]
+            return ['No reference', None]
+
+        reference_axis = import_objects[[
+            import_object.data_handler.parameter for import_object in import_objects].index(reference)].getAxes()[2]
         inside = [element in reference_axis for element in axes[2]]
         if not all(inside):
-            out = (np.array(axes[2])[np.argwhere(np.array([inside]) == False)]).tolist()
-            return ['Echo issue', out ]
+            out = (np.array(axes[2])[np.argwhere(
+                np.array([inside]) == False)]).tolist()
+            return ['Echo issue', out]
 
         return [None, None]
 
     def _getAxes(self, import_objects):
         '''
         compute the axes from all the import objects
-        and then stick them together and finally 
+        and then stick them together and finally
         remove repetitions through sets
         '''
         temp_axes = []
@@ -238,7 +249,8 @@ class Generator:
         for j in range(len(temp_axes[0])):
             axes[j] = list(set(axes[j]))
 
-        idx = [[[]for j in range(len(temp_axes[i][2]))] for i in range(len(temp_axes))]
+        idx = [[[]for j in range(len(temp_axes[i][2]))]
+               for i in range(len(temp_axes))]
         for i in range(len(temp_axes)):
             for j in range(len(temp_axes[i][2])):
                 idx[i][j] = [
@@ -246,7 +258,7 @@ class Generator:
                     axes[1].index(temp_axes[i][1][0]),
                     axes[2].index(temp_axes[i][2][j])]
 
-        return axes,idx
+        return axes, idx
 
     def _setAxes(self, data, axes):
         '''
@@ -278,52 +290,56 @@ class Generator:
     def _populateData(self, axes, idx, import_objects):
         '''
         compute the axes from all the import objects
-        and then stick them together and finally 
+        and then stick them together and finally
         remove repetitions through sets
         '''
         data_structure = DataStructure()
 
-        for i,import_object in enumerate(import_objects):
-            for j,path in enumerate(import_object.file_handler.total_path_files):
-                data_structure.addMetadataObject(self._generateMetadata(import_object, j))
+        for i, import_object in enumerate(import_objects):
+            for j, path in enumerate(import_object.file_handler.total_path_files):
+                data_structure.addMetadataObject(
+                    self._generateMetadata(import_object, j))
 
-                f = open(path,'rb')
-                loadeddata = np.fromfile(f, dtype=np.int32)[:np.prod(import_object.data_handler.dimension)]
-                data = loadeddata.reshape(*import_object.data_handler.dimension)
+                f = open(path, 'rb')
+                loadeddata = np.fromfile(f, dtype=np.int32)[
+                    :np.prod(import_object.data_handler.dimension)]
+                data = loadeddata.reshape(
+                    *import_object.data_handler.dimension)
                 f.close()
-                
+
                 for idx_1 in range(import_object.data_handler.dimension[0]):
                     for idx_2 in range(import_object.data_handler.dimension[1]):
-                        address = list(idx[i][j]) + [idx_1,idx_2]
-                        data_structure[address] = np.transpose(data[idx_1,idx_2,:,:])
+                        address = list(idx[i][j]) + [idx_1, idx_2]
+                        data_structure[address] = np.transpose(
+                            data[idx_1, idx_2, :, :])
 
         data_structure.validate()
 
         data_structure.metadata_class.addMetadata(
-            'Selected foils', 
-            value = '[1,1,1,0,0,1,1,1]' , 
-            logical_type = 'int_array', 
-            unit = '-')
+            'Selected foils',
+            value='[1,1,1,0,0,1,1,1]',
+            logical_type='int_array',
+            unit='-')
 
         reference = self._getReference(import_objects)
         data_structure.metadata_class.addMetadata(
-            'Reference', 
-            value = reference, 
-            logical_type = 'float', 
-            unit = 'K')
+            'Reference',
+            value=reference,
+            logical_type='float',
+            unit='K')
 
         background = self._getBackground(import_objects)
         data_structure.metadata_class.addMetadata(
-            'Background', 
-            value = str(background) , 
-            logical_type = 'float', 
-            unit = 'K')
+            'Background',
+            value=str(background),
+            logical_type='float',
+            unit='K')
 
         return data_structure
 
-    def _generateMetadata(self,import_object, index):
+    def _generateMetadata(self, import_object, index):
         '''
-        Here is the routine managing the metadata 
+        Here is the routine managing the metadata
         handling.
         '''
         metadata = {}
@@ -333,9 +349,9 @@ class Generator:
                 'float',
                 import_object.meta_handler.values[key][index],
                 '-'
-                ]
+            ]
         return metadata
-                
+
     def _getReference(self, import_objects):
         '''
         Grab the reference from the widgets if possible
@@ -356,16 +372,17 @@ class Generator:
                 background = import_object.data_handler.parameter
         return background
 
+
 class ImportObject:
-    
+
     def __init__(self, parent):
 
-        self.parent         = parent
-        self.meta_handler   = MetaHandler()
-        self.file_handler   = FileHandler()
-        self.data_handler   = DataHandler()
+        self.parent = parent
+        self.meta_handler = MetaHandler()
+        self.file_handler = FileHandler()
+        self.data_handler = DataHandler()
 
-        #set the default
+        # set the default
         self.meta_handler.defaultMeta()
         self.file_handler.extra_folders = list(self.parent.extra_folders)
 
@@ -410,17 +427,19 @@ class ImportObject:
             axis.append([self.data_handler.meas])
 
         if self.meta_handler.values['Echo'] == 'Not given':
-            axis.append([i for i in range(len(self.file_handler.total_path_files))])
+            axis.append(
+                [i for i in range(len(self.file_handler.total_path_files))])
         else:
             axis.append(self.meta_handler.values['Echo'])
 
         axis.append([i for i in range(self.data_handler.dimension[0])])
         axis.append([i for i in range(self.data_handler.dimension[1])])
-        
+
         return axis
-        
+
+
 class DataHandler:
-    
+
     def __init__(self):
         self.initialize()
 
@@ -429,11 +448,11 @@ class DataHandler:
         This will initialize the different arrays and
         can be used to reset the class.
         '''
-        self.dimension = [8,16,128,128]
+        self.dimension = [8, 16, 128, 128]
         self.parameter = 'None'
-        self.meas      = 0
+        self.meas = 0
         self.reference = False
-        self.background= False
+        self.background = False
 
     def script(self, indent):
         '''
@@ -443,17 +462,24 @@ class DataHandler:
         script = ""
 
         script += indent * "    " + "########## The data handler ##########\n"
-        script += indent * "    " + "current_object.data_handler.dimension = "+str(self.dimension) + "\n"
-        script += indent * "    " + "current_object.data_handler.parameter = '"+str(self.parameter) + "'\n"
-        script += indent * "    " + "current_object.data_handler.meas = '"+str(self.meas) + "'\n"
-        script += indent * "    " + "current_object.data_handler.reference = "+str(self.reference) + "\n"
-        script += indent * "    " + "current_object.data_handler.background = "+str(self.background) + "\n"
-        script += indent * "    " + "return [meta_files_found, data_files_found]\n"
+        script += indent * "    " + "current_object.data_handler.dimension = " + \
+            str(self.dimension) + "\n"
+        script += indent * "    " + "current_object.data_handler.parameter = '" + \
+            str(self.parameter) + "'\n"
+        script += indent * "    " + \
+            "current_object.data_handler.meas = '"+str(self.meas) + "'\n"
+        script += indent * "    " + "current_object.data_handler.reference = " + \
+            str(self.reference) + "\n"
+        script += indent * "    " + "current_object.data_handler.background = " + \
+            str(self.background) + "\n"
+        script += indent * "    " + \
+            "return [meta_files_found, data_files_found]\n"
 
         return script
 
+
 class FileHandler:
-    
+
     def __init__(self):
         self.initialize()
 
@@ -462,9 +488,9 @@ class FileHandler:
         This will initialize the different arrays and
         can be used to reset the class.
         '''
-        self.total_path_files   = []
-        self.nice_path_files    = []
-        self.extra_folders      = []
+        self.total_path_files = []
+        self.nice_path_files = []
+        self.extra_folders = []
 
     def filesExist(self, file_path_array):
         '''
@@ -478,10 +504,10 @@ class FileHandler:
                 for folder_path in self.extra_folders:
                     found_names = glob.glob(os.path.realpath(
                         os.path.abspath(folder_path)
-                        +os.path.sep
-                        +'**'
-                        +os.path.sep
-                        +os.path.abspath(path).split(os.path.sep)[-1]),
+                        + os.path.sep
+                        + '**'
+                        + os.path.sep
+                        + os.path.abspath(path).split(os.path.sep)[-1]),
                         recursive=True)
                     if len(found_names) > 0:
                         files_present.append(True)
@@ -494,7 +520,7 @@ class FileHandler:
     def addFiles(self, file_path_array):
         '''
         This routine will get the file names and try
-        to test store them and create a nice 
+        to test store them and create a nice
         representation for the display.
         '''
         for element in file_path_array:
@@ -503,13 +529,13 @@ class FileHandler:
                     path = element
                 else:
                     for folder_path in self.extra_folders:
-                        
+
                         path_list = glob.glob(os.path.realpath(
                             os.path.abspath(folder_path)
-                            +os.path.sep
-                            +'**'
-                            +os.path.sep
-                            +os.path.abspath(element).split(os.path.sep)[-1]),
+                            + os.path.sep
+                            + '**'
+                            + os.path.sep
+                            + os.path.abspath(element).split(os.path.sep)[-1]),
                             recursive=True)
 
                         if len(path_list) == 1:
@@ -521,13 +547,13 @@ class FileHandler:
     def removeFile(self, index):
         '''
         This routine will get the file names and try
-        to test store them and create a nice 
+        to test store them and create a nice
         representation for the display.
         '''
         del self.total_path_files[index]
         del self.nice_path_files[index]
 
-    def genPrev(self, index, sum_axes = (0, 1), log = True):
+    def genPrev(self, index, sum_axes=(0, 1), log=True):
         '''
         Generate a preview of a file
         '''
@@ -535,8 +561,8 @@ class FileHandler:
 
         with open(target) as f:
             loadeddata = np.fromfile(f, dtype=np.int32)[:8*16*128*128]
-            data = loadeddata.reshape(8,16,128,128)
-            data = np.transpose(data,(0,1,3,2))
+            data = loadeddata.reshape(8, 16, 128, 128)
+            data = np.transpose(data, (0, 1, 3, 2))
             for element in list(set(sum_axes))[::-1]:
                 data = np.sum(data, axis=element)
 
@@ -553,8 +579,8 @@ class FileHandler:
 
         with open(target) as f:
             loadeddata = np.fromfile(f, dtype=np.int32)[:8*16*128*128]
-            data = loadeddata.reshape(8,16,128,128)
-            data = np.transpose(data,(0,1,3,2))
+            data = loadeddata.reshape(8, 16, 128, 128)
+            data = np.transpose(data, (0, 1, 3, 2))
 
         return data
 
@@ -570,26 +596,33 @@ class FileHandler:
         script += indent * "    " + "\n"
         script += indent * "    " + "########## The file paths ##########\n"
         script += (indent+0) * "    " + "common_path = '" + common_path + "'\n"
-        
-        if len(self.total_path_files)>0:
+
+        if len(self.total_path_files) > 0:
             script += (indent+0) * "    " + "path_list = [\n"
             for item in self.total_path_files:
                 if common_path == "":
-                    script += (indent+1) * "    " + "'" +item+ "',\n"
+                    script += (indent+1) * "    " + "'" + item + "',\n"
                 else:
-                    script += (indent+1) * "    " + "'" + str(os.path.sep).join(item.split(common_path)[1].split(os.path.sep)[1:]) + "',\n"
+                    script += (indent+1) * "    " + "'" + str(os.path.sep).join(
+                        item.split(common_path)[1].split(os.path.sep)[1:]) + "',\n"
             script = script[:-2]
             script += "]\n"
-            script += (indent+0) * "    " + "if current_object.file_handler.filesExist([\n"
-            script += (indent+1) * "    " + "os.path.join(common_path,item) for item in path_list]):\n"
-            script += (indent+1) * "    " + "current_object.file_handler.addFiles([\n"
-            script += (indent+2) * "    " + "os.path.join(common_path,item) for item in path_list])\n"
+            script += (indent+0) * "    " + \
+                "if current_object.file_handler.filesExist([\n"
+            script += (indent+1) * "    " + \
+                "os.path.join(common_path,item) for item in path_list]):\n"
+            script += (indent+1) * "    " + \
+                "current_object.file_handler.addFiles([\n"
+            script += (indent+2) * "    " + \
+                "os.path.join(common_path,item) for item in path_list])\n"
             script += indent * "    " + "else:\n"
-            script += (indent+1) * "    " + "data_files_found = [False,common_path]\n"
+            script += (indent+1) * "    " + \
+                "data_files_found = [False,common_path]\n"
         return script
 
+
 class MetaHandler:
-    
+
     def __init__(self):
         self.path = ''
         self.selected_meta = []
@@ -604,20 +637,22 @@ class MetaHandler:
         script += indent * "    " + "########## The meta info ##########\n"
         script += indent * "    " + "try:\n"
         script += (indent+1) * "    " + "path = '"+self.path+"'\n"
-        script += (indent+1) * "    " + "current_object.meta_handler.buildMeta(path)\n"
-        if len(self.selected_meta)> 0:
+        script += (indent+1) * "    " + \
+            "current_object.meta_handler.buildMeta(path)\n"
+        if len(self.selected_meta) > 0:
             script += (indent+1) * "    " + "selected_meta = ["
             for element in self.selected_meta:
-                script += "\n"+ (indent+2) * "    " + "["
+                script += "\n" + (indent+2) * "    " + "["
                 for item in element:
-                    script += "'"+item +"' ,"
-                script = script [:-1]
+                    script += "'"+item + "' ,"
+                script = script[:-1]
                 script += "],"
-            script = script [:-1]
+            script = script[:-1]
             script += "]\n"
         else:
             script += (indent+1) * "    " + "selected_meta = []\n"
-        script += (indent+1) * "    " + "current_object.meta_handler.selected_meta = selected_meta\n"
+        script += (indent+1) * "    " + \
+            "current_object.meta_handler.selected_meta = selected_meta\n"
         script += indent * "    " + "except:\n"
         script += (indent+1) * "    " + "meta_files_found = [False,path]\n"
         return script
@@ -625,25 +660,25 @@ class MetaHandler:
     def buildMeta(self, file_path):
         '''
         Create a list of the available metadata in the
-        file and then 
+        file and then
         '''
         self.path = file_path
-        self.metadata_temp  = []
+        self.metadata_temp = []
         if not self.path == '':
-            f                   = open(file_path,'rb')
-            line                = f.readlines()
+            f = open(file_path, 'rb')
+            line = f.readlines()
 
             for binaryLine in line:
                 try:
-                    line = binaryLine.decode('ascii').replace('\n','')
-                    nums = re.findall('-?\d*\.?\d+',line.split(" : ")[1])
+                    line = binaryLine.decode('ascii').replace('\n', '')
+                    nums = re.findall('-?\d*\.?\d+', line.split(" : ")[1])
                     if len(nums) == 0:
                         pass
                     else:
                         self.metadata_temp.append([
                             False,
                             line.split(" : ")[0].replace(" ", ""),
-                            line.split(" : ")[1].split(nums[len(nums) - 1])[1].replace(" ","").replace(")","")])
+                            line.split(" : ")[1].split(nums[len(nums) - 1])[1].replace(" ", "").replace(")", "")])
                 except:
                     pass
 
@@ -651,7 +686,7 @@ class MetaHandler:
 
     def flipBool(self, name, value):
         '''
-        This method will flip a boolean value when 
+        This method will flip a boolean value when
         selected
         '''
         for element in self.metadata_temp:
@@ -674,12 +709,12 @@ class MetaHandler:
         Allow the metadata to be set quickly with a default...
         '''
         self.selected_meta = [
-            ['cbox_0a_fg_freq_value' ,'Hz' ,'Freq. first' ,'1' ,'' ],
-            ['cbox_0b_fg_freq_value' ,'Hz' ,'Freq. second' ,'1' ,'' ],
-            ['psd_distance_value' ,'m' ,'lsd' ,'1e9' ,'' ],
-            ['selector_lambda_value' ,'A' ,'Wavelength' ,'1e-10' ,'' ],
-            ['monitor1' ,'' ,'Monitor' ,'1' ,'' ]]
-        
+            ['cbox_0a_fg_freq_value', 'Hz', 'Freq. first', '1', ''],
+            ['cbox_0b_fg_freq_value', 'Hz', 'Freq. second', '1', ''],
+            ['psd_distance_value', 'm', 'lsd', '1e9', ''],
+            ['selector_lambda_value', 'A', 'Wavelength', '1e-10', ''],
+            ['monitor1', '', 'Monitor', '1', '']]
+
     def checkPresence(self):
         '''
         This will retrieve the set metadata information
@@ -691,7 +726,7 @@ class MetaHandler:
 
     def removeElement(self, row):
         '''
-        reset the output 
+        reset the output
         '''
         try:
             del self.metadata_temp[row]
@@ -704,7 +739,7 @@ class MetaHandler:
 
     def reset(self):
         '''
-        reset the output 
+        reset the output
         '''
         self.selected_meta = []
 
@@ -725,21 +760,21 @@ class MetaHandler:
         self.values_set = {}
 
         for element in self.selected_meta:
-            self.values[element[0]]     = []
+            self.values[element[0]] = []
 
-    def extractMeta(self,file_path):
+    def extractMeta(self, file_path):
         '''
         '''
-        f           = open(file_path,'rb')
-        line        = f.readlines()
+        f = open(file_path, 'rb')
+        line = f.readlines()
         for element in self.selected_meta:
             self.values_set[element[0]] = False
 
         for binaryLine in line:
             try:
-                line = binaryLine.decode('ascii').replace('\n','')
+                line = binaryLine.decode('ascii').replace('\n', '')
                 nums = re.findall(
-                    '[-+]?(\d+([.,]\d*)?)([eE][-+]?\d+)?',line.split(" : ")[1])
+                    '[-+]?(\d+([.,]\d*)?)([eE][-+]?\d+)?', line.split(" : ")[1])
                 if len(nums) == 0:
                     pass
                 else:
@@ -757,9 +792,9 @@ class MetaHandler:
         '''
         Preates the metadata dictionary for the file
         '''
-        self.values['Parameter']    = ['Not given']
-        self.values['Measurement']  = ['Not given']
-        self.values['Echo']         = ['Not given']
+        self.values['Parameter'] = ['Not given']
+        self.values['Measurement'] = ['Not given']
+        self.values['Echo'] = ['Not given']
 
         for element in self.selected_meta:
             if element[2] == 'Parameter':
@@ -780,12 +815,12 @@ class MetaHandler:
                 self.processMeta('Monitor', False, element)
 
         if all([(element in self.values.keys()) for element in [
-            'Freq. first','Freq. second','Wavelength','lsd']]) and self.values['Echo'][0] == 'Not given':
+                'Freq. first', 'Freq. second', 'Wavelength', 'lsd']]) and self.values['Echo'][0] == 'Not given':
 
             self.values['Echo'] = [0]*len(self.values['Wavelength'])
 
             for i in range(len(self.values['Wavelength'])):
-                self.values['Echo'][i],val = miezeTauCalculation(
+                self.values['Echo'][i], val = miezeTauCalculation(
                     float(self.values['Wavelength'][i]),
                     float(self.values['Freq. first'][i]),
                     float(self.values['Freq. second'][i]),
@@ -804,15 +839,15 @@ class MetaHandler:
 
     def processMeta(self, ptr, mean, element):
         '''
-        This will process the value for the given 
+        This will process the value for the given
         ptr value. if mean is true a summation will
-        be performed. 
+        be performed.
         '''
-        #check for the manual manipulation
+        # check for the manual manipulation
         temp_list = list(self.values[element[0]])
         if len(element) < 5:
             element += ['']
-        
+
         if not element[4] == '':
             array = self.getArray(element[4])
             if len(array) == 1 and not array[0] == None:
@@ -823,20 +858,20 @@ class MetaHandler:
                     if not array[i] == None:
                         temp_list[i] = array[i]
 
-        #perform it
+        # perform it
         if mean:
             self.values[ptr] = str(np.mean([
-                float(e)*float(element[3])  
+                float(e)*float(element[3])
                 for e in temp_list]))
         else:
             self.values[ptr] = [
-                float(e)*float(element[3])  
+                float(e)*float(element[3])
                 for e in temp_list]
 
     def getArray(self, string_element):
         '''
         This will produce an array of floats
-        of the string array provided. Note that 
+        of the string array provided. Note that
         the '_' symbol corresponds to inserting
         None in the list.
         '''

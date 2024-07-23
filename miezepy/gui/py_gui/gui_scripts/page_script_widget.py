@@ -21,43 +21,43 @@
 #
 # *****************************************************************************
 
-#public dependencies
+# public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
 import traceback
 from functools import partial
 import numpy as np
 import os
 
-#private dependencies
-from ...qt_gui.main_script_ui       import Ui_script_widget
-from ..gui_common.python_syntax     import PythonHighlighter
-from ..gui_mask.page_mask_widget    import PanelPageMaskWidget
-from ..gui_common.dialog            import dialog 
-from ..gui_common.code_editor       import CodeEditor
+# private dependencies
+from ...qt_gui.main_script_ui import Ui_script_widget
+from ..gui_mask.page_mask_widget import PanelPageMaskWidget
+from ..gui_common.dialog import dialog
+from ..gui_common.code_editor import CodeEditor
 
 from .foil_delegate import FoilDelegate
 
+
 class PageScriptWidget(Ui_script_widget):
-    
+
     def __init__(self, stack, parent, mask_interface):
-        
+
         Ui_script_widget.__init__(self)
-        self.parent         = parent
-        self.stack          = stack
-        self.local_widget   = QtWidgets.QWidget() 
-        self.env            = None
+        self.parent = parent
+        self.stack = stack
+        self.local_widget = QtWidgets.QWidget()
+        self.env = None
         self.mask_interface = mask_interface
 
         self._setup()
         self._connect()
         self.fadeActivity()
 
-        self.elements       = []
-        self.meta_elements  = []
-        
+        self.elements = []
+        self.meta_elements = []
+
     def _setup(self):
         '''
-        This is the initial setup method that will 
+        This is the initial setup method that will
         build the layout and introduce the graphics
         area.
         '''
@@ -67,7 +67,7 @@ class PageScriptWidget(Ui_script_widget):
         self.process_box_mask_fit = self.mask_interface.getComboBox()
         self.fit_select_layout.addWidget(self.process_box_mask_fit)
 
-        self.process_box_masks = self.mask_interface.getComboBox(connect = False)
+        self.process_box_masks = self.mask_interface.getComboBox(connect=False)
         self.phase_mask_layout.addWidget(self.process_box_masks)
 
         self.text_widgets = [
@@ -87,13 +87,13 @@ class PageScriptWidget(Ui_script_widget):
             self.process_button_run_data,
             self.process_button_run_phase,
             self.process_button_run_fit,
-            self.process_button_run_post,            
-            
+            self.process_button_run_post,
+
             None,
             None,
             None,
             None,
-            
+
             self.script_button_import_gui,
             self.script_button_phase_gui,
             self.script_button_reduction_gui]
@@ -103,14 +103,14 @@ class PageScriptWidget(Ui_script_widget):
             "#mask_editor{background:transparent;}")
         self.panel_layout.addWidget(self.tool.local_widget)
 
-        with open(os.path.realpath(os.path.sep.join(str(os.path.realpath(__file__)).split(os.path.sep)[0:-4] + ['ressources', 'default_post_path.txt'])),'r') as f:
+        with open(os.path.realpath(os.path.sep.join(str(os.path.realpath(__file__)).split(os.path.sep)[0:-4] + ['ressources', 'default_post_path.txt'])), 'r') as f:
             self.path = f.readline()
             self.script_line_def_save.setText(self.path)
 
     def _setEditors(self):
         '''
         locally create the editors to allow custom ones. These parts
-        have been engineered through the pyqt framework and then 
+        have been engineered through the pyqt framework and then
         exported through the pyuic5 routine. Note that here we are
         simply selecting parts of it and changing the intput text editor
         '''
@@ -127,10 +127,12 @@ class PageScriptWidget(Ui_script_widget):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.script_tab_import)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.script_text_import = CodeEditor(self.script_tab_import)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.script_text_import.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.script_text_import.sizePolicy().hasHeightForWidth())
         self.script_text_import.setSizePolicy(sizePolicy)
         self.script_text_import.setObjectName("script_text_import")
         self.verticalLayout_2.addWidget(self.script_text_import)
@@ -140,12 +142,15 @@ class PageScriptWidget(Ui_script_widget):
             'Reset', self.script_tab_import)
         self.import_gui_reset.setObjectName("import_gui_reset")
         self.horizontalLayout_2.addWidget(self.import_gui_reset)
-        spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem6 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem6)
-        self.script_button_import_gui = QtWidgets.QPushButton('GUI', self.script_tab_import)
+        self.script_button_import_gui = QtWidgets.QPushButton(
+            'GUI', self.script_tab_import)
         self.script_button_import_gui.setObjectName("script_button_import_gui")
         self.horizontalLayout_2.addWidget(self.script_button_import_gui)
-        self.script_button_import_run = QtWidgets.QPushButton('Run', self.script_tab_import)
+        self.script_button_import_run = QtWidgets.QPushButton(
+            'Run', self.script_tab_import)
         self.script_button_import_run.setDefault(True)
         self.script_button_import_run.setObjectName("script_button_import_run")
         self.horizontalLayout_2.addWidget(self.script_button_import_run)
@@ -158,10 +163,12 @@ class PageScriptWidget(Ui_script_widget):
         self.verticalLayout_20 = QtWidgets.QVBoxLayout(self.script_tab_set_fit)
         self.verticalLayout_20.setObjectName("verticalLayout_20")
         self.script_text_set_fit = CodeEditor(self.script_tab_set_fit)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.script_text_set_fit.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.script_text_set_fit.sizePolicy().hasHeightForWidth())
         self.script_text_set_fit.setSizePolicy(sizePolicy)
         self.script_text_set_fit.setObjectName("script_text_set_fit")
         self.verticalLayout_20.addWidget(self.script_text_set_fit)
@@ -171,14 +178,19 @@ class PageScriptWidget(Ui_script_widget):
             'Reset', self.script_tab_set_fit)
         self.set_fit_gui_reset.setObjectName("set_fit_gui_reset")
         self.horizontalLayout_3.addWidget(self.set_fit_gui_reset)
-        spacerItem7 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem7 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem7)
-        self.script_button_set_fit_gui = QtWidgets.QPushButton('GUI', self.script_tab_set_fit)
-        self.script_button_set_fit_gui.setObjectName("script_button_set_fit_gui")
+        self.script_button_set_fit_gui = QtWidgets.QPushButton(
+            'GUI', self.script_tab_set_fit)
+        self.script_button_set_fit_gui.setObjectName(
+            "script_button_set_fit_gui")
         self.horizontalLayout_3.addWidget(self.script_button_set_fit_gui)
-        self.script_button_set_fit_run = QtWidgets.QPushButton('Run', self.script_tab_set_fit)
+        self.script_button_set_fit_run = QtWidgets.QPushButton(
+            'Run', self.script_tab_set_fit)
         self.script_button_set_fit_run.setDefault(True)
-        self.script_button_set_fit_run.setObjectName("script_button_set_fit_run")
+        self.script_button_set_fit_run.setObjectName(
+            "script_button_set_fit_run")
         self.horizontalLayout_3.addWidget(self.script_button_set_fit_run)
         self.verticalLayout_20.addLayout(self.horizontalLayout_3)
         self.script_tabs.addTab(self.script_tab_set_fit, "Fit parameters")
@@ -197,12 +209,15 @@ class PageScriptWidget(Ui_script_widget):
             'Reset', self.script_tab_phase)
         self.phase_gui_reset.setObjectName("phase_gui_reset")
         self.horizontalLayout_5.addWidget(self.phase_gui_reset)
-        spacerItem8 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem8 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem8)
-        self.script_button_phase_gui = QtWidgets.QPushButton('GUI', self.script_tab_phase)
+        self.script_button_phase_gui = QtWidgets.QPushButton(
+            'GUI', self.script_tab_phase)
         self.script_button_phase_gui.setObjectName("script_button_phase_gui")
         self.horizontalLayout_5.addWidget(self.script_button_phase_gui)
-        self.script_button_phase_run = QtWidgets.QPushButton('Run',self.script_tab_phase)
+        self.script_button_phase_run = QtWidgets.QPushButton(
+            'Run', self.script_tab_phase)
         self.script_button_phase_run.setDefault(True)
         self.script_button_phase_run.setObjectName("script_button_phase_run")
         self.horizontalLayout_5.addWidget(self.script_button_phase_run)
@@ -212,7 +227,8 @@ class PageScriptWidget(Ui_script_widget):
         # for script_text_reduction
         self.script_tab_reduction = QtWidgets.QWidget()
         self.script_tab_reduction.setObjectName("script_tab_reduction")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.script_tab_reduction)
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout(
+            self.script_tab_reduction)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.script_text_reduction = CodeEditor(self.script_tab_reduction)
         self.script_text_reduction.setObjectName("script_text_reduction")
@@ -223,14 +239,19 @@ class PageScriptWidget(Ui_script_widget):
             'Reset', self.script_tab_reduction)
         self.reduction_gui_reset.setObjectName("reduction_gui_reset")
         self.horizontalLayout_6.addWidget(self.reduction_gui_reset)
-        spacerItem9 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem9 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_6.addItem(spacerItem9)
-        self.script_button_reduction_gui = QtWidgets.QPushButton('GUI', self.script_tab_reduction)
-        self.script_button_reduction_gui.setObjectName("script_button_reduction_gui")
+        self.script_button_reduction_gui = QtWidgets.QPushButton(
+            'GUI', self.script_tab_reduction)
+        self.script_button_reduction_gui.setObjectName(
+            "script_button_reduction_gui")
         self.horizontalLayout_6.addWidget(self.script_button_reduction_gui)
-        self.script_button_reduction_run = QtWidgets.QPushButton('Run', self.script_tab_reduction)
+        self.script_button_reduction_run = QtWidgets.QPushButton(
+            'Run', self.script_tab_reduction)
         self.script_button_reduction_run.setDefault(True)
-        self.script_button_reduction_run.setObjectName("script_button_reduction_run")
+        self.script_button_reduction_run.setObjectName(
+            "script_button_reduction_run")
         self.horizontalLayout_6.addWidget(self.script_button_reduction_run)
         self.verticalLayout_4.addLayout(self.horizontalLayout_6)
         self.script_tabs.addTab(self.script_tab_reduction, "Reduction")
@@ -248,12 +269,13 @@ class PageScriptWidget(Ui_script_widget):
         self.script_line_def_save = QtWidgets.QLineEdit(self.tab)
         self.script_line_def_save.setObjectName("script_line_def_save")
         self.horizontalLayout_7.addWidget(self.script_line_def_save)
-        self.script_save_def_save = QtWidgets.QPushButton('...',self.tab)
+        self.script_save_def_save = QtWidgets.QPushButton('...', self.tab)
         self.script_save_def_save.setObjectName("script_save_def_save")
         self.horizontalLayout_7.addWidget(self.script_save_def_save)
-        spacerItem10 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem10 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem10)
-        self.script_button_post_run = QtWidgets.QPushButton('Run',self.tab)
+        self.script_button_post_run = QtWidgets.QPushButton('Run', self.tab)
         self.script_button_post_run.setDefault(True)
         self.script_button_post_run.setObjectName("script_button_post_run")
         self.horizontalLayout_7.addWidget(self.script_button_post_run)
@@ -264,16 +286,16 @@ class PageScriptWidget(Ui_script_widget):
         '''
         Connect all Qt slots to their respective methods.
         '''
-        self.button_widgets[0].clicked.connect(partial(self.run,0))
-        self.button_widgets[2].clicked.connect(partial(self.run,0))
-        self.button_widgets[2].clicked.connect(partial(self.run,1))
-        self.button_widgets[3].clicked.connect(partial(self.run,2))
-        self.button_widgets[4].clicked.connect(partial(self.run,3))
+        self.button_widgets[0].clicked.connect(partial(self.run, 0))
+        self.button_widgets[2].clicked.connect(partial(self.run, 0))
+        self.button_widgets[2].clicked.connect(partial(self.run, 1))
+        self.button_widgets[3].clicked.connect(partial(self.run, 2))
+        self.button_widgets[4].clicked.connect(partial(self.run, 3))
 
-        self.button_widgets[5].clicked.connect(partial(self.run,0))
-        self.button_widgets[6].clicked.connect(partial(self.run,1))
-        self.button_widgets[7].clicked.connect(partial(self.run,2))
-        self.button_widgets[8].clicked.connect(partial(self.run,3))
+        self.button_widgets[5].clicked.connect(partial(self.run, 0))
+        self.button_widgets[6].clicked.connect(partial(self.run, 1))
+        self.button_widgets[7].clicked.connect(partial(self.run, 2))
+        self.button_widgets[8].clicked.connect(partial(self.run, 3))
 
         self.button_widgets[13].clicked.connect(
             partial(self.link, None))
@@ -292,7 +314,7 @@ class PageScriptWidget(Ui_script_widget):
             partial(self._updateEditable, 3))
         self.text_widgets[4].textChanged.connect(
             partial(self._updateEditable, 4))
-        
+
         self.script_save_def_save.clicked.connect(
             self._setNewDefaultSavePath)
 
@@ -309,7 +331,7 @@ class PageScriptWidget(Ui_script_widget):
 
     def _resetScript(self, idx):
         '''
-        Reset a script given by his index 
+        Reset a script given by his index
         value as integer.
 
         Parameters
@@ -325,28 +347,29 @@ class PageScriptWidget(Ui_script_widget):
         This routine will launch the metadat window.
         '''
         self.env.instrument.setDetector(
-            self.process_box_detector.currentText(), 
+            self.process_box_detector.currentText(),
             self.process_box_detector.currentText())
 
         self.parent.window_manager.newWindow('FoilVisual')
-        self.parent.window_manager.active_windows['FoilVisual'].target.link(self.env.instrument)
+        self.parent.window_manager.active_windows['FoilVisual'].target.link(
+            self.env.instrument)
 
     def _setNewDefaultSavePath(self):
         '''
         When the button is clicked a new file
-        dialogue will be open to set the new 
+        dialogue will be open to set the new
         file.
         '''
         dir_path = QtWidgets.QFileDialog.getExistingDirectory(
-            self.parent.window, 
+            self.parent.window,
             'Select folder')
 
-        with open(os.path.sep.join(str(os.path.realpath(__file__)).split(os.path.sep)[0:-3] + ['ressources', 'default_post_path.txt']),'w') as f:
+        with open(os.path.sep.join(str(os.path.realpath(__file__)).split(os.path.sep)[0:-3] + ['ressources', 'default_post_path.txt']), 'w') as f:
             f.writelines([dir_path])
             self.path = dir_path
             self.script_line_def_save.setText(dir_path)
 
-    def link(self, env = None):
+    def link(self, env=None):
         '''
         Link the GUI to the environment that will be  read and
         taken care of.
@@ -373,24 +396,24 @@ class PageScriptWidget(Ui_script_widget):
         Once the link is done the system can inject the attributes
         into the selectors. This is manages through this dispatcher.
         '''
-        self.synthesize_scripts     = False
+        self.synthesize_scripts = False
         self._reset()
 
         self.container = self.env.scripts.readFromScripts()
         self._linkVisualInstrument()
         self._linkVisualDetector()
         self._linkVisualFit()
-        
+
         self._setVisualFit()
         self._setVisualPhase()
         self._setVisualExposure()
         self._setVisualInstrument()
         self._setVisualDetector()
 
-        self.foil_header_active     = True
-        self.foil_elements_active   = True
-        self.synthesize_scripts     = True
-        
+        self.foil_header_active = True
+        self.foil_elements_active = True
+        self.synthesize_scripts = True
+
         self._connectVisualFit()
         self._connectVisualPhase()
         self._connectVisualInstrument()
@@ -402,13 +425,12 @@ class PageScriptWidget(Ui_script_widget):
         '''
         pass
 
-
     #######################################################################
     #######################################################################
 
     def _setVisualPhase(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         if not self.container['phase_mask'] == None:
@@ -423,14 +445,16 @@ class PageScriptWidget(Ui_script_widget):
         Connect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_masks.currentIndexChanged.connect(self._synthesizePhase)
+        self.process_box_masks.currentIndexChanged.connect(
+            self._synthesizePhase)
 
     def _disconnectVisualPhase(self):
         '''
         Disconnect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_masks.currentIndexChanged.disconnect(self._synthesizePhase)
+        self.process_box_masks.currentIndexChanged.disconnect(
+            self._synthesizePhase)
 
     #######################################################################
     #######################################################################
@@ -439,13 +463,15 @@ class PageScriptWidget(Ui_script_widget):
         Link the Instrument selection component
         '''
         self.process_box_instrument.clear()
-        self.process_box_instrument.addItems(self.env.instrument.detector_names)
+        self.process_box_instrument.addItems(
+            self.env.instrument.detector_names)
 
-    def _linkVisualDetector(self, update = False):
+    def _linkVisualDetector(self, update=False):
         '''
         Link the detector selection component
         '''
-        array = [ text[2] for text in self.env.instrument.detector.foil_file_list] + ['None']
+        array = [text[2]
+                 for text in self.env.instrument.detector.foil_file_list] + ['None']
         self.process_box_detector.clear()
         self.process_box_detector.addItems(array)
         if update:
@@ -464,7 +490,7 @@ class PageScriptWidget(Ui_script_widget):
 
     def _setVisualInstrument(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         try:
@@ -475,10 +501,11 @@ class PageScriptWidget(Ui_script_widget):
 
     def _setVisualDetector(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
-        array = [text[0] for text in self.env.instrument.detector.foil_file_list]
+        array = [text[0]
+                 for text in self.env.instrument.detector.foil_file_list]
         try:
             self.process_box_detector.setCurrentIndex(
                 array.index(self.container['detector']))
@@ -490,8 +517,10 @@ class PageScriptWidget(Ui_script_widget):
         Connect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_instrument.currentIndexChanged.connect(self._processInstrument)
-        self.process_box_detector.currentIndexChanged.connect(self._processInstrument)
+        self.process_box_instrument.currentIndexChanged.connect(
+            self._processInstrument)
+        self.process_box_detector.currentIndexChanged.connect(
+            self._processInstrument)
         self.process_radio_exposure.toggled.connect(self._processInstrument)
 
     def _disconnectVisualInstrument(self):
@@ -499,19 +528,22 @@ class PageScriptWidget(Ui_script_widget):
         Disconnect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_instrument.currentIndexChanged.disconnect(self._processInstrument)
-        self.process_box_detector.currentIndexChanged.disconnect(self._processInstrument)
+        self.process_box_instrument.currentIndexChanged.disconnect(
+            self._processInstrument)
+        self.process_box_detector.currentIndexChanged.disconnect(
+            self._processInstrument)
         self.process_radio_exposure.toggled.disconnect(self._processInstrument)
 
     def _processInstrument(self):
         '''
-        The instrument is more complex and needs to be managed 
+        The instrument is more complex and needs to be managed
         through an intermediate routine here
         '''
         self._disconnectVisualInstrument()
 
-        new     = self.process_box_instrument.currentText()
-        array   = [text[0] for text in self.env.instrument.detector.foil_file_list] + ['None']
+        new = self.process_box_instrument.currentText()
+        array = [text[0]
+                 for text in self.env.instrument.detector.foil_file_list] + ['None']
         element = array[self.process_box_detector.currentIndex()]
 
         self.env.instrument.setDetector(
@@ -540,7 +572,8 @@ class PageScriptWidget(Ui_script_widget):
         '''
         Link the fit parameters component
         '''
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]+['None']
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]+['None']
         self.process_box_back_fit.clear()
         self.process_box_back_fit.addItems(array)
 
@@ -548,34 +581,36 @@ class PageScriptWidget(Ui_script_widget):
         '''
         Link the fit parameters component
         '''
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]
         self.process_box_refs_fit.clear()
         self.process_box_refs_fit.addItems(array)
 
-    def _setVisualFit(self):   
+    def _setVisualFit(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         self._setVisualFitDrops()
         self._setVisualFitSelected()
         self._setVisualFitFoilsInEcho()
 
-    def _setVisualFitDrops(self):   
+    def _setVisualFitDrops(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
-        #Reduction mask
+        # Reduction mask
         if not self.container['reduction_mask'] == None:
             try:
                 self.process_box_mask_fit.setCurrentIndex(
-                    [ key for key in self.env.mask.mask_dict.keys() ].index(self.container['reduction_mask']))
+                    [key for key in self.env.mask.mask_dict.keys()].index(self.container['reduction_mask']))
             except:
                 pass
 
-        #Background field
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]+['None']
+        # Background field
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]+['None']
         if self.container['Background'] == None:
             self.process_box_back_fit.setCurrentIndex(array.index('None'))
         else:
@@ -585,8 +620,9 @@ class PageScriptWidget(Ui_script_widget):
             except:
                 pass
 
-        #Reference field
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]
+        # Reference field
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]
         if self.container['Reference'] == None:
             try:
                 self.process_box_refs_fit.setCurrentIndex(
@@ -599,66 +635,73 @@ class PageScriptWidget(Ui_script_widget):
                     array.index(str(list(self.container['Reference'])[0])))
             except:
                 pass
-        
-    def _setVisualFitSelected(self):   
+
+    def _setVisualFitSelected(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         if not self.container['Selected'] == None:
             for item in self.selected_items:
-                checked = QtCore.Qt.Checked if str(item.text()) in [str(element) for element in self.container['Selected']] else QtCore.Qt.Unchecked
+                checked = QtCore.Qt.Checked if str(item.text()) in [str(
+                    element) for element in self.container['Selected']] else QtCore.Qt.Unchecked
                 item.setCheckState(checked)
 
-    def _setVisualTimeChannel(self):   
+    def _setVisualTimeChannel(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         if not self.container['time_channels'] == None:
             for i, item in enumerate(self.selected_items):
-                checked = QtCore.Qt.Checked if i in self.container['time_channels'] else QtCore.Qt.Unchecked
+                checked = QtCore.Qt.Checked if i in self.container[
+                    'time_channels'] else QtCore.Qt.Unchecked
                 item.setCheckState(checked)
 
-    def _setVisualFitFoilsInEcho(self):   
+    def _setVisualFitFoilsInEcho(self):
         '''
-        Set the widget values depending on the input of the 
+        Set the widget values depending on the input of the
         environnement
         '''
         for i, foil_select in enumerate(self.container['foils_in_echo']):
             for j, element in enumerate(foil_select):
                 try:
-                    self._foil_model.item(i+1,j).setCheckState(QtCore.Qt.Checked if element == 1 else QtCore.Qt.Unchecked)
+                    self._foil_model.item(
+                        i+1, j).setCheckState(QtCore.Qt.Checked if element == 1 else QtCore.Qt.Unchecked)
                 except:
                     pass
 
         for i in range(self.env.current_data.get_axis_len('Foil')):
             self._foil_model.item(0, i).setCheckState(self._allInCol(i))
 
-    def _connectVisualFit(self):   
+    def _connectVisualFit(self):
         '''
         Connect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_back_fit.currentIndexChanged.connect(self._synthesizeFit)
-        self.process_box_refs_fit.currentIndexChanged.connect(self._synthesizeFit)
+        self.process_box_back_fit.currentIndexChanged.connect(
+            self._synthesizeFit)
+        self.process_box_refs_fit.currentIndexChanged.connect(
+            self._synthesizeFit)
         self.mask_interface.mask_updated.connect(self._synthesizeReduction)
 
-    def _disconnectVisualFit(self):   
+    def _disconnectVisualFit(self):
         '''
         Disconnect all the elements after the value has been
         set in the set routine.
         '''
-        self.process_box_back_fit.currentIndexChanged.disconnect(self._synthesizeFit)
-        self.process_box_refs_fit.currentIndexChanged.disconnect(self._synthesizeFit)
+        self.process_box_back_fit.currentIndexChanged.disconnect(
+            self._synthesizeFit)
+        self.process_box_refs_fit.currentIndexChanged.disconnect(
+            self._synthesizeFit)
         self.mask_interface.mask_updated.disconnect(self._synthesizeReduction)
 
     #######################################################################
     #######################################################################
-            
+
     def _buildSelectedItems(self):
         '''
-        Build the list that will contain the standart 
+        Build the list that will contain the standart
         items of the measurements selected.
         '''
         self.selected_model = QtGui.QStandardItemModel()
@@ -671,7 +714,7 @@ class PageScriptWidget(Ui_script_widget):
 
         self.process_list_selected.setModel(self.selected_model)
 
-    def _addSelectedItem(self,name, check = True):
+    def _addSelectedItem(self, name, check=True):
         '''
         Add an echo type widget to the widget view
         '''
@@ -683,19 +726,19 @@ class PageScriptWidget(Ui_script_widget):
 
     def _buildTimeChannelItems(self):
         '''
-        Build the list that will contain the standart 
+        Build the list that will contain the standart
         items of the measurements selected.
         '''
         self.time_channel_model = QtGui.QStandardItemModel()
         self.time_channel_model.itemChanged.connect(self._synthesize)
         self.time_channel_items = []
-        
+
         for i in range(self.env.current_data.get_axis_len('Time Channel')):
             self._addTimeChannelItem(str(i))
 
         self.time_channel_selected.setModel(self.time_channel_model)
 
-    def _addTimeChannelItem(self,name, check = True):
+    def _addTimeChannelItem(self, name, check=True):
         '''
         Add an echo type widget to the widget view
         '''
@@ -716,31 +759,33 @@ class PageScriptWidget(Ui_script_widget):
         self._foil_delegate = FoilDelegate()
 
         try:
-            self.names = ['{:0.5e}'.format(x) for x in self.env.current_data.get_axis('Echo Time').sort()]
+            self.names = ['{:0.5e}'.format(
+                x) for x in self.env.current_data.get_axis('Echo Time').sort()]
         except:
-            self.names = ['{:0.5e}'.format(x) for x in self.env.current_data.get_axis('Echo Time')]
+            self.names = ['{:0.5e}'.format(
+                x) for x in self.env.current_data.get_axis('Echo Time')]
 
         for j in range(num_foils):
             item = QtGui.QStandardItem()
             item.setCheckable(True)
             item.setEditable(False)
-            self._foil_model.setItem(0,j,item)
+            self._foil_model.setItem(0, j, item)
 
         for i in range(len(self.names)):
             for j in range(num_foils):
                 item = QtGui.QStandardItem()
                 item.setCheckable(True)
                 item.setEditable(False)
-                self._foil_model.setItem(i+1,j,item)
+                self._foil_model.setItem(i+1, j, item)
 
         self.process_list_echo_times.setModel(self._foil_model)
         self.process_list_echo_times.setItemDelegate(self._foil_delegate)
         self._foil_model.setVerticalHeaderLabels(['All']+self.names)
-        self._foil_model.setHorizontalHeaderLabels([ 
-            str(val) for val in self.env.current_data.get_axis('Foil') ])
+        self._foil_model.setHorizontalHeaderLabels([
+            str(val) for val in self.env.current_data.get_axis('Foil')])
         for j in range(num_foils):
             self.process_list_echo_times.resizeColumnsToContents()
-        
+
         self.process_list_echo_times.clicked.connect(self._updateFoil)
 
     def _updateFoil(self, index):
@@ -753,7 +798,8 @@ class PageScriptWidget(Ui_script_widget):
         if index.row() == 0:
             self._setFoilCol(index.column(), item.checkState())
         else:
-            self._foil_model.item(0, index.column()).setCheckState(self._allInCol(index.column()))
+            self._foil_model.item(0, index.column()).setCheckState(
+                self._allInCol(index.column()))
 
         self._synthesizeFit()
 
@@ -764,7 +810,8 @@ class PageScriptWidget(Ui_script_widget):
         '''
         selected = []
         for i in range(len(self.names)):
-            selected.append(self._foil_model.item(i+1, col).checkState() == QtCore.Qt.Checked)
+            selected.append(self._foil_model.item(
+                i+1, col).checkState() == QtCore.Qt.Checked)
 
         if all(selected):
             return QtCore.Qt.Checked
@@ -773,14 +820,12 @@ class PageScriptWidget(Ui_script_widget):
         else:
             return QtCore.Qt.PartiallyChecked
 
-
     def _setFoilCol(self, col, state):
         '''
         set the state of the element in a column
         '''
         for i in range(len(self.names)):
             self._foil_model.item(i+1, col).setCheckState(state)
-
 
     #######################################################################
     #######################################################################
@@ -800,26 +845,26 @@ class PageScriptWidget(Ui_script_widget):
         '''
         This function will build the container for the
         script structure to rewrite the script. This
-        was separated into reading the GUI here and 
+        was separated into reading the GUI here and
         writing the script in the script structure.
         '''
         container = {}
 
-        #get the foils
+        # get the foils
         foils_in_echo = []
         echo_len = self.env.current_data.get_axis_len('Echo Time')
         foil_len = self.env.current_data.get_axis_len('Foil')
         for i in range(echo_len):
             items = []
-            for j in range(foil_len): 
-                if self._foil_model.item(i+1,j).checkState() == QtCore.Qt.Checked:
+            for j in range(foil_len):
+                if self._foil_model.item(i+1, j).checkState() == QtCore.Qt.Checked:
                     items.append(1)
                 else:
                     items.append(0)
-            foils_in_echo.append(items)    
+            foils_in_echo.append(items)
         container['foils_in_echo'] = foils_in_echo
 
-        #get selected
+        # get selected
         selected = []
         for i, item in enumerate(self.selected_items):
             if item.checkState() == QtCore.Qt.Checked:
@@ -829,32 +874,42 @@ class PageScriptWidget(Ui_script_widget):
         except:
             container['selected'] = selected
 
-        #get the background
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]
+        # get the background
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]
         if self.process_box_back_fit.currentIndex() == len(array):
             container['Background'] = "None"
         else:
             try:
-                container['Background'] = str(float(array[self.process_box_back_fit.currentIndex()]))
+                container['Background'] = str(
+                    float(array[self.process_box_back_fit.currentIndex()]))
             except:
-               container['Background'] = "'"+str(array[self.process_box_back_fit.currentIndex()])+"'"
+                container['Background'] = "'" + \
+                    str(array[self.process_box_back_fit.currentIndex()])+"'"
 
-        #get the reference
-        array = [ str(val) for val in self.env.current_data.get_axis('Parameter') ]
+        # get the reference
+        array = [str(val)
+                 for val in self.env.current_data.get_axis('Parameter')]
         try:
-            container['Reference'] = "["+str(float(array[self.process_box_refs_fit.currentIndex()]))+",0]"
+            container['Reference'] = "[" + \
+                str(float(
+                    array[self.process_box_refs_fit.currentIndex()]))+",0]"
         except:
-            container['Reference'] = "['"+str(array[self.process_box_refs_fit.currentIndex()])+"',0]"
+            container['Reference'] = "['" + \
+                str(array[self.process_box_refs_fit.currentIndex()])+"',0]"
 
-        #get the Instrument
-        container['Instrument'] = str(self.process_box_instrument.currentText())
+        # get the Instrument
+        container['Instrument'] = str(
+            self.process_box_instrument.currentText())
 
-        #get the detector
-        array = [ text[0] for text in self.env.instrument.detector.foil_file_list]
-        
-        container['detector'] = str(array[self.process_box_detector.currentIndex()])
+        # get the detector
+        array = [text[0]
+                 for text in self.env.instrument.detector.foil_file_list]
 
-        #get the exposure
+        container['detector'] = str(
+            array[self.process_box_detector.currentIndex()])
+
+        # get the exposure
         container['exposure'] = str(self.process_radio_exposure.isChecked())
 
         time_channels = []
@@ -872,9 +927,10 @@ class PageScriptWidget(Ui_script_widget):
         manage the data parameter part
         '''
         container = {}
-        container['mask'] = str([ key for key in self.env.mask.mask_dict.keys() ][self.process_box_masks.currentIndex()])
+        container['mask'] = str([key for key in self.env.mask.mask_dict.keys(
+        )][self.process_box_masks.currentIndex()])
 
-        #find strings
+        # find strings
         self.env.scripts.synthesizePhaseScript(container)
         self._refresh()
 
@@ -886,7 +942,7 @@ class PageScriptWidget(Ui_script_widget):
         container = {}
         container['mask'] = str(self.process_box_mask_fit.currentText())
 
-        #find strings
+        # find strings
         self.env.scripts.synthesizeReductionScript(container)
         self._refresh()
 
@@ -896,9 +952,9 @@ class PageScriptWidget(Ui_script_widget):
     def _refresh(self):
         '''
         Refresh the text present in the code editors
-        with the source present in the core env.process 
-        class. 
-        '''        
+        with the source present in the core env.process
+        class.
+        '''
         self.text_widgets[0].setPlainText(self.env.scripts.editable_scripts[0])
         self.text_widgets[1].setPlainText(self.env.scripts.editable_scripts[1])
         self.text_widgets[2].setPlainText(self.env.scripts.editable_scripts[2])
@@ -910,41 +966,43 @@ class PageScriptWidget(Ui_script_widget):
         if not self.env == None:
             for i in range(5):
                 try:
-                    self.env.scripts.setEditable(i, self.text_widgets[i].toPlainText())
+                    self.env.scripts.setEditable(
+                        i, self.text_widgets[i].toPlainText())
                 except Exception as e:
                     dialog(
-                        parent = self.local_widget,
-                        icon = 'error', 
-                        title= 'Could not update script',
-                        message = 'The core encountered an error',
-                        add_message = str(e),
-                        det_message = traceback.format_exc())
+                        parent=self.local_widget,
+                        icon='error',
+                        title='Could not update script',
+                        message='The core encountered an error',
+                        add_message=str(e),
+                        det_message=traceback.format_exc())
 
     def _updateEditable(self, index):
         if not self.env == None:
             try:
-                self.env.scripts.setEditable(index, self.text_widgets[index].toPlainText())
+                self.env.scripts.setEditable(
+                    index, self.text_widgets[index].toPlainText())
             except Exception as e:
                 dialog(
-                    parent = self.local_widget,
-                    icon = 'error', 
-                    title= 'Could not update script',
-                    message = 'The core encountered an error',
-                    add_message = str(e),
-                    det_message = traceback.format_exc())
+                    parent=self.local_widget,
+                    icon='error',
+                    title='Could not update script',
+                    message='The core encountered an error',
+                    add_message=str(e),
+                    det_message=traceback.format_exc())
 
     def show(self, index):
         '''
         This is the run method that will determine the measure
-        to undertake. 
+        to undertake.
         '''
         self.tabWidget.setCurrentIndex(2)
         self.script_tabs.setCurrentIndex(index)
-        
+
     def run(self, index):
         '''
         This is the run method that will determine the measure
-        to undertake. 
+        to undertake.
         '''
         if not self.env == None:
             mask_to_reset = self.env.mask.current_mask
@@ -966,7 +1024,7 @@ class PageScriptWidget(Ui_script_widget):
 
     def _runPythonCode(self, index):
         '''
-        Parse and run python code. 
+        Parse and run python code.
         '''
         self._updateEditable(index)
         code_array, meta_array = self.env.scripts.preprocessScript(index)
@@ -983,12 +1041,12 @@ class PageScriptWidget(Ui_script_widget):
             except Exception as e:
                 error = e
                 dialog(
-                    parent = self.local_widget,
-                    icon = 'error', 
-                    title= 'Script error',
-                    message = 'Your script has encountered an error.',
-                    add_message = str(e),
-                    det_message = traceback.format_exc())
+                    parent=self.local_widget,
+                    icon='error',
+                    title='Script error',
+                    message='Your script has encountered an error.',
+                    add_message=str(e),
+                    det_message=traceback.format_exc())
                 success = False
                 break
         if success:
@@ -1003,14 +1061,14 @@ class PageScriptWidget(Ui_script_widget):
     def saveScripts(self):
         '''
         This method as the name indicates is in charge of
-        prompting the user for a savefile name and location 
+        prompting the user for a savefile name and location
         through a QFileDialog and then saves the file as
         a script.
         '''
         # filters = "mieze_script_save.py"
 
         # file_path = QtWidgets.QFileDialog.getSaveFileName(
-        #         self.window, 
+        #         self.window,
         #         'Select file',
         #         filters)[0]
         # self._updateAllEditable()
@@ -1018,14 +1076,14 @@ class PageScriptWidget(Ui_script_widget):
 
     def loadScripts(self):
         '''
-        This method will load the string from file through 
+        This method will load the string from file through
         a QFileDialog. Specify a file formated in the right
         way or saved through miezepy.
         '''
         # filters = "*.py"
 
         # file_path = QtWidgets.QFileDialog.getOpenFileName(
-        #         self.window, 
+        #         self.window,
         #         'Select file',
         #         filters)[0]
 
@@ -1036,13 +1094,13 @@ class PageScriptWidget(Ui_script_widget):
         '''
 
         '''
-        #make it visible in case it was hidden
+        # make it visible in case it was hidden
         self.script_label_running.show()
         self.script_bar_running.show()
         self.scrip_label_action.show()
         self.script_label_action_2.show()
 
-        #in case it was faded
+        # in case it was faded
         self._unfade(self.script_label_running)
         self._unfade(self.script_bar_running)
         self._unfade(self.scrip_label_action)

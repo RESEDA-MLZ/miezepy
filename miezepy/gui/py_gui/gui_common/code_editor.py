@@ -21,13 +21,14 @@
 #
 # *****************************************************************************
 
-#inspired from:
+# inspired from:
 # https://stackoverflow.com/questions/40386194/create-text-area-textedit-with-line-number-in-pyqt
 
-#public dependencies
+# public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
 from ..gui_common.python_syntax import PythonHighlighter
 import sys
+
 
 class LineNumberArea(QtWidgets.QWidget):
 
@@ -40,6 +41,7 @@ class LineNumberArea(QtWidgets.QWidget):
 
     def paintEvent(self, event):
         self.my_editor.lineNumberAreaPaintEvent(event)
+
 
 class CodeEditor(QtWidgets.QPlainTextEdit):
     def __init__(self, parent):
@@ -69,7 +71,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             self.lineNumberArea.scroll(0, dy)
         else:
             self.lineNumberArea.update(0, rect.y(), self.lineNumberArea.width(),
-                       rect.height())
+                                       rect.height())
 
         if rect.contains(self.viewport().rect()):
             self.updateLineNumberAreaWidth(0)
@@ -79,7 +81,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         cr = self.contentsRect()
         self.lineNumberArea.setGeometry(QtCore.QRect(cr.left(), cr.top(),
-                    self.lineNumberAreaWidth(), cr.height()))
+                                                     self.lineNumberAreaWidth(), cr.height()))
 
     def lineNumberAreaPaintEvent(self, event):
         my_painter = QtGui.QPainter(self.lineNumberArea)
@@ -88,7 +90,8 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
 
         block = self.firstVisibleBlock()
         blockNumber = block.blockNumber()
-        top = self.blockBoundingGeometry(block).translated(self.contentOffset()).top()
+        top = self.blockBoundingGeometry(
+            block).translated(self.contentOffset()).top()
         bottom = top + self.blockBoundingRect(block).height()
 
         # Just to make sure I use the right font
@@ -98,7 +101,7 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
                 number = str(blockNumber + 1)
                 my_painter.setPen(QtCore.Qt.black)
                 my_painter.drawText(0, top, self.lineNumberArea.width(), height,
-                 QtCore.Qt.AlignRight, number)
+                                    QtCore.Qt.AlignRight, number)
 
             block = block.next()
             top = bottom
@@ -111,16 +114,10 @@ class CodeEditor(QtWidgets.QPlainTextEdit):
             selection = QtWidgets.QTextEdit.ExtraSelection()
             lineColor = QtGui.QColor('darkYellow')
             selection.format.setBackground(lineColor)
-            selection.format.setProperty(QtGui.QTextFormat.FullWidthSelection, True)
+            selection.format.setProperty(
+                QtGui.QTextFormat.FullWidthSelection, True)
             selection.cursor = self.textCursor()
             selection.cursor.clearSelection()
             extraSelections.append(selection)
         self.setExtraSelections(extraSelections)
 
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-
-    txt = CodeEditor()
-    txt.show()
-
-    sys.exit(app.exec_())

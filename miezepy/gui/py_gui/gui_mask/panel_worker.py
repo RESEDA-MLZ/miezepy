@@ -21,14 +21,15 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtCore
 import numpy as np
 
 from ....core.fit_modules.library_fit import fitDataSinus
 
+
 class PanelWorker(QtCore.QObject):
     '''
-    This is the panel worker that will be used to 
+    This is the panel worker that will be used to
     perform on the fly computation of the contrast
     for a single parameter, measurement, echo, and
     foil.
@@ -48,10 +49,10 @@ class PanelWorker(QtCore.QObject):
             The contrast calculation method
         '''
         QtCore.QObject.__init__(self)
-        self.method     = method
-        self._finished  = False
-        
-    def setParameters(self,data, para, foil, mask, results, time_channels):
+        self.method = method
+        self._finished = False
+
+    def setParameters(self, data, para, foil, mask, results, time_channels):
         '''
         Parameters
         ----------
@@ -67,9 +68,9 @@ class PanelWorker(QtCore.QObject):
         echo : float
             The echo time value
 
-        foil : int 
+        foil : int
             The foil value
-        
+
         mask : numpy array
             The mask
         '''
@@ -81,25 +82,24 @@ class PanelWorker(QtCore.QObject):
         self.time_channels = time_channels
 
     @QtCore.pyqtSlot()
-    def run(self): 
+    def run(self):
         '''
         define the parameters
         '''
         self.counts = [
-            np.multiply(self.data[timechannel], self.mask).sum() 
+            np.multiply(self.data[timechannel], self.mask).sum()
             for timechannel in range(16)]
-            
+
         try:
             fitDataSinus(
-                self.results,self.counts, np.sqrt(self.counts), 
+                self.results, self.counts, np.sqrt(self.counts),
                 time_select=self.time_channels)
             self.fit = self.results.getLastResult('Fit Data Sinus')
         except:
             self.fit = None
-            
 
         try:
-            self.method(self.para,self.foil)
+            self.method(self.para, self.foil)
             self.process = self.results.getLastResult('Contrast calculation')
         except:
             self.process = None

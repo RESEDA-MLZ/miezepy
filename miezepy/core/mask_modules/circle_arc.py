@@ -24,6 +24,7 @@
 import numpy as np
 from .mask_shape import MaskShape
 
+
 class CircleArc(MaskShape):
 
     def __init__(self):
@@ -37,12 +38,12 @@ class CircleArc(MaskShape):
 
     def initialize(self):
         '''
-        This routine will edit the inherited 
+        This routine will edit the inherited
         dictionary of parameters.
         '''
-        self.parameters['Name']             = 'Arc'
-        self.parameters['Radial range']     = (10,15)
-        self.parameters['Angular range']    = (0, 350)
+        self.parameters['Name'] = 'Arc'
+        self.parameters['Radial range'] = (10, 15)
+        self.parameters['Angular range'] = (0, 350)
 
     def setDirectly(self, **kwargs):
         '''
@@ -55,11 +56,11 @@ class CircleArc(MaskShape):
 
     def generate(self, size_x, size_y):
         '''
-        This will generate the mask element 
+        This will generate the mask element
         onto a canvas of a given dimension
         '''
         angle_range = [
-            angle + self.parameters['Angle'] 
+            angle + self.parameters['Angle']
             for angle in self.parameters['Angular range']]
 
         self.mask = self.processSector(
@@ -67,5 +68,5 @@ class CircleArc(MaskShape):
             angle_range,
             size_x,
             size_y)
-        
+
         return self.mask

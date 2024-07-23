@@ -23,7 +23,6 @@
 
 import numpy as np
 from PyQt5 import QtCore, QtGui
-from PIL import Image, ImageDraw
 
 
 class MaskShape:
@@ -36,82 +35,84 @@ class MaskShape:
         '''
         self.parameters = {}
 
-        self.parameters['index']    = 0
-        self.parameters['color']    = (0,0,0)
-        self.parameters['exclude']  = False
-        self.parameters['processed']= False
-        self.parameters['increment']= True
-        self.parameters['methods']  = []
+        self.parameters['index'] = 0
+        self.parameters['color'] = (0, 0, 0)
+        self.parameters['exclude'] = False
+        self.parameters['processed'] = False
+        self.parameters['increment'] = True
+        self.parameters['methods'] = []
 
-        self.parameters['Angle']    = 0
+        self.parameters['Angle'] = 0
         self.parameters['Position'] = [0, 0]
 
-    def move(self, relative = [None,None], absolute = [None,None]):
+        self.mask = None
+
+    def move(self, relative=[None, None], absolute=[None, None]):
         '''
-        Set the move method general to all objects 
+        Set the move method general to all objects
         in the inherited class allows flexibility
         '''
-        if any([not element == None for element in absolute]):
+        if any([not element is None for element in absolute]):
             self.parameters['Position'] = list(absolute)
             self.parameters['processed'] = False
 
-        elif any([not element == None for element in relative]):
+        elif any([not element is None for element in relative]):
             self.parameters['Position'][0] += relative[0]
             self.parameters['Position'][1] += relative[1]
             self.parameters['processed'] = False
-        
-    def rotate(self, relative = None, absolute = None):
+
+    def rotate(self, relative=None, absolute=None):
         '''
-        Set the move method general to all objects 
+        Set the move method general to all objects
         in the inherited class allows flexibility
         '''
-        if not absolute == None:
+        if not absolute is None:
             self.parameters['Angle'] = absolute
             self.parameters['processed'] = False
 
-        elif not relative == None:
+        elif not relative is None:
             self.parameters['Angle'] += relative
             self.parameters['processed'] = False
-               
+
     def processPolygon(self, edges, size_x, size_y):
         '''
-        This method is universal and will check if 
-        a point is situated within a polygon 
+        This method is universal and will check if
+        a point is situated within a polygon
         defined by the the edges.
         '''
         path_1 = QtGui.QPainterPath()
-        path_1.moveTo(edges[0][0],edges[0][1])
-        for i in range(1,len(edges)):
-            path_1.lineTo(edges[i][0],edges[i][1])
+        path_1.moveTo(edges[0][0], edges[0][1])
+        for i in range(1, len(edges)):
+            path_1.lineTo(edges[i][0], edges[i][1])
         path_1.closeSubpath()
 
         path_2 = QtGui.QPainterPath()
-        path_2.moveTo(edges[0][0]+1,edges[0][1])
-        for i in range(1,len(edges)):
-            path_2.lineTo(edges[i][0]+1,edges[i][1])
+        path_2.moveTo(edges[0][0]+1, edges[0][1])
+        for i in range(1, len(edges)):
+            path_2.lineTo(edges[i][0]+1, edges[i][1])
         path_2.closeSubpath()
 
         path_3 = QtGui.QPainterPath()
-        path_3.moveTo(edges[0][0],edges[0][1]+1)
-        for i in range(1,len(edges)):
-            path_3.lineTo(edges[i][0],edges[i][1]+1)
+        path_3.moveTo(edges[0][0], edges[0][1]+1)
+        for i in range(1, len(edges)):
+            path_3.lineTo(edges[i][0], edges[i][1]+1)
         path_3.closeSubpath()
 
         path_4 = QtGui.QPainterPath()
-        path_4.moveTo(edges[0][0]+1,edges[0][1]+1)
-        for i in range(1,len(edges)):
-            path_4.lineTo(edges[i][0]+1,edges[i][1]+1)
+        path_4.moveTo(edges[0][0]+1, edges[0][1]+1)
+        for i in range(1, len(edges)):
+            path_4.lineTo(edges[i][0]+1, edges[i][1]+1)
         path_4.closeSubpath()
 
         pixmap = QtGui.QPixmap(size_x, size_y)
-        pixmap.fill(QtGui.QColor(0,0,0))
+        pixmap.fill(QtGui.QColor(0, 0, 0))
         painter = QtGui.QPainter(pixmap)
         painter.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         pen = QtGui.QPen()
-        pen.setColor(QtGui.QColor(0,0,1))
+        pen.setColor(QtGui.QColor(0, 0, 1))
         pen.setWidthF(0.1)
         painter.setPen(pen)
-        painter.setBrush(QtGui.QColor(0,0,1))
+        painter.setBrush(QtGui.QColor(0, 0, 1))
         painter.drawPath(path_1)
         painter.drawPath(path_2)
         painter.drawPath(path_3)
@@ -121,82 +122,83 @@ class MaskShape:
         image = pixmap.toImage()
         b = image.bits()
         b.setsize(size_x * size_y * 4)
-        arr = np.frombuffer(b, np.uint8).reshape((size_x, size_y, 4)).astype(np.int16)
+        arr = np.frombuffer(b, np.uint8).reshape(
+            (size_x, size_y, 4)).astype(np.int16)
 
-        return arr[:,:,0]
+        return arr[:, :, 0]
 
     def processEllipse(self, dimensions, size_x, size_y):
         '''
-        This method is universal and will check if 
-        a point is situated within a polygon 
+        This method is universal and will check if
+        a point is situated within a polygon
         defined by the the edges.
         '''
         pixmap = QtGui.QPixmap(size_x, size_y)
-        pixmap.fill(QtGui.QColor(0,0,0))
+        pixmap.fill(QtGui.QColor(0, 0, 0))
         painter = QtGui.QPainter(pixmap)
 
         painter.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         pen = QtGui.QPen()
-        pen.setColor(QtGui.QColor(0,0,1))
+        pen.setColor(QtGui.QColor(0, 0, 1))
         pen.setWidthF(0.1)
         painter.setPen(pen)
-        painter.setBrush(QtGui.QColor(0,0,1))
+        painter.setBrush(QtGui.QColor(0, 0, 1))
 
         painter.translate(
-            self.parameters['Position'][0], 
+            self.parameters['Position'][0],
             self.parameters['Position'][1])
         painter.rotate(
             self.parameters['Angle'])
         painter.drawEllipse(
-            QtCore.QPointF(0.,0.), 
-            dimensions[0], 
+            QtCore.QPointF(0., 0.),
+            dimensions[0],
             dimensions[1])
         painter.rotate(
             -self.parameters['Angle'])
         painter.translate(
-            -self.parameters['Position'][0], 
+            -self.parameters['Position'][0],
             -self.parameters['Position'][1])
         painter.translate(
-            self.parameters['Position'][0]+1, 
+            self.parameters['Position'][0]+1,
             self.parameters['Position'][1])
         painter.rotate(
             self.parameters['Angle'])
         painter.drawEllipse(
-            QtCore.QPointF(0.,0.), 
-            dimensions[0], 
+            QtCore.QPointF(0., 0.),
+            dimensions[0],
             dimensions[1])
         painter.rotate(
             -self.parameters['Angle'])
         painter.translate(
-            -self.parameters['Position'][0]-1, 
+            -self.parameters['Position'][0]-1,
             -self.parameters['Position'][1])
         painter.translate(
-            self.parameters['Position'][0], 
+            self.parameters['Position'][0],
             self.parameters['Position'][1]+1)
         painter.rotate(
             self.parameters['Angle'])
         painter.drawEllipse(
-            QtCore.QPointF(0.,0.), 
-            dimensions[0], 
+            QtCore.QPointF(0., 0.),
+            dimensions[0],
             dimensions[1])
         painter.rotate(
             -self.parameters['Angle'])
         painter.translate(
-            -self.parameters['Position'][0], 
+            -self.parameters['Position'][0],
             -self.parameters['Position'][1]-1)
         painter.translate(
-            self.parameters['Position'][0]+1, 
+            self.parameters['Position'][0]+1,
             self.parameters['Position'][1]+1)
         painter.rotate(
             self.parameters['Angle'])
         painter.drawEllipse(
-            QtCore.QPointF(0.,0.), 
-            dimensions[0], 
+            QtCore.QPointF(0., 0.),
+            dimensions[0],
             dimensions[1])
         painter.rotate(
             -self.parameters['Angle'])
         painter.translate(
-            -self.parameters['Position'][0]-1, 
+            -self.parameters['Position'][0]-1,
             -self.parameters['Position'][1]-1)
 
         painter.end()
@@ -204,44 +206,45 @@ class MaskShape:
         image = pixmap.toImage()
         b = image.bits()
         b.setsize(size_x * size_y * 4)
-        arr = np.frombuffer(b, np.uint8).reshape((size_x, size_y, 4)).astype(np.int16)
+        arr = np.frombuffer(b, np.uint8).reshape(
+            (size_x, size_y, 4)).astype(np.int16)
 
-        return arr[:,:,0]
+        return arr[:, :, 0]
 
     def processSector(self, radius_range, angle_range, size_x, size_y):
         '''
-        This part will process a circular region of the 
+        This part will process a circular region of the
         current numpy array range. This part was taken
         of the original python MIEZE package of TUM.
         '''
         # -> Check whether sector is in image
-        y, x        = np.ogrid[:size_x,:size_y]
-        cx,cy       = self.parameters['Position']
-        t_min,t_max = np.deg2rad(angle_range)
+        y, x = np.ogrid[:size_x, :size_y]
+        cx, cy = self.parameters['Position']
+        t_min, t_max = np.deg2rad([min(angle_range), max(angle_range)])
 
-        if t_max < t_min:
-            t_max += 2 * np.pi
+        # if t_max < t_min:
+        #     t_max += 2 * np.pi
 
-        #convert cartesian --> polar coordinates
-        r2 = ( x - cx ) * ( x - cx ) + ( y - cy ) * ( y - cy )
-        theta = np.arctan2(y-cy,x-cx) - t_min
+        # convert cartesian --> polar coordinates
+        r2 = (x - cx) * (x - cx) + (y - cy) * (y - cy)
+        theta = np.arctan2(y-cy, x-cx) - t_min
 
-        #wrap angles between 0 and 2*pi
+        # wrap angles between 0 and 2*pi
         theta %= (2*np.pi)
 
-        #circular mask
-        circmask    = r2 <  radius_range[1] * radius_range[1]
-        circmask2   = r2 >= radius_range[0] * radius_range[0]
+        # circular mask
+        circmask = r2 < radius_range[1] * radius_range[1]
+        circmask2 = r2 >= radius_range[0] * radius_range[0]
 
         # angular mask
         anglemask = theta <= (t_max-t_min)
-        mask =  (circmask * circmask2 * anglemask).astype(np.int16)
+        mask = (circmask * circmask2 * anglemask).astype(np.int16)
 
         return mask
 
     def rotatePoint(self, origin, point, angle):
         """
-        Rotate a point counterclockwise by a given 
+        Rotate a point counterclockwise by a given
         angle around a given origin.
         The angle should be given in radians.
         """

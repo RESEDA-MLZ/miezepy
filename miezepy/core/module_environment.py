@@ -22,24 +22,25 @@
 # *****************************************************************************
 
 #############################
-#import child components
-from .module_mask       import MaskStructure 
-from .module_data       import DataStructure 
-from .module_fit        import getFitStructure
-from .module_result     import ResultStructure
-from .module_process    import getProcessStructure
-from .module_io         import IOStructure
+# import child components
+from .module_mask import MaskStructure
+from .module_data import DataStructure
+from .module_fit import getFitStructure
+from .module_result import ResultStructure
+from .module_process import getProcessStructure
+from .module_io import IOStructure
 from .module_instrument import InstrumentStructure
-from .module_scripts    import ScriptStructure
+from .module_scripts import ScriptStructure
+
 
 class Environment:
     '''
-    This will define the heart of each single measurement. It will 
-    incorporate the data structure, mask system, the reduction 
+    This will define the heart of each single measurement. It will
+    incorporate the data structure, mask system, the reduction
     computation and the result structure.
     '''
 
-    def __init__(self, env_handler, title, select = 'MIEZE'):
+    def __init__(self, env_handler, title, select='MIEZE'):
         '''
         Initialise the Environment class
 
@@ -51,17 +52,17 @@ class Environment:
         title: str
             the name of the current environnement
         '''
-        #set up
-        self.env_handler    = env_handler
-        self.name           = title
-        self.select         = select
+        # set up
+        self.env_handler = env_handler
+        self.name = title
+        self.select = select
         self.initialise()
 
     def initialise(self):
         '''
         set all the local items
         '''
-        self.data           = []
+        self.data = []
 
         self._initDataStructure()
         self._initFitStructure()
@@ -71,7 +72,7 @@ class Environment:
         self._initIOHandler()
         self._initInstrumentStructure()
         self._initScriptStructure()
-    
+
     def _initDataStructure(self):
         '''
         This function will initiate a new data class
@@ -96,39 +97,39 @@ class Environment:
 
     def _initMaskStructure(self):
         '''
-        This function will initiate a new mask class to the 
-        environnement. 
+        This function will initiate a new mask class to the
+        environnement.
         '''
         self.mask = MaskStructure()
 
     def _initResultStructure(self):
         '''
-        This function will initiate a new 
-        result structure that will be used int he 
+        This function will initiate a new
+        result structure that will be used int he
         current environment.
         '''
-        self.results = ResultStructure(mode = 'Dict')
+        self.results = ResultStructure(mode='Dict')
 
     def _initIOHandler(self):
         '''
-        initialise the io handler that will manage the 
+        initialise the io handler that will manage the
         data and content flow back and forth between the
         miezepy software and the operating system.
         '''
-        self.io      = IOStructure(self)
+        self.io = IOStructure(self)
 
     def _initInstrumentStructure(self):
         '''
-        This function will initiate a new 
-        result structure that will be used int he 
+        This function will initiate a new
+        result structure that will be used int he
         current environment.
         '''
         self.instrument = InstrumentStructure()
 
     def _initScriptStructure(self):
         '''
-        This function will initiate a new 
-        result structure that will be used int he 
+        This function will initiate a new
+        result structure that will be used int he
         current environment.
         '''
         self.scripts = ScriptStructure()
@@ -147,14 +148,15 @@ class Environment:
         indent = 1
 
         script += "def setEnv(handler):\n"
-        script += indent * "    " +"env = handler.new_environment('"+str(self.name)+"')\n"
-        script += indent * "    " +"return env\n"
+        script += indent * "    " + \
+            "env = handler.new_environment('"+str(self.name)+"')\n"
+        script += indent * "    " + "return env\n"
 
         f = open(path, 'w')
         f.write(script)
         f.close()
 
-    def setCurrentData(self, idx = None):
+    def setCurrentData(self, idx=None):
         '''
         This function sets the current data
         with the right key

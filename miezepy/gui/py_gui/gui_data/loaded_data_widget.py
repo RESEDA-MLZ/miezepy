@@ -22,26 +22,25 @@
 # *****************************************************************************
 
 import operator
-from PyQt5 import QtWidgets, QtGui, QtCore, uic
-import sys
-import os
+from PyQt5 import QtWidgets, QtCore
 
 from ...qt_gui.loaded_data_ui import Ui_dataset_widget
 
-class LoadedDataWidget(Ui_dataset_widget,QtCore.QObject):
+
+class LoadedDataWidget(Ui_dataset_widget, QtCore.QObject):
     '''
-    This class will manage the raw import 
-    machinery. the UI is inherited through 
+    This class will manage the raw import
+    machinery. the UI is inherited through
     Ui_main_window from the Qt designer anf then
     converted through pyuic5
     '''
 
-    def __init__(self, data_handler, parent = None):
+    def __init__(self, data_handler, parent=None):
         QtCore.QObject.__init__(self)
         Ui_dataset_widget.__init__(self)
 
         self.parent = parent
-        self.item   = QtWidgets.QListWidgetItem(parent)
+        self.item = QtWidgets.QListWidgetItem(parent)
         self.widget = QtWidgets.QWidget()
 
         self.setupUi(self.widget)
@@ -68,9 +67,9 @@ class LoadedDataWidget(Ui_dataset_widget,QtCore.QObject):
 
         self.connect()
 
-    def setMeta(self,val_dict, file_list):
+    def setMeta(self, val_dict, file_list):
         '''
-        Process an array of values to set the 
+        Process an array of values to set the
         parameters in the design
         '''
         new_val_dict = dict(val_dict)
@@ -86,28 +85,28 @@ class LoadedDataWidget(Ui_dataset_widget,QtCore.QObject):
 
     def clearTable(self):
         '''
-        Clears the table content and makes it ready 
+        Clears the table content and makes it ready
         for new entries
         '''
-        pass
 
-    def setTable(self,val_dict, file_list):
+    def setTable(self, val_dict, file_list):
         '''
         Put the elements into the table widget
         '''
-        data_list = [[val_dict[key][i] for key in val_dict.keys()] for i in range(len(file_list))]
+        data_list = [[val_dict[key][i] for key in val_dict.keys()]
+                     for i in range(len(file_list))]
         self.header = [key for key in val_dict.keys()]
         self.model = MyTableModel(
             None,
-            data_list, 
-            self.header, 
+            data_list,
+            self.header,
             file_list)
 
         self.meta_table.setModel(self.model)
 
     def eventFilter(self, in_object, event):
         '''
-        The event filter to manage clicks on all 
+        The event filter to manage clicks on all
         '''
         if event.type() == QtCore.QEvent.MouseButtonPress:
             self.item.setSelected(True)
@@ -129,7 +128,6 @@ class LoadedDataWidget(Ui_dataset_widget,QtCore.QObject):
         self.vis_button.installEventFilter(self)
         self.meta_table.installEventFilter(self)
 
-
     def disconnect(self):
         '''
         disconnect
@@ -146,20 +144,19 @@ class LoadedDataWidget(Ui_dataset_widget,QtCore.QObject):
         # self.vis_button.clicked.disconnect(self.setSelected)
         # self.meta_table.clicked.disconnect(self.setSelected)
 
-
-    def getValues(self, index = None):
+    def getValues(self, index=None):
         '''
         initialize the widget and set the stage
         '''
         self.data_handler.parameter = self.para_input.text()
-        self.data_handler.meas      = str(self.meas_input.value())
+        self.data_handler.meas = str(self.meas_input.value())
         self.data_handler.reference = self.ref_radio.isChecked()
-        self.data_handler.background= self.back_radio.isChecked()
+        self.data_handler.background = self.back_radio.isChecked()
 
 
-#https://stackoverflow.com/questions/19411101/pyside-qtableview-example
+# https://stackoverflow.com/questions/19411101/pyside-qtableview-example
 class MyTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent, mylist, col_header,row_header, *args):
+    def __init__(self, parent, mylist, col_header, row_header, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
         self.mylist = mylist
         self.col_header = col_header
@@ -167,33 +164,33 @@ class MyTableModel(QtCore.QAbstractTableModel):
 
     def rowCount(self, parent):
         return len(self.mylist)
+
     def columnCount(self, parent):
         if len(self.mylist) > 0:
             return len(self.mylist[0])
         else:
             return 0
+
     def data(self, index, role):
         if not index.isValid():
             return None
         elif role != QtCore.Qt.DisplayRole:
             return None
         return self.mylist[index.row()][index.column()]
+
     def headerData(self, col, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.col_header[col]
+            return self.col_header[col] if col < len(self.col_header) else None
         elif orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return self.row_header[col]
+            return self.row_header[col] if col < len(self.row_header) else None
         else:
             return None
+
     def sort(self, col, order):
         """sort table by given column number col"""
         self.emit(QtCore.SIGNAL("layoutAboutToBeChanged()"))
         self.mylist = sorted(self.mylist,
-            key=operator.itemgetter(col))
+                             key=operator.itemgetter(col))
         if order == QtCore.Qt.DescendingOrder:
             self.mylist.reverse()
         self.emit(QtCore.SIGNAL("layoutChanged()"))
-
-
-                
-        

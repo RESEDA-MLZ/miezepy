@@ -21,26 +21,27 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtWidgets
 
 from simpleplot.models.delegates import ParameterDelegate
 from simpleplot.models.session_node import SessionNode
-from .mask_model   import MaskModel
+from .mask_model import MaskModel
+
 
 class MaskTreeView(QtWidgets.QTreeView):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         '''
         '''
-        super().__init__(parent = parent)
+        super().__init__(parent=parent)
         self.initialize()
         sizePolicy = QtWidgets.QSizePolicy(
-        QtWidgets.QSizePolicy.Expanding, 
-        QtWidgets.QSizePolicy.Expanding)
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
 
     def initialize(self):
         '''
-        Initialise the parameter such as the 
+        Initialise the parameter such as the
         delegate from the parameter class
         of simpleplot
 
@@ -51,12 +52,12 @@ class MaskTreeView(QtWidgets.QTreeView):
         '''
         self.delegate = ParameterDelegate()
         self.setItemDelegate(self.delegate)
-        
+
         self.collapsed.connect(self.resizeTree)
         self.expanded.connect(self.resizeTree)
 
-        self.states = {'expanded':True}
-        self._rootNode  = SessionNode('Mask')
+        self.states = {'expanded': True}
+        self._rootNode = SessionNode('Mask')
         self._model = MaskModel(self._rootNode)
         self.setModel(self._model)
         self._connect()
@@ -122,8 +123,8 @@ class MaskTreeView(QtWidgets.QTreeView):
     def getIndex(self, index):
         '''
         Get the list of row values in respect
-        to the parents of the given child. This 
-        allows to build the dictionary that will 
+        to the parents of the given child. This
+        allows to build the dictionary that will
         keep track of the expanded states
         '''
         index_list = []
@@ -137,7 +138,7 @@ class MaskTreeView(QtWidgets.QTreeView):
         index_list = index_list[::-1]
         return index_list
 
-    def setState(self,value, index_list):
+    def setState(self, value, index_list):
         '''
         Set the state of the expansion in a custom
         generated dictionary.
@@ -160,18 +161,18 @@ class MaskTreeView(QtWidgets.QTreeView):
 
     def restoreState(self):
         '''
-        Restore the states from the dictionary 
-        to allow a more pleasent sue of the 
+        Restore the states from the dictionary
+        to allow a more pleasent sue of the
         treeview widget
         '''
         self._disconnect()
         self.recursiveRestore(self.states, self.model()._rootNode)
         self._connect()
 
-    def recursiveRestore(self,state_dict, node):
+    def recursiveRestore(self, state_dict, node):
         '''
         Run through the model to identify
-        the indexes in the treeview to 
+        the indexes in the treeview to
         restore.
         '''
         index_list = list([key for key in state_dict.keys()])
@@ -191,7 +192,7 @@ class MaskTreeView(QtWidgets.QTreeView):
 
     def getSelected(self):
         '''
-        return the selected index of the 
+        return the selected index of the
         view to prepare for removal
         '''
         return self.selectedIndexes()[0]

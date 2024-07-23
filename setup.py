@@ -23,23 +23,48 @@
 
 from setuptools import setup, find_packages
 import miezepy
+import pip
+import os
+from io import BytesIO
+
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')) as file:
+    lines = file.readlines()
+    lines = [line.rstrip() for line in lines]
+
+for line in lines:
+    pip.main(['install', line])
+
+try:
+    import simpleplot
+except:
+    import requests
+    import zipfile
+    url = "https://github.com/AlexanderSchober/simpleplot_qt/archive/refs/heads/master.zip"
+    req = requests.get(url)
+    zipfile = zipfile.ZipFile(BytesIO(req.content))
+    zipfile.extractall(os.path.join(os.path.dirname(
+        os.path.realpath(__file__)), 'simpleplot_qt'))
+    path = os.getcwd()
+    os.chdir(os.path.join(os.path.dirname(os.path.realpath(
+        __file__)), 'simpleplot_qt', 'simpleplot_qt-master'))
+    os.system('python setup.py install')
+    os.chdir(os.path.join(os.path.dirname(os.path.realpath(
+        __file__))))
 
 setup(
-    name = 'miezepy',
-    version = miezepy.__version__,
-    license = 'GPL',
-    author = 'Dr. Alexander Schober',
-#    install_requires = requirements,
-#    dependency_links =['https://github.com/AlexanderSchober/simpleplot_qt/tarball/master#egg=SimplePlot-0.1'],
-    author_email = 'alex.schober@mac.com',
-    description = 'Mieze analysis package',
-    packages = find_packages(exclude=['doc','test']),
-    package_data = {
+    name='miezepy',
+    version=miezepy.__version__,
+    license='GPL',
+    author='Dr. Alexander Schober',
+    author_email='alex.schober@mac.com',
+    description='Mieze analysis package',
+    packages=find_packages(exclude=['doc', 'test']),
+    package_data={
         'miezepy': ['RELEASE-VERSION'],
         'miezepy.core.process_modules.defaults': ['*.txt'],
         'miezepy.core.instrument_modules.Reseda': ['*.npy']},
-    
-    classifiers = [
+
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',

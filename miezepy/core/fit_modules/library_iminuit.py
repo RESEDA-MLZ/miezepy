@@ -22,20 +22,18 @@
 # *****************************************************************************
 
 from scipy import integrate as integrate
-from scipy import special as sp
 from scipy import constants as co
-from scipy import optimize as op
-from scipy import stats as st
 
 import iminuit
 import numpy as np
 import warnings
 
+
 class CosineMinuit:
 
     def fitCosine(self, counts, time, freq, error):
         '''
-        Creates the minuit fit function and runs 
+        Creates the minuit fit function and runs
         leastsquarefit.
 
         Parameters
@@ -56,26 +54,25 @@ class CosineMinuit:
         fit : iminuit fit structure
         '''
         self.argument_dict = {}
-        self.argument_dict['counts']       = counts
-        self.argument_dict['time']         = time
-        self.argument_dict['freq']         = freq
-        self.argument_dict['error']        = error
+        self.argument_dict['counts'] = counts
+        self.argument_dict['time'] = time
+        self.argument_dict['freq'] = freq
+        self.argument_dict['error'] = error
 
         minuit_dict = {}
-        minuit_dict['phase']       = 0
-        minuit_dict['offset']      = np.mean(counts)
-        minuit_dict['amplitude']   = np.abs(np.mean(counts) - np.amax(counts))
-        minuit_dict['pedantic']    = False
-        minuit_dict['print_level'] = 0
+        minuit_dict['phase'] = 0
+        minuit_dict['offset'] = np.mean(counts)
+        minuit_dict['amplitude'] = np.abs(np.mean(counts) - np.amax(counts))
 
-        fit     = iminuit.Minuit(self.cosine, **minuit_dict)
+        fit = iminuit.Minuit(self.cosine, **minuit_dict)
+        fit.errordef = iminuit.Minuit.LEAST_SQUARES
         fit.migrad()
 
-        return fit 
+        return fit
 
     def cosine(self, phase, offset, amplitude):
         '''
-        Creates the minuit fit function and runs 
+        Creates the minuit fit function and runs
         leastsquarefit.
 
         Parameters
@@ -95,15 +92,16 @@ class CosineMinuit:
         '''
         # with warnings.catch_warnings():
         try:
-            return sum((((amplitude*np.cos(self.argument_dict['freq']*t+phase)+offset-c)**2)/e**2 if not e == 0 else np.nan for c,t,e in zip(self.argument_dict['counts'],self.argument_dict['time'],self.argument_dict['error'])))
+            return sum((((amplitude*np.cos(self.argument_dict['freq']*t+phase)+offset-c)**2)/e**2 if not e == 0 else np.nan for c, t, e in zip(self.argument_dict['counts'], self.argument_dict['time'], self.argument_dict['error'])))
         except:
             return np.nan
 
+
 class ExpMinuit:
 
-    def fitExp(self,contrast, SpinEchoTime, contrastError, x_display_axis):
+    def fitExp(self, contrast, SpinEchoTime, contrastError, x_display_axis):
         '''
-        Creates the minuit fit function and runs 
+        Creates the minuit fit function and runs
         leastsquarefit.
 
         Parameters
@@ -121,31 +119,30 @@ class ExpMinuit:
         fit : fit result dictionary
         '''
         self.argument_dict = {}
-        self.argument_dict['contrast']      = contrast
-        self.argument_dict['SpinEchoTime']  = SpinEchoTime
+        self.argument_dict['contrast'] = contrast
+        self.argument_dict['SpinEchoTime'] = SpinEchoTime
         self.argument_dict['contrastError'] = contrastError
 
         minuit_dict = {}
-        minuit_dict['Gamma']       = 10
-        minuit_dict['pedantic']    = False
-        minuit_dict['print_level'] = 0
+        minuit_dict['Gamma'] = 10
 
-        fit = iminuit.Minuit(self.exp,**minuit_dict)
+        fit = iminuit.Minuit(self.exp, **minuit_dict)
+        fit.errordef = iminuit.Minuit.LEAST_SQUARES
         fit.migrad()
 
-        params  = fit.values
-        chi2    = fit.fval
-        cov     = fit.np_matrix()
-        Cov     = np.array(cov).reshape([1,1])
-        Gamma   = fit.values['Gamma']
-        Gammaerr = np.sqrt(Cov[0][0])
+        params = fit.values
+        chi2 = fit.fval
+        cov = fit.covariance
+        Cov = np.array(cov).reshape([1, 1])
+        Gamma = fit.values['Gamma']
+        Gammaerr = np.sqrt(Cov[0][0]) if fit.covariance is not None else None
 
         return {'Gamma': Gamma,
                 'Gamma_error': Gammaerr,
-                'Curve':np.exp(-Gamma*1e-6*co.e*x_display_axis*1e-9/co.hbar),
-                'Curve Axis':x_display_axis}
+                'Curve': np.exp(-Gamma*1e-6*co.e*x_display_axis*1e-9/co.hbar),
+                'Curve Axis': x_display_axis}
 
-    def exp(self,Gamma):
+    def exp(self, Gamma):
         '''
         Gamma exponential fit minimizer function
 
@@ -167,8 +164,11 @@ class ExpMinuit:
         with warnings.catch_warnings():
             try:
                 return sum(
-                        (( np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)-c)**2. 
-                        /e**2.
-                        for c, t, e in zip(self.argument_dict['contrast'], self.argument_dict['SpinEchoTime'], self.argument_dict['contrastError'])))
+                    ((np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)-c)**2.
+                     / e**2.
+                     for c, t, e in zip(
+                         self.argument_dict['contrast'],
+                         self.argument_dict['SpinEchoTime'],
+                         self.argument_dict['contrastError'])))
             except:
                 return np.nan

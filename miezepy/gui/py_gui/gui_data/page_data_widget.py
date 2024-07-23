@@ -21,32 +21,30 @@
 #
 # *****************************************************************************
 
-#public dependencies
+# public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
-import sys
-import os
 import copy
-import time
 import numpy as np
 
-#private dependencies
-from ...qt_gui.main_data_import_ui  import Ui_data_import
-from .loaded_data_widget            import LoadedDataWidget
-from .meta_widget                   import MetaWidget 
-from ..gui_common.dialog            import dialog 
-from .drag_drop_file                import DropListView 
+# private dependencies
+from ...qt_gui.main_data_import_ui import Ui_data_import
+from .loaded_data_widget import LoadedDataWidget
+from .meta_widget import MetaWidget
+from ..gui_common.dialog import dialog
+from .drag_drop_file import DropListView
 
-#private plotting library
+# private plotting library
 from simpleplot.canvas.multi_canvas import MultiCanvasItem
 
+
 class PageDataWidget(Ui_data_import):
-    
+
     def __init__(self, stack, parent):
-    
+
         Ui_data_import.__init__(self)
-        self.parent         = parent
-        self.stack          = stack
-        self.local_widget   = QtWidgets.QWidget() 
+        self.parent = parent
+        self.stack = stack
+        self.local_widget = QtWidgets.QWidget()
         self.setupUi(self.local_widget)
         self.setup()
         self.connect()
@@ -57,9 +55,9 @@ class PageDataWidget(Ui_data_import):
         Reset all the inputs and all the fields
         present in the current view.
         '''
-        self.elements       = []
-        self.meta_elements  = []
-        self.io_core        = None
+        self.elements = []
+        self.meta_elements = []
+        self.io_core = None
         if not self.data_list_files.model() is None:
             self.data_list_files.model().clear()
         self.data_list_loaded.clear()
@@ -67,45 +65,50 @@ class PageDataWidget(Ui_data_import):
 
     def setup(self):
         '''
-        This is the initial setup method that will 
+        This is the initial setup method that will
         build the layout and introduce the graphics
         area
         '''
 
         ##############################################
-        #add the file drop
-        self.data_list_files = DropListView(self.data_group_dialog, 'tof_file_drop')
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        # add the file drop
+        self.data_list_files = DropListView(
+            self.data_group_dialog, 'tof_file_drop')
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.data_list_files.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.data_list_files.sizePolicy().hasHeightForWidth())
         self.data_list_files.setSizePolicy(sizePolicy)
         self.data_list_files.setMinimumSize(QtCore.QSize(0, 30))
-        self.data_list_files.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
+        self.data_list_files.setVerticalScrollMode(
+            QtWidgets.QAbstractItemView.ScrollPerItem)
         self.data_list_files.setObjectName("data_list_files")
         self.add_custome_file.addWidget(self.data_list_files)
 
         ##############################################
-        #add the file drop
+        # add the file drop
         self.data_list_loaded.setStyleSheet(
             "QListWidget::item { border: 2px solid black ;background-color: palette(Midlight) }"
             "QListWidget::item:selected { background-color: palette(Mid)  }")
-        self.data_list_loaded.setSizeAdjustPolicy(QtWidgets.QListWidget.AdjustToContents)
+        self.data_list_loaded.setSizeAdjustPolicy(
+            QtWidgets.QListWidget.AdjustToContents)
         self.data_list_meta.setStyleSheet(
             "QListWidget::item { border: 2px solid black ;background-color: palette(Midlight) }"
             "QListWidget::item:selected { background-color: palette(Mid)  }")
         ##############################################
-        #add the 
-        self.my_canvas    = MultiCanvasItem(
+        # add the
+        self.my_canvas = MultiCanvasItem(
             self.data_widget_graph,
-            grid        = [[True]],
-            x_ratios    = [1],
-            y_ratios    = [1],
-            background  = "w",
-            highlightthickness = 0)
+            grid=[[True]],
+            x_ratios=[1],
+            y_ratios=[1],
+            background="w",
+            highlightthickness=0)
 
-        self.ax = self.my_canvas.getSubplot(0,0)
-        self._prev_plot = self.ax.addPlot('Surface',Name = 'Surface')
+        self.ax = self.my_canvas.getSubplot(0, 0)
+        self._prev_plot = self.ax.addPlot('Surface', Name='Surface')
 
         self.ax.axes.general_handler['Active'] = [False]*4
         self.ax.pointer.pointer_handler['Sticky'] = 2
@@ -115,7 +118,7 @@ class PageDataWidget(Ui_data_import):
     def link(self, io_core):
         '''
         This routine will link to the io manager class
-        from the core. 
+        from the core.
         '''
         self.initialize()
         self.io_core = io_core
@@ -130,9 +133,9 @@ class PageDataWidget(Ui_data_import):
     def connect(self):
         '''
         This routine will link to the io manager class
-        from the core. 
+        from the core.
         '''
-        #connect buttons
+        # connect buttons
         self.data_button_meta_add.clicked.connect(self.openMetadataWindow)
         self.data_button_meta_remove.clicked.connect(self.removeMeta)
         self.data_button_meta_all.clicked.connect(self.propagateMeta)
@@ -145,38 +148,41 @@ class PageDataWidget(Ui_data_import):
         self.data_button_add_object.clicked.connect(self.addElement)
         self.data_button_remove_object.clicked.connect(self.removeElement)
 
-        #connect lists
+        # connect lists
         self.data_list_files.drop_success.connect(self.addFiles)
         self.data_list_loaded.clicked.connect(self.setCurrentElement)
-        self.data_list_loaded.itemSelectionChanged.connect(self.setCurrentElementSilent)
+        self.data_list_loaded.itemSelectionChanged.connect(
+            self.setCurrentElementSilent)
 
-        #the dimension fields
+        # the dimension fields
         self.data_input_foils.textChanged.connect(self.dimChanged)
         self.data_input_time_channel.textChanged.connect(self.dimChanged)
         self.data_input_pix_x.textChanged.connect(self.dimChanged)
         self.data_input_pix_y.textChanged.connect(self.dimChanged)
-        
+
     def openMetadataWindow(self):
         '''
         This routine will launch the metadat window.
         '''
         if len(self.elements) == 0:
             dialog(
-                parent = self.local_widget,
-                icon = 'error', 
-                title= 'No data element set',
-                message = 'No data element initialized. Add one first...',
+                parent=self.local_widget,
+                icon='error',
+                title='No data element set',
+                message='No data element initialized. Add one first...',
                 add_message='You can add a dataset by going to File>add element.')
 
         else:
             self.parent.window_manager.newWindow('MetaWindow')
-            self.parent.window_manager.active_windows['MetaWindow'].target.link(self.meta_handler)
+            self.parent.window_manager.active_windows['MetaWindow'].target.link(
+                self.meta_handler)
 
     def hide_preview(self):
         '''
         This routine will launch the metadat window.
         '''
-        self.data_widget_graph.setVisible(not self.data_widget_graph.isVisible())
+        self.data_widget_graph.setVisible(
+            not self.data_widget_graph.isVisible())
 
         if self.data_widget_graph.isVisible():
             self.data_button_prev.setText('Hide')
@@ -197,7 +203,7 @@ class PageDataWidget(Ui_data_import):
         '''
         self.parent.window_manager.newWindow('RawVisual')
         self.parent.window_manager.active_windows['RawVisual'].target.link(
-            self.import_object, mode = '4D')
+            self.import_object, mode='4D')
 
     def removeMeta(self):
         '''
@@ -211,7 +217,7 @@ class PageDataWidget(Ui_data_import):
     def propagateMeta(self):
         '''
         This routine will simply propagate the
-        current meta information to all other meta 
+        current meta information to all other meta
         windows.
         '''
         for element in self.io_core.import_objects:
@@ -220,20 +226,20 @@ class PageDataWidget(Ui_data_import):
     def _setCurrentObject(self, index):
         '''
         '''
-        self.import_object      = self.io_core.import_objects[index]
-        self.file_handler       = self.io_core.import_objects[index].file_handler
-        self.meta_handler       = self.io_core.import_objects[index].meta_handler
-        self.data_handler       = self.io_core.import_objects[index].data_handler
-        self.current_element    = self.elements[index]
+        self.import_object = self.io_core.import_objects[index]
+        self.file_handler = self.io_core.import_objects[index].file_handler
+        self.meta_handler = self.io_core.import_objects[index].meta_handler
+        self.data_handler = self.io_core.import_objects[index].data_handler
+        self.current_element = self.elements[index]
 
         self.setFileList()
         self.setMetaList()
         self.setDimInputs()
 
-    def setCurrentElement(self, row = None):
+    def setCurrentElement(self, row=None):
         '''
         On clicking an element the system will set the
-        classes linked to the current element 
+        classes linked to the current element
         '''
         if isinstance(row, int):
             index = row
@@ -244,10 +250,10 @@ class PageDataWidget(Ui_data_import):
             self._setCurrentObject(index)
             self.elements[index].widget.setFocus()
 
-    def setCurrentElementSilent(self, row = None):
+    def setCurrentElementSilent(self, row=None):
         '''
         On clicking an element the system will set the
-        classes linked to the current element 
+        classes linked to the current element
         '''
         if isinstance(row, int):
             index = row
@@ -259,26 +265,26 @@ class PageDataWidget(Ui_data_import):
 
     def addElement(self):
         '''
-        Add an element into the list which is loaded 
+        Add an element into the list which is loaded
         from a custom widget.
         '''
         self.io_core.addObject()
 
         self.elements.append(LoadedDataWidget(
             self.io_core.import_objects[-1].data_handler,
-            parent = self.data_list_loaded))
+            parent=self.data_list_loaded))
         self.elements[-1].vis_button.clicked.connect(self.openVisualWindow)
         self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D)
         self.setCurrentElement(len(self.io_core.import_objects)-1)
 
-    def addElementSilent(self,i):
+    def addElementSilent(self, i):
         '''
-        Add an element into the list which is loaded 
+        Add an element into the list which is loaded
         from a custom widget.
         '''
         self.elements.append(LoadedDataWidget(
             self.io_core.import_objects[i].data_handler,
-            parent = self.data_list_loaded))
+            parent=self.data_list_loaded))
         self.elements[-1].vis_button.clicked.connect(self.openVisualWindow)
         self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D)
         self.setCurrentElement(i)
@@ -301,8 +307,8 @@ class PageDataWidget(Ui_data_import):
 
     def setMetaList(self):
         '''
-        grabs the information from the initial meta 
-        container in the core and then produces the 
+        grabs the information from the initial meta
+        container in the core and then produces the
         adequate list.
         '''
         self.clearMeta()
@@ -313,7 +319,7 @@ class PageDataWidget(Ui_data_import):
                 self.meta_handler.selected_meta[i])
             self.meta_elements[-1].edited.connect(
                 self.meta_handler.editValue)
-            
+
     def addMetaElement(self):
         '''
 
@@ -333,17 +339,17 @@ class PageDataWidget(Ui_data_import):
         '''
         if len(self.elements) == 0:
             dialog(
-                parent = self.local_widget,
-                icon = 'error', 
-                title= 'No data element set',
-                message = 'No data element initialized. Add one first...',
+                parent=self.local_widget,
+                icon='error',
+                title='No data element set',
+                message='No data element initialized. Add one first...',
                 add_message='You can add a dataset by going to File>add element.')
 
         else:
-            filter      = "All (*);; TOF (*.tof);;PAD (*.pad)"
-            file_name   = QtWidgets.QFileDialog()
+            filter = "All (*);; TOF (*.tof);;PAD (*.pad)"
+            file_name = QtWidgets.QFileDialog()
             file_name.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
-            names       = file_name.getOpenFileNames(
+            names = file_name.getOpenFileNames(
                 self.parent.window,
                 'Select files ...',
                 '',
@@ -352,7 +358,7 @@ class PageDataWidget(Ui_data_import):
 
     def addFiles(self, filenames):
         '''
-        Adding files to the data either through the 
+        Adding files to the data either through the
         filedialog or the drag and drop.
         '''
         self.file_handler.addFiles(filenames)
@@ -360,7 +366,7 @@ class PageDataWidget(Ui_data_import):
 
     def setFileList(self):
         '''
-        This will be the loading of files to the 
+        This will be the loading of files to the
         io file handler class.
         '''
         self.file_model = QtGui.QStandardItemModel()
@@ -369,21 +375,21 @@ class PageDataWidget(Ui_data_import):
 
             item = QtGui.QStandardItem(element)
             self.file_model.appendRow(item)
-    
+
         self.data_list_files.setModel(self.file_model)
         self.data_list_files.selectionModel().selectionChanged.connect(self.setPrev)
 
     def removeFile(self):
         '''
-        This will reset the file view and the 
+        This will reset the file view and the
         associated core io routine.
         '''
         self.file_handler.removeFile(self.data_list_files.currentIndex().row())
         self.setFileList()
-        
+
     def resetFiles(self):
         '''
-        This will reset the file view and the 
+        This will reset the file view and the
         associated core io routine.
         '''
         self.file_handler.initialize()
@@ -404,13 +410,15 @@ class PageDataWidget(Ui_data_import):
         selected dataset processed by setPrev.
         '''
         self._prev_plot.setData(
-            x = np.array([ i for i in range(self.file_handler.current_preview.shape[0])]), 
-            y = np.array([ i for i in range(self.file_handler.current_preview.shape[1])]), 
-            z = self.file_handler.current_preview )
+            x=np.array(
+                [i for i in range(self.file_handler.current_preview.shape[0])]),
+            y=np.array(
+                [i for i in range(self.file_handler.current_preview.shape[1])]),
+            z=self.file_handler.current_preview)
 
-    def populate(self, warning = True):
+    def populate(self, warning=True):
         '''
-        This routine will call the generator for the 
+        This routine will call the generator for the
         currently active object.
         '''
         self.import_object.processObject()
@@ -424,33 +432,33 @@ class PageDataWidget(Ui_data_import):
         except:
             if warning:
                 dialog(
-                    parent = self.local_widget,
-                    icon = 'error', 
-                    title= 'Echo time not processed',
-                    message = 'The echo time has not been processed. This is probably due to a lack of deinitions. See details...',
+                    parent=self.local_widget,
+                    icon='error',
+                    title='Echo time not processed',
+                    message='The echo time has not been processed. This is probably due to a lack of deinitions. See details...',
                     add_message='The calculation of the echo time require the presence of the Wavelength, the first and second frequency attributed the the first and second RF coils and finally the lsd distance in between them extracted from the metadata. One or multiple of them are missing. Please rectify.')
 
     def populateAll(self):
         '''
-        This routine will call the generator for the 
+        This routine will call the generator for the
         currently active object.
         '''
         self.parent.setActivity(
-            "Populating data", 
-            0, 
+            "Populating data",
+            0,
             len(self.io_core.import_objects))
-        
+
         for i in range(len(self.io_core.import_objects)):
             self.parent.setProgress("Adding element "+str(i+1), i+1)
             self.addElementSilent(i)
             self.parent.setProgress("Populating element "+str(i+1), i+1)
-            self.populate(warning = False)
-            
+            self.populate(warning=False)
+
         self.parent.fadeActivity()
 
     def generateDataset(self):
         '''
-        This routine will call the generator for the 
+        This routine will call the generator for the
         currently active object.
         '''
         sanity = self.io_core.generate()
@@ -460,20 +468,20 @@ class PageDataWidget(Ui_data_import):
             self.parent.widgetClasses[0].refreshData()
             self.parent.widgetClasses[3].link(self.parent.handler.current_env)
         elif sanity[0] == 'Echo issue':
-                dialog(
-                    parent      = self.local_widget,
-                    icon        = 'error', 
-                    title       = 'Data echo time point has no reference. ',
-                    message     = 'Some echo time values could not be found in the reference:\n'+str(sanity[1][0]),
-                    add_message = 'The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
+            dialog(
+                parent=self.local_widget,
+                icon='error',
+                title='Data echo time point has no reference. ',
+                message='Some echo time values could not be found in the reference:\n' +
+                str(sanity[1][0]),
+                add_message='The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
         elif sanity[0] == 'No reference':
-                dialog(
-                    parent      = self.local_widget,
-                    icon        = 'error', 
-                    title       = 'No reference set',
-                    message     = 'You did not specify which one of the measurements should be set as reference. See details...',
-                    add_message = 'The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
-
+            dialog(
+                parent=self.local_widget,
+                icon='error',
+                title='No reference set',
+                message='You did not specify which one of the measurements should be set as reference. See details...',
+                add_message='The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
 
     def save(self):
         '''
@@ -483,11 +491,11 @@ class PageDataWidget(Ui_data_import):
         filters = "mieze_save.py"
 
         file_path = QtWidgets.QFileDialog.getSaveFileName(
-                self.parent.window, 
-                'Select file',
-                filters)[0]
+            self.parent.window,
+            'Select file',
+            filters)[0]
         self.io_core.saveToPython(file_path)
-        
+
     def load(self):
         '''
         This will launch the save file of the io
@@ -496,9 +504,9 @@ class PageDataWidget(Ui_data_import):
         filters = "*.py"
 
         file_path = QtWidgets.QFileDialog.getOpenFileName(
-                self.parent.window, 
-                'Select file',
-                filters)[0]
+            self.parent.window,
+            'Select file',
+            filters)[0]
 
         if not file_path == '':
             self.clear()
@@ -513,7 +521,8 @@ class PageDataWidget(Ui_data_import):
         anything went wrong
         '''
         try:
-            passed = all([all([subelement[0] for subelement in element]) for element in output])
+            passed = all([all([subelement[0] for subelement in element])
+                         for element in output])
 
             if not passed:
 
@@ -522,18 +531,20 @@ class PageDataWidget(Ui_data_import):
 
                 for element in output:
                     if not element[0][0]:
-                        meta_string.append('Invalid meta file location: ' + element[0][1])
+                        meta_string.append(
+                            'Invalid meta file location: ' + element[0][1])
                     if not element[1][0]:
-                        folder_string.append('Invalid file folder location: ' + element[1][1])
+                        folder_string.append(
+                            'Invalid file folder location: ' + element[1][1])
                 dialog(
-                    parent = self.local_widget,
-                    icon = 'warning', 
-                    title= 'Could not load all files',
-                    message = 'Some files and folders seem to either have moved or not exist. Please rebase them manually in the import file located at:\n'+file_path,
-                    det_message = '\n\n'.join(meta_string+folder_string))
+                    parent=self.local_widget,
+                    icon='warning',
+                    title='Could not load all files',
+                    message='Some files and folders seem to either have moved or not exist. Please rebase them manually in the import file located at:\n'+file_path,
+                    det_message='\n\n'.join(meta_string+folder_string))
         except:
             pass
-        
+
     def dimChanged(self):
         '''
         This will launch the save file of the io
@@ -546,14 +557,15 @@ class PageDataWidget(Ui_data_import):
             int(self.data_input_pix_y.text())]
 
         self.data_handler.dimension = list(dim)
-        
+
     def setDimInputs(self):
         '''
         This routine will simply propagate the
-        current meta information to all other meta 
+        current meta information to all other meta
         windows.
         '''
         self.data_input_foils.setText(str(self.data_handler.dimension[0]))
-        self.data_input_time_channel.setText(str(self.data_handler.dimension[1]))
+        self.data_input_time_channel.setText(
+            str(self.data_handler.dimension[1]))
         self.data_input_pix_x.setText(str(self.data_handler.dimension[2]))
         self.data_input_pix_y.setText(str(self.data_handler.dimension[3]))

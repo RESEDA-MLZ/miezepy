@@ -23,22 +23,23 @@
 
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-import sys
 import os
-from imageio import imread 
+from imageio import imread
 
-from ...qt_gui.metadata_window_ui import Ui_select_meta 
+from ...qt_gui.metadata_window_ui import Ui_select_meta
+
 
 class MetadataWindowLayout(Ui_select_meta):
     '''
     This is the main window element that will later
-    be the item managin the rest of the system. 
+    be the item managin the rest of the system.
     Note that at a later point we will feature
     drag and drop onto this window.
     '''
+
     def __init__(self, window, window_manager):
 
-        #set up the window
+        # set up the window
         Ui_select_meta.__init__(self)
         self.window = window
         self.setupUi(window)
@@ -49,7 +50,7 @@ class MetadataWindowLayout(Ui_select_meta):
         '''
         connect the actions to their respective buttons
         '''
-        self.meta_button_select.clicked.connect(self.grabFile) 
+        self.meta_button_select.clicked.connect(self.grabFile)
         self.meta_input_select.textChanged.connect(self.scanFile)
         self.meta_input_filter.textChanged.connect(self.setList)
         self.meta_button_accept.clicked.connect(self.accept)
@@ -58,10 +59,10 @@ class MetadataWindowLayout(Ui_select_meta):
 
     def link(self, meta_class):
         '''
-        link the class that will manage the current 
+        link the class that will manage the current
         input output.
         '''
-        self.meta_class = meta_class 
+        self.meta_class = meta_class
         self.initialize()
 
     def initialize(self):
@@ -77,13 +78,13 @@ class MetadataWindowLayout(Ui_select_meta):
 
     def grabFile(self):
         '''
-        Open a folder and set the path and then scan 
+        Open a folder and set the path and then scan
         it automatically on path change.
         '''
         file = QtWidgets.QFileDialog.getOpenFileName(
-                self.window, 
-                'Select directory')
-                
+            self.window,
+            'Select directory')
+
         self.meta_input_select.setText(file[0])
 
     def scanFile(self):
@@ -111,15 +112,15 @@ class MetadataWindowLayout(Ui_select_meta):
             if filter_value in element[1] or filter_value == '':
                 item = QtGui.QStandardItem(element[1]+" ("+element[2]+")")
                 item.setFlags(
-                    QtCore.Qt.ItemIsUserCheckable 
+                    QtCore.Qt.ItemIsUserCheckable
                     | QtCore.Qt.ItemIsEnabled)
                 check = QtCore.Qt.Checked if element[0] else QtCore.Qt.Unchecked
                 item.setData(
-                    QtCore.QVariant(check), 
+                    QtCore.QVariant(check),
                     QtCore.Qt.CheckStateRole)
                 self.model.appendRow(item)
                 self.index.append(element[1])
-    
+
         self.meta_list_list.setModel(self.model)
         self.model.itemChanged.connect(self.onChecked)
 
@@ -127,7 +128,7 @@ class MetadataWindowLayout(Ui_select_meta):
         '''
         When an item is checked the boolena value has
         to be modified in the correct element
-        Input: 
+        Input:
         - index is the line in which this change
         happened
         '''
@@ -146,7 +147,7 @@ class MetadataWindowLayout(Ui_select_meta):
         '''
         self.meta_class.setMeta()
         self.window.parent.setWindowState(
-            self.window.parent.windowState() & ~QtCore.Qt.WindowMinimized 
+            self.window.parent.windowState() & ~QtCore.Qt.WindowMinimized
             | QtCore.Qt.WindowActive)
         self.window.parent.activateWindow()
         self.window.parent.target.widgetClasses[1].setMetaList()
@@ -158,7 +159,7 @@ class MetadataWindowLayout(Ui_select_meta):
         to be modified in the correct element
         '''
         self.window.parent.setWindowState(
-            self.window.parent.windowState() & ~QtCore.Qt.WindowMinimized 
+            self.window.parent.windowState() & ~QtCore.Qt.WindowMinimized
             | QtCore.Qt.WindowActive)
         self.window.parent.activateWindow()
         self.window.close()

@@ -22,18 +22,18 @@
 # *****************************************************************************
 
 #############################
-#import general components
+# import general components
 import numpy as np
-import copy
 
 from .mask_shape import MaskShape
+
 
 class Rectangle(MaskShape):
 
     def __init__(self):
         '''
-        This is the grid mode of the element. 
-        Note that this composition can only 
+        This is the grid mode of the element.
+        Note that this composition can only
         be set to close gaps if the subelement
         is of rectangular shape.
         '''
@@ -42,14 +42,14 @@ class Rectangle(MaskShape):
 
     def initialize(self):
         '''
-        This routine will edit the inherited 
+        This routine will edit the inherited
         dictionary of parameters.
         '''
-        self.parameters['Type']         = 'Rectangle'
-        self.parameters['Dimensions']   = [10.,10.]
-        self.parameters['Subdivisions'] = [1,1]
-        self.parameters['Subdivision dimensions'] = [True, 1.,1.]
-        self.parameters['Increment']    = True
+        self.parameters['Type'] = 'Rectangle'
+        self.parameters['Dimensions'] = [10., 10.]
+        self.parameters['Subdivisions'] = [1, 1]
+        self.parameters['Subdivision dimensions'] = [True, 1., 1.]
+        self.parameters['Increment'] = True
 
     def setDirectly(self, **kwargs):
         '''
@@ -77,12 +77,14 @@ class Rectangle(MaskShape):
         for i in range(self.parameters['Subdivisions'][0]):
             for j in range(self.parameters['Subdivisions'][1]):
                 edge = [
-                    self.parameters['Position'][0]-self.parameters['Dimensions'][0]/2.
-                    +(i+0.5)*self.parameters['Dimensions'][0]
-                    /self.parameters['Subdivisions'][0],
-                    self.parameters['Position'][1]-self.parameters['Dimensions'][1]/2.
-                    +(j+0.5)*self.parameters['Dimensions'][1]
-                    /self.parameters['Subdivisions'][1]]
+                    self.parameters['Position'][0] -
+                    self.parameters['Dimensions'][0]/2.
+                    + (i+0.5)*self.parameters['Dimensions'][0]
+                    / self.parameters['Subdivisions'][0],
+                    self.parameters['Position'][1] -
+                    self.parameters['Dimensions'][1]/2.
+                    + (j+0.5)*self.parameters['Dimensions'][1]
+                    / self.parameters['Subdivisions'][1]]
 
                 temp = []
                 if not self.parameters['Subdivision dimensions'][0]:
@@ -123,9 +125,9 @@ class Rectangle(MaskShape):
                         self.parameters['Position'],
                         [
                             (edge[0]-self.parameters['Dimensions'][0]
-                            /(2*self.parameters['Subdivisions'][0])),
+                             / (2*self.parameters['Subdivisions'][0])),
                             (edge[1]-self.parameters['Dimensions'][1]
-                            /(2*self.parameters['Subdivisions'][1]))
+                             / (2*self.parameters['Subdivisions'][1]))
                         ],
                         self.parameters['Angle'])
                     )
@@ -133,9 +135,9 @@ class Rectangle(MaskShape):
                         self.parameters['Position'],
                         [
                             (edge[0]+self.parameters['Dimensions'][0]
-                            /(2*self.parameters['Subdivisions'][0])),
+                             / (2*self.parameters['Subdivisions'][0])),
                             (edge[1]-self.parameters['Dimensions'][1]
-                            /(2*self.parameters['Subdivisions'][1]))
+                             / (2*self.parameters['Subdivisions'][1]))
                         ],
                         self.parameters['Angle'])
                     )
@@ -143,9 +145,9 @@ class Rectangle(MaskShape):
                         self.parameters['Position'],
                         [
                             (edge[0]+self.parameters['Dimensions'][0]
-                            /(2*self.parameters['Subdivisions'][0])),
+                             / (2*self.parameters['Subdivisions'][0])),
                             (edge[1]+self.parameters['Dimensions'][1]
-                            /(2*self.parameters['Subdivisions'][1]))
+                             / (2*self.parameters['Subdivisions'][1]))
                         ],
                         self.parameters['Angle'])
                     )
@@ -153,9 +155,9 @@ class Rectangle(MaskShape):
                         self.parameters['Position'],
                         [
                             (edge[0]-self.parameters['Dimensions'][0]
-                            /(2*self.parameters['Subdivisions'][0])),
+                             / (2*self.parameters['Subdivisions'][0])),
                             (edge[1]+self.parameters['Dimensions'][1]
-                            /(2*self.parameters['Subdivisions'][1]))
+                             / (2*self.parameters['Subdivisions'][1]))
                         ],
                         self.parameters['Angle'])
                     )
@@ -164,19 +166,19 @@ class Rectangle(MaskShape):
 
     def generate(self, size_x, size_y):
         '''
-        Generate the mask element by calling the 
+        Generate the mask element by calling the
         setup and then patching the masks
         '''
         self.setup()
         self.mask = np.zeros((size_x, size_y), dtype=np.int16)
 
-        for i,polygon in enumerate(self.polygons):
+        for i, polygon in enumerate(self.polygons):
             temp_map = self.processPolygon(polygon, size_x, size_y)
             if self.parameters['Increment']:
                 self.mask += temp_map * (i+1)
                 self.mask[self.mask > (i+1)] = (i+1)
             else:
                 self.mask += temp_map
-                self.mask[self.mask >1] = 1
+                self.mask[self.mask > 1] = 1
 
         return self.mask

@@ -22,9 +22,10 @@
 # *****************************************************************************
 
 #############################
-#import general components
+# import general components
 import copy
 import datetime
+
 
 class LogHandler:
 
@@ -34,19 +35,19 @@ class LogHandler:
         errors  handler class.
 
         The print_level parameter is the setting in which
-        the log handler will print log inputs to the 
+        the log handler will print log inputs to the
         console as it is fed.
         '''
-        self.info           = []
-        self.warning        = []
-        self.error          = []
-        self.print_level    = []
-        self.children       = [] 
-        self.parent         = None 
+        self.info = []
+        self.warning = []
+        self.error = []
+        self.print_level = []
+        self.children = []
+        self.parent = None
 
     def returnLastLog(self, selected):
         '''
-        Will return the last log entry for the 
+        Will return the last log entry for the
         selected type.
         '''
         if selected == 'error':
@@ -64,77 +65,77 @@ class LogHandler:
         '''
 
         ##############################################
-        #are we fed by an error
+        # are we fed by an error
         if selected == 'error':
-            #add error
+            # add error
             self.error.append([
                 datetime.datetime.now(),
                 message,
                 'ERROR'])
-            #print error
-            if  'error' in self.print_level:
+            # print error
+            if 'error' in self.print_level:
                 line = self.error[-1]
                 print(str(line[0])+' '+line[2]+' '+line[1])
 
         ##############################################
-        #are we fed by a warning
+        # are we fed by a warning
         elif selected == 'warning':
-            #add error
+            # add error
             self.warning.append([
                 datetime.datetime.now(),
                 message,
                 'WARNING'])
-            #print error
-            if  'warning' in self.print_level:
+            # print error
+            if 'warning' in self.print_level:
                 line = self.warning[-1]
                 print(str(line[0])+' '+line[2]+' '+line[1])
 
         ##############################################
-        #are we fed by an information
+        # are we fed by an information
         elif selected == 'info':
-            #add error
+            # add error
             self.info.append([
                 datetime.datetime.now(),
                 message,
                 'INFORMATION'])
-            #print error
-            if  'info' in self.print_level:
+            # print error
+            if 'info' in self.print_level:
                 line = self.info[-1]
                 print(str(line[0])+' '+line[2]+' '+line[1])
 
-    def dump_to_file(self, path, level = 0):
+    def dump_to_file(self, path, level=0):
         '''
-        This function will dump the log to file with 
+        This function will dump the log to file with
         the adequate level. Note that level 0 indicates
         that everything should be written while level
         1,2,3 refere to 'error', 'error' + 'warnings'
         'error'+'warnings'+'information'
         '''
-        log_array = self.return_single_array(level = level)
+        log_array = self.return_single_array(level=level)
         file = open(path, 'w')
         for line in log_array:
             file.write(str(line[0])+' '+line[2]+' '+line[1]+'\n')
 
-    def dump_to_console(self,level = 0):
+    def dump_to_console(self, level=0):
         '''
-        This function will dump the log to file with 
+        This function will dump the log to file with
         the adequate level. Note that level 0 indicates
         that everything should be written while level
         1,2,3 refere to 'error', 'error' + 'warnings'
         'error'+'warnings'+'information'
         '''
-        log_array = self.return_single_array(level = level)
+        log_array = self.return_single_array(level=level)
         for line in log_array:
             print(str(line[0])+' '+line[2]+' '+line[1])
 
-    def return_single_array(self, level = 0):
+    def return_single_array(self, level=0):
         '''
 
         '''
-        #initialize
+        # initialize
         log_array = []
 
-        #create the list of lists
+        # create the list of lists
         if level == 0:
             log_lists = [self.info, self.warning, self.error]
         elif level == 1:
@@ -143,12 +144,11 @@ class LogHandler:
             log_lists = [self.error, self.warning]
         elif level == 3:
             log_lists = [self.info, self.warning, self.error]
-    
-        #now populate all the warnings
+
+        # now populate all the warnings
         for log_list in log_lists:
             log_array += list(log_list)
 
-        #now sort it 
+        # now sort it
         log_array.sort()
         return log_array
-        

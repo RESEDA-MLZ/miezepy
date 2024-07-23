@@ -21,24 +21,24 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets,QtCore,QtGui
+from PyQt5 import QtWidgets, QtCore
+
 
 class FoilDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(self, painter, option, index):
-        item = index.model().item(index.row(), index.column()) 
+        item = index.model().item(index.row(), index.column())
         if item.isCheckable() or item.isTristate():
             checked = item.checkState()
             check_box_style_option = QtWidgets.QStyleOptionButton()
-            
-    
+
             if checked == QtCore.Qt.Checked:
                 check_box_style_option.state |= QtWidgets.QStyle.State_On
             elif checked == QtCore.Qt.PartiallyChecked:
                 check_box_style_option.state |= QtWidgets.QStyle.State_NoChange
             elif checked == QtCore.Qt.Unchecked:
                 check_box_style_option.state |= QtWidgets.QStyle.State_Off
-    
+
             check_box_style_option.rect = self.getCheckBoxRect(option)
             check_box_style_option.state |= QtWidgets.QStyle.State_Enabled
             QtWidgets.QApplication.style().drawControl(
@@ -51,15 +51,15 @@ class FoilDelegate(QtWidgets.QStyledItemDelegate):
         check_box_style_option = QtWidgets.QStyleOptionButton()
         check_box_rect = QtWidgets.QApplication.style().subElementRect(
             QtWidgets.QStyle.SE_CheckBoxIndicator, check_box_style_option, None)
-        check_box_point = QtCore.QPoint (
-            option.rect.x(), 
-            option.rect.y() + option.rect.height() / 2 
+        check_box_point = QtCore.QPoint(
+            option.rect.x(),
+            option.rect.y() + option.rect.height() / 2
             - check_box_rect.height() / 2)
 
         return QtCore.QRect(check_box_point, check_box_rect.size())
 
     def sizeHint(self, option, index):
-        item = index.model().item(index.row(), index.column()) 
+        item = index.model().item(index.row(), index.column())
         if item.isCheckable() or item.isTristate():
             rect = self.getCheckBoxRect(option)
             size = QtCore.QSize(rect.width(), rect.height())

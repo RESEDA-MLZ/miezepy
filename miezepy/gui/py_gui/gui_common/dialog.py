@@ -21,20 +21,20 @@
 #
 # *****************************************************************************
 
-#public dependencies
+# public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-def dialog(
-    parent      = None,
-    icon        = None, 
-    message     = None, 
-    add_message = None, 
-    det_message = None, 
-    title       = None):
 
+def dialog(
+        parent=None,
+        icon=None,
+        message=None,
+        add_message=None,
+        det_message=None,
+        title=None):
     '''
     '''
-    parent.msg = QtWidgets.QMessageBox(parent = parent)
+    parent.msg = QtWidgets.QMessageBox(parent=parent)
     if icon == 'error':
         parent.msg.setIcon(QtWidgets.QMessageBox.Critical)
     elif icon == 'info':
@@ -44,7 +44,7 @@ def dialog(
     else:
         icon = 'warning'
         parent.msg.setIcon(QtWidgets.QMessageBox.Warning)
-    
+
     if not message == None:
         parent.msg.setText(message)
     if not add_message == None:
@@ -57,6 +57,6 @@ def dialog(
         parent.msg.setWindowTitle(icon)
     if not message == None:
         parent.msg.setText(message)
-    
+
     parent.msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
     parent.msg.exec_()

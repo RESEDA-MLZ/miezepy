@@ -22,76 +22,77 @@
 # *****************************************************************************
 
 
-#public dependencies
+# public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
-import sys
-import os
-import copy
 import numpy as np
 
-#private dependencies
+# private dependencies
 from ...qt_gui.display_foils_ui import Ui_foil_display
 
-#private plotting library
+# private plotting library
 from simpleplot.canvas.multi_canvas import MultiCanvasItem
+
 
 class DisplayFoilWindowLayout(Ui_foil_display):
     '''
-    This class will manage the raw import 
-    machinery. the UI is inherited through 
+    This class will manage the raw import
+    machinery. the UI is inherited through
     Ui_main_window from the Qt designer anf then
     converted through pyuic5
     '''
+
     def __init__(self, window, window_manager):
 
         Ui_foil_display.__init__(self)
         self.window_manager = window_manager
-        self.window         = window
+        self.window = window
         self.setup()
-        
+
     def setup(self):
         '''
-        This is the initial setup method that will 
+        This is the initial setup method that will
         build the layout and introduce the graphics
         area
         '''
         self.setupUi(self.window)
 
-        self.my_canvas    = MultiCanvasItem(
+        self.my_canvas = MultiCanvasItem(
             self.graph_widget,
-            grid        = [[True]],
-            x_ratios    = [1],
-            y_ratios    = [1],
-            background  = "w",
-            highlightthickness = 0)
+            grid=[[True]],
+            x_ratios=[1],
+            y_ratios=[1],
+            background="w",
+            highlightthickness=0)
 
-        ax = self.my_canvas.getSubplot(0,0)
+        ax = self.my_canvas.getSubplot(0, 0)
         ax.pointer.pointer_handler['Sticky'] = 2
 
     def link(self, instrument):
         '''
         This routine will link to the io manager class
-        from the core. 
+        from the core.
         '''
         self._instrument = instrument
         self.foil_detector_label.setText(
             self._instrument.detector.identifier + ' ('
-            +self._instrument.detector.current_date +')')
+            + self._instrument.detector.current_date + ')')
         self.initialize()
         self.connect()
 
     def initialize(self):
         '''
         This routine will link to the io manager class
-        from the core. 
+        from the core.
         '''
 
         self.foil_spin.setMinimum(0)
-        self.foil_spin.setMaximum(self._instrument.detector.foil_array.shape[0]-1)
+        self.foil_spin.setMaximum(
+            self._instrument.detector.foil_array.shape[0]-1)
 
-        self.ax     = self.my_canvas.getSubplot(0,0)
-        self.plot   = self.ax.addPlot('Surface', Name = 'Surface' )
-        histogram   = self.plot.childFromName('Surface').childFromName('Shader').getHistogramItem()
+        self.ax = self.my_canvas.getSubplot(0, 0)
+        self.plot = self.ax.addPlot('Surface', Name='Surface')
+        histogram = self.plot.childFromName(
+            'Surface').childFromName('Shader').getHistogramItem()
         self.ax.addHistogramItem('right', histogram)
         self.ax.draw()
         self.draw()
@@ -100,7 +101,7 @@ class DisplayFoilWindowLayout(Ui_foil_display):
     def connect(self):
         '''
         This routine will link to the io manager class
-        from the core. 
+        from the core.
         '''
         self.foil_spin.valueChanged.connect(self.draw)
         self.foil_factor_spin.valueChanged.connect(self.draw)
@@ -108,9 +109,10 @@ class DisplayFoilWindowLayout(Ui_foil_display):
     def draw(self):
         '''
         '''
-        data = self._instrument.detector.foil_array[self.foil_spin.value()]*self.foil_factor_spin.value()
+        data = self._instrument.detector.foil_array[self.foil_spin.value(
+        )]*self.foil_factor_spin.value()
 
         self.plot.setData(
-            x = np.array([ i for i in range(data.shape[0])]), 
-            y = np.array([ i for i in range(data.shape[1])]), 
-            z = data)
+            x=np.array([i for i in range(data.shape[0])]),
+            y=np.array([i for i in range(data.shape[1])]),
+            z=data)

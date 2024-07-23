@@ -27,7 +27,6 @@ import numpy as np
 import scipy.constants as co
 from matplotlib.colors import Colormap, LogNorm
 from matplotlib.cm import get_cmap
-import pandas as pd
 fig = plt.figure(figsize=(16,5))
 ax  = fig.add_subplot(1,2,1)
 ax.set_xscale('log')

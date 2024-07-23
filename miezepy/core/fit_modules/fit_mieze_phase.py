@@ -23,8 +23,6 @@
 
 import iminuit
 import numpy as np
-import copy
-import os
 
 #functions for processing the phase through pregroup masks
 from .library_fit import phaseMaskFunction
@@ -45,7 +43,7 @@ class PhaseProcessing():
 
     def noCorrection(self, target, results):
         '''
-        The phase correction can be turned off to 
+        The phase correction can be turned off to
         allow for quick analysis of the data. This
         will simply fill the associated datafield.
 
@@ -65,8 +63,8 @@ class PhaseProcessing():
         echo_name   = self.para_dict['echo_name']
         meas_name   = self.para_dict['meas_name']
 
-        para_axis   = target.get_axis(para_name) 
-        meas_axis   = target.get_axis(meas_name) 
+        para_axis   = target.get_axis(para_name)
+        meas_axis   = target.get_axis(meas_name)
         echo_axis   = target.get_axis(echo_name)
 
         loop = loopLibrary(self, target, 'loop_main')
@@ -79,13 +77,13 @@ class PhaseProcessing():
         temp = {}
         for key, meas, echo in loop:
             #grab the data slice
-            if not data_map[para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+            if not data_map[para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2]), 0, 0] == -1:
 
                 temp[idx] = data_meas[
-                        para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+                        para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2])]
 
             idx += 1
@@ -99,16 +97,16 @@ class PhaseProcessing():
         #write the dictionary entries
         local_results.addLog('info', 'Computation of the shift was a success')
         local_results.setComplete()
-        
+
         #tell fit handler what happened
         self.log.addLog(
-            'info', 
+            'info',
             'Computation of the shift was a success')
 
     def correctPhase(self,target, mask, results):
         '''
         This function is the main callable
-        to process with the change of the phase. 
+        to process with the change of the phase.
         note that this method uses the pregroup
         mask method.
 
@@ -139,17 +137,17 @@ class PhaseProcessing():
         tcha_name   = self.para_dict['tcha_name']
         cha_num     = target.get_axis_len(tcha_name)
 
-        para_axis   = target.get_axis(para_name) 
-        meas_axis   = target.get_axis(meas_name) 
-        echo_axis   = target.get_axis(echo_name) 
-        foil_axis   = target.get_axis(foil_name) 
+        para_axis   = target.get_axis(para_name)
+        meas_axis   = target.get_axis(meas_name)
+        echo_axis   = target.get_axis(echo_name)
+        foil_axis   = target.get_axis(foil_name)
 
         loop = loopLibrary(self, target, 'loop_main')
 
         loop_2 = [
             (m1, m2)
             for m1 in range(1,premask.max()+1)
-            for m2 in range(target.get_axis_len(foil_name))] 
+            for m2 in range(target.get_axis_len(foil_name))]
 
         worker_pool = WorkerPool(self.para_dict['processors'])
         index_array = []
@@ -160,8 +158,8 @@ class PhaseProcessing():
         idx = 0
         for key, meas, echo in loop:
             #grab the data slice
-            if data_map[para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+            if data_map[para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2]), 0, 0] == -1:
                 pass
             else:
@@ -169,8 +167,8 @@ class PhaseProcessing():
                     correctPhaseParaMeas,
                     index_array[idx], idx,
                     data_meas[
-                        para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+                        para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2])],
                     cha_num, echo_axis, foil_axis,
                     premask, loop_2, phase[echo]])
@@ -186,15 +184,15 @@ class PhaseProcessing():
         #write the dictionary entries
         local_results.addLog('info', 'Computation of the shift was a success')
         local_results.setComplete()
-        
+
         #tell fit handler what happened
         self.log.addLog(
-            'info', 
+            'info',
             'Computation of the shift was a success')
-                
+
     def extractPhaseMask(self, target, mask, results):
         '''
-        This part will try to correct the phase anomalies through the 
+        This part will try to correct the phase anomalies through the
         fit of each mask region an then fit it the sinus form. After
         which a map will be generated to which the entire dataset will
         be corrected.
@@ -223,7 +221,7 @@ class PhaseProcessing():
         echo_axis = target.get_axis(echo_name)
         foil_axis = target.get_axis(foil_name)
         chan_num  = target.get_axis_len(tcha_name)
-        
+
         ref_index       = [
             target.get_axis_idx(para_name, selected_ref[0]),
             target.get_axis_idx(meas_name, selected_ref[1])]
@@ -233,7 +231,7 @@ class PhaseProcessing():
         #set result dimensions
         result_dimension = (
             target.data_objects[0].dim[0],
-            target.data_objects[0].dim[1])   
+            target.data_objects[0].dim[1])
 
         loop = [e1 for e1 in range(1,premask.max()+1)]
 
@@ -278,13 +276,13 @@ class PhaseProcessing():
 
         #tell fit handler what happened
         self.log.addLog(
-            'Info', 
+            'Info',
             'Fit of the phase was a success')
 
     def correctPhaseExposure(self, target, mask, instrument, results):
         '''
         This function is the main callable
-        to process with the change of the phase. 
+        to process with the change of the phase.
         note that this method uses the pregroup
         mask method.
 
@@ -314,10 +312,10 @@ class PhaseProcessing():
         foil_name   = self.para_dict['foil_name']
         tcha_name   = self.para_dict['tcha_name']
 
-        para_axis   = target.get_axis(para_name) 
-        meas_axis   = target.get_axis(meas_name) 
-        echo_axis   = target.get_axis(echo_name) 
-        foil_axis   = target.get_axis(foil_name) 
+        para_axis   = target.get_axis(para_name)
+        meas_axis   = target.get_axis(meas_name)
+        echo_axis   = target.get_axis(echo_name)
+        foil_axis   = target.get_axis(foil_name)
         cha_axis    = target.get_axis(tcha_name)
 
         loop_main   = loopLibrary(self, target, 'loop_main')
@@ -351,16 +349,16 @@ class PhaseProcessing():
         idx = 0
         for key, meas, echo in loop_main:
             #grab the data slice
-            if data_map[para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+            if data_map[para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2]), 0, 0] == -1:
                 pass
             else:
                 worker_pool.addWorker([
                     phaseExposure, idx,
                     data_meas[
-                        para_axis.index(index_array[idx][0]), 
-                        meas_axis.index(index_array[idx][1]), 
+                        para_axis.index(index_array[idx][0]),
+                        meas_axis.index(index_array[idx][1]),
                         echo_axis.index(index_array[idx][2])],
                     index_map[echo_axis.index(index_array[idx][2])],
                     loop_final, foil_axis, cha_axis])
@@ -376,8 +374,8 @@ class PhaseProcessing():
         #write the dictionary entries
         local_results.addLog('info', 'Computation of the shift was a success')
         local_results.setComplete()
-        
+
         #tell fit handler what happened
         self.log.addLog(
-            'info', 
+            'info',
             'Computation of the shift was a success')

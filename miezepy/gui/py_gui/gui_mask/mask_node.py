@@ -21,23 +21,23 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5 import QtCore
 
-from simpleplot.models.session_node         import SessionNode
-from simpleplot.models.parameter_class      import ParameterHandler
-from simpleplot.models.widget_constructors  import comboBoxConstructor
+from simpleplot.models.session_node import SessionNode
+from simpleplot.models.parameter_class import ParameterHandler
+from simpleplot.models.widget_constructors import comboBoxConstructor
 
 from .parameter_handlers import RectangleHandler
 from .parameter_handlers import TriangleHandler
 from .parameter_handlers import PieHandler
 from .parameter_handlers import EllipseHandler
- 
+
 
 class MaskElementNode(ParameterHandler):
-    def __init__(self,name ='Mask Element', parent = None, value = 'arc'):
+    def __init__(self, name='Mask Element', parent=None, value='arc'):
         '''
         This node will be the main node for a
-        mask element and will contain by default a 
+        mask element and will contain by default a
         parameter node and if it becomes a combination
         the child node
         '''
@@ -46,17 +46,19 @@ class MaskElementNode(ParameterHandler):
         self.handlers = {}
 
     def data(self, column):
-        if column == 0: return self._name
-        elif column == 1: return self._value
-            
+        if column == 0:
+            return self._name
+        elif column == 1:
+            return self._value
+
     def setData(self, column, value):
-        if column == 0: 
+        if column == 0:
             self._name = value
-        elif column == 1: 
+        elif column == 1:
             self._value = value
-        
+
     def flags(self, index):
-        if index.column() in [0,1]: 
+        if index.column() in [0, 1]:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         else:
             return QtCore.Qt.ItemIsEnabled
@@ -65,7 +67,7 @@ class MaskElementNode(ParameterHandler):
         '''
         create the widget for the delegate
         '''
-        return self._constructor.create(parent,index =  index)
+        return self._constructor.create(parent, index=index)
 
     def setEditorData(self, editor, index):
         '''
@@ -78,18 +80,18 @@ class MaskElementNode(ParameterHandler):
         set the data of the editor
         '''
         return self._constructor.retrieveData(editor)
-    
+
     def updateValue(self, value):
         '''
         The values here will be set manually
         '''
         if value in self.kwargs['choices']:
             self._value = value
-            self._model.dataChanged.emit(self.index(),self.index())
+            self._model.dataChanged.emit(self.index(), self.index())
 
     def setParameters(self, parameter_dict):
         '''
-        Set the parameters of the node through 
+        Set the parameters of the node through
         the interfaces
         '''
         self.load(parameter_dict)
@@ -105,17 +107,18 @@ class MaskElementNode(ParameterHandler):
 
         return output
 
+
 class MaskNode(MaskElementNode):
-    def __init__(self,name ='Mask Element', parent = None):
+    def __init__(self, name='Mask Element', parent=None):
         '''
         This node will be the main node for a
-        mask element and will contain by default a 
+        mask element and will contain by default a
         parameter node and if it becomes a combination
         the child node
         '''
-        MaskElementNode.__init__(self,name = name, parent=parent)
+        MaskElementNode.__init__(self, name=name, parent=parent)
         self.kwargs = {}
-        self.kwargs['choices'] = ['Rectangle','Pie','Triangle','Ellipse']
+        self.kwargs['choices'] = ['Rectangle', 'Pie', 'Triangle', 'Ellipse']
         self.kwargs['method'] = self.typeChanged
         self._value = 'Rectangle'
         self._constructor = comboBoxConstructor(self)
@@ -123,32 +126,32 @@ class MaskNode(MaskElementNode):
 
     def _buildParameterHandlers(self):
         '''
-        Define all the handlers that can be put in. 
-        The fact of not destroying them in 
+        Define all the handlers that can be put in.
+        The fact of not destroying them in
         case the user changes assures the safeguard
         of the data loaded in it.
         '''
         self.handlers = {}
-        self.handlers['Rectangle']  = RectangleHandler()
-        self.handlers['Triangle']   = TriangleHandler()
-        self.handlers['Pie']        = PieHandler()
-        self.handlers['Ellipse']    = EllipseHandler()
+        self.handlers['Rectangle'] = RectangleHandler()
+        self.handlers['Triangle'] = TriangleHandler()
+        self.handlers['Pie'] = PieHandler()
+        self.handlers['Ellipse'] = EllipseHandler()
 
     def typeChanged(self):
         '''
-        This machinery is developed in order to remove the 
+        This machinery is developed in order to remove the
         previous handler and insert the new one
         '''
-        self._model.removeRows(0,len(self._children), self)
+        self._model.removeRows(0, len(self._children), self)
         self.items = self.handlers[self._value].items
         self._model.insertRows(
-            0,len(self.handlers[self._value]._children), 
-            self.handlers[self._value]._children[::-1],self)
+            0, len(self.handlers[self._value]._children),
+            self.handlers[self._value]._children[::-1], self)
         self.freezOrder()
         self.setCurrentTags('2D')
 
     def flags(self, index):
-        if index.column() == 1: 
-            return QtCore.Qt.ItemIsEnabled  | QtCore.Qt.ItemIsEditable
+        if index.column() == 1:
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         else:
-            return QtCore.Qt.ItemIsEnabled 
+            return QtCore.Qt.ItemIsEnabled

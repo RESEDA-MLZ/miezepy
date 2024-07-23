@@ -22,13 +22,6 @@
 # *****************************************************************************
 
 #############################
-#import general components
-import iminuit
-import numpy as np
-import warnings
-import copy
-import math
-#############################
 #import child components
 from .fit_modules.fit_mieze import Fit_MIEZE
 from .fit_modules.fit_sans  import Fit_SANS

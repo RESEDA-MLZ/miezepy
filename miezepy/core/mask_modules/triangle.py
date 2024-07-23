@@ -22,9 +22,9 @@
 # *****************************************************************************
 
 #############################
-#import general components
-import numpy as np
+# import general components
 from .mask_shape import MaskShape
+
 
 class Triangle(MaskShape):
 
@@ -39,11 +39,11 @@ class Triangle(MaskShape):
 
     def initialize(self):
         '''
-        This routine will edit the inherited 
+        This routine will edit the inherited
         dictionary of parameters.
         '''
-        self.parameters['Type']         = 'Triangle'
-        self.parameters['Dimensions']   = [10.,10.]
+        self.parameters['Type'] = 'Triangle'
+        self.parameters['Dimensions'] = [10., 10.]
 
     def setDirectly(self, **kwargs):
         '''
@@ -65,24 +65,26 @@ class Triangle(MaskShape):
 
     def generate(self, size_x, size_y):
         '''
-        This will generate the mask element 
+        This will generate the mask element
         onto a canvas of a given dimension
         '''
         polygon_edges = []
         polygon_edges.append([
-            self.parameters['Position'][0] - self.parameters['Dimensions'][0] / 2.,
+            self.parameters['Position'][0] -
+            self.parameters['Dimensions'][0] / 2.,
             self.parameters['Position'][1] - self.parameters['Dimensions'][1] / 2.])
         polygon_edges.append([
-            self.parameters['Position'][0] + self.parameters['Dimensions'][0] / 2.,
+            self.parameters['Position'][0] +
+            self.parameters['Dimensions'][0] / 2.,
             self.parameters['Position'][1] - self.parameters['Dimensions'][1] / 2.])
         polygon_edges.append([
-            self.parameters['Position'][0] ,
+            self.parameters['Position'][0],
             self.parameters['Position'][1] + self.parameters['Dimensions'][1] / 2.])
 
         for i, element in enumerate(polygon_edges):
             polygon_edges[i] = self.rotatePoint(
                 self.parameters['Position'],
-                polygon_edges[i] , 
+                polygon_edges[i],
                 self.parameters['Angle'])
 
         self.mask = self.processPolygon(polygon_edges, size_x, size_y)
