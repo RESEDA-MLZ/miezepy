@@ -104,9 +104,9 @@ class MaskShape:
             path_4.lineTo(edges[i][0]+1, edges[i][1]+1)
         path_4.closeSubpath()
 
-        pixmap = QtGui.QPixmap(size_x, size_y)
-        pixmap.fill(QtGui.QColor(0, 0, 0))
-        painter = QtGui.QPainter(pixmap)
+        image = QtGui.QImage(size_x, size_y, QtGui.QImage.Format.Format_RGB32)
+        image.fill(QtGui.QColor(0, 0, 0))
+        painter = QtGui.QPainter(image)
         painter.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         pen = QtGui.QPen()
         pen.setColor(QtGui.QColor(0, 0, 1))
@@ -119,7 +119,6 @@ class MaskShape:
         painter.drawPath(path_4)
         painter.end()
 
-        image = pixmap.toImage()
         b = image.bits()
         b.setsize(size_x * size_y * 4)
         arr = np.frombuffer(b, np.uint8).reshape(
@@ -133,9 +132,9 @@ class MaskShape:
         a point is situated within a polygon
         defined by the the edges.
         '''
-        pixmap = QtGui.QPixmap(size_x, size_y)
-        pixmap.fill(QtGui.QColor(0, 0, 0))
-        painter = QtGui.QPainter(pixmap)
+        image = QtGui.QImage(size_x, size_y, QtGui.QImage.Format.Format_RGB32)
+        image.fill(QtGui.QColor(0, 0, 0))
+        painter = QtGui.QPainter(image)
 
         painter.setRenderHint(QtGui.QPainter.HighQualityAntialiasing)
         pen = QtGui.QPen()
@@ -202,8 +201,7 @@ class MaskShape:
             -self.parameters['Position'][1]-1)
 
         painter.end()
-
-        image = pixmap.toImage()
+        
         b = image.bits()
         b.setsize(size_x * size_y * 4)
         arr = np.frombuffer(b, np.uint8).reshape(

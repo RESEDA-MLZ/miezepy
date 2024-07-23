@@ -22,6 +22,7 @@
 # *****************************************************************************
 
 import multiprocessing as mp
+from miezepy.core.module_thread_wrapper import ThreadWrapper
 
 class WorkerPool():
     '''
@@ -30,11 +31,13 @@ class WorkerPool():
     an then move on to the next task
     '''
 
-    def __init__(self, processes):
+    def __init__(self, processes, thread:ThreadWrapper = None):
         self.workers    = []
         self.processes  = processes
         self.queue      = mp.Queue()
         self.manager    = mp.Manager()
+        self.thread     = thread
+        
         if self.processes == 1:
             self.result_dict= {}
         else:
@@ -58,6 +61,9 @@ class WorkerPool():
         while idx < len(self.workers):
             limit   = int(idx + self.processes)
             temp    = []
+            if self.thread is not None:
+                if self.thread.isCanceled():
+                    return None
 
             while idx < limit and idx < len(self.workers):
                 self.workers[idx].start()

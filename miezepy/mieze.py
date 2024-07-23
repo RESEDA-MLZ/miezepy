@@ -27,6 +27,10 @@ from .core.core_handler             import CoreHandler
 from .gui.py_gui.window_handlers    import WindowHandler
 import os
 
+# python 10 fix
+import collections
+collections.Callable = collections.abc.Callable
+
 import argparse
 parser = argparse.ArgumentParser(description='Miezepy data analysis software for MIEZE measurements.')
 parser.add_argument(
@@ -116,9 +120,8 @@ class Mieze(CoreHandler):
         default_post_path = os.path.realpath(os.path.sep.join(
             base + ['ressources', 'default_post_path.txt']))
         if not os.path.isfile(default_post_path):
-            f = open(default_post_path,'w')
-            f.write('')
-            f.close()
+            with open(default_post_path,'w') as f:
+                f.write('')
 
     def run(self, test = False):
         '''

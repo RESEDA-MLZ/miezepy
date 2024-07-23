@@ -385,7 +385,7 @@ class Ui_script_widget(object):
         self.groupBox_3.setTitle(_translate("script_widget", "Reduction settings"))
         self.label_2.setText(_translate("script_widget", "Reference measurement: "))
         self.label_3.setText(_translate("script_widget", "Background measurement:"))
-        self.label_4.setText(_translate("script_widget", "Mask for reduction:"))
+        self.label_4.setText(_translate("script_widget", "Masks for reduction:"))
         self.process_button_run_data.setToolTip(_translate("script_widget", "Set metadata and fit parameters"))
         self.process_button_run_phase.setToolTip(_translate("script_widget", "Run phase processing script"))
         self.process_button_run_fit.setToolTip(_translate("script_widget", "Run Reduction script"))

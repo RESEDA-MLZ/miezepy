@@ -32,11 +32,11 @@ def getProcessStructure(env):
     '''
     if env.select == 'MIEZE':
         return Process_MIEZE(env)
-    if env.select == 'SANS':
-        return Process_SANS(env)
-    else:
-        print('Could not find the process class you are looking for. Error...')
-        return None
+    # if env.select == 'SANS':
+    #     return Process_SANS(env)
+    # else:
+    #     print('Could not find the process class you are looking for. Error...')
+    #     return None
 
 
 class Process_Handler:
@@ -137,7 +137,8 @@ class Process_MIEZE(Process_Handler):
                 self.env.current_data,
                 self.env.mask,
                 self.env.instrument,
-                self.env.results)
+                self.env.results,
+                thread=self.env.thread_wrapper)
         else:
             # generate the mask adapted to this dataset
             self.env.mask.generateMask(
@@ -148,13 +149,15 @@ class Process_MIEZE(Process_Handler):
             self.env.fit.extractPhaseMask(
                 self.env.current_data,
                 self.env.mask,
-                self.env.results)
+                self.env.results,
+                thread=self.env.thread_wrapper)
 
             # process the shift
             self.env.fit.correctPhase(
                 self.env.current_data,
                 self.env.mask,
-                self.env.results)
+                self.env.results,
+                thread=self.env.thread_wrapper)
 
     def calcContrastRef(self):
         '''
@@ -169,7 +172,8 @@ class Process_MIEZE(Process_Handler):
         self.env.fit.calcContrastRef(
             self.env.current_data,
             self.env.mask,
-            self.env.results)
+            self.env.results,
+            thread=self.env.thread_wrapper)
 
     def calcContrastMain(self):
         '''
@@ -184,13 +188,25 @@ class Process_MIEZE(Process_Handler):
         self.env.fit.calcContrastMain(
             self.env.current_data,
             self.env.mask,
-            self.env.results)
+            self.env.results,
+            thread=self.env.thread_wrapper)
 
         # fit the contrast data
         self.env.fit.contrastFit(
             self.env.current_data,
             self.env.mask,
-            self.env.results)
+            self.env.results,
+            thread=self.env.thread_wrapper)
+        
+        if self.env.thread_wrapper is not None and self.env.thread_wrapper.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+        
+        # save the result to file
+        self.validateResult()
 
     def calcContrastSingle(self, select, foil):
         '''
@@ -209,31 +225,48 @@ class Process_MIEZE(Process_Handler):
             select=[select],
             foil=foil,
             no_bg=True)
-
-
-class Process_SANS(Process_Handler):
-
-    def __init__(self, env):
+        
+    def validateResult(self):
         '''
-        This class is a subs process class that
-        contains the method related to processing the
-        SANS data
+        Here the user has validate the result and it will be dumped
+        to the result structure
         '''
-        # initialize the superclass
-        Process_Handler.__init__(self, env)
-        self.env = env
+        path = self.env.io.prepareResultDump(self.env.mask.current_mask)
 
-    def calculate_intensity(self):
-        '''
-        process the intensity vs. parameter calculation
-        '''
-        # generate the mask adapted to this dataset
-        self.env.mask.generateMask(
-            self.env.current_data.data_objects[0].dim[0],
-            self.env.current_data.data_objects[0].dim[1])
+        if  isinstance(path, tuple):
+            raise Exception(path)
+        
+        self.env.scripts.dumpScripts(path)
+        self.env.mask.dumpUsedMask(path)
+        self.env.mask.dumpAllMasks(path)
+        self.env.io.dumpResultMeta(path, self.env.mask.current_mask)
+        
+        data_results = self.env.fit.getEndResults(self.env.results)
+        self.env.io.dumpCSVResults(data_results, path)
+        
+# class Process_SANS(Process_Handler):
 
-        # process the intensity calculations
-        self.env.fit['intensity'](
-            self.env.current_data,
-            self.env.mask,
-            self.env.results)
+#     def __init__(self, env):
+#         '''
+#         This class is a subs process class that
+#         contains the method related to processing the
+#         SANS data
+#         '''
+#         # initialize the superclass
+#         Process_Handler.__init__(self, env)
+#         self.env = env
+
+#     def calculate_intensity(self):
+#         '''
+#         process the intensity vs. parameter calculation
+#         '''
+#         # generate the mask adapted to this dataset
+#         self.env.mask.generateMask(
+#             self.env.current_data.data_objects[0].dim[0],
+#             self.env.current_data.data_objects[0].dim[1])
+
+#         # process the intensity calculations
+#         self.env.fit['intensity'](
+#             self.env.current_data,
+#             self.env.mask,
+#             self.env.results)

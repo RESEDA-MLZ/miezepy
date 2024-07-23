@@ -34,8 +34,8 @@ def getFitStructure(select):
     '''
     if select == 'MIEZE':
         return Fit_MIEZE()
-    if select == 'SANS':
-        return Fit_SANS()
-    else:
-        print('Could not find the fit class you are looking for. Error...')
-        return None
+    # if select == 'SANS':
+    #     return Fit_SANS()
+    # else:
+    #     print('Could not find the fit class you are looking for. Error...')
+    #     return None

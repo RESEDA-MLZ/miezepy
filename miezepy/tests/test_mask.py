@@ -1,5 +1,4 @@
 import unittest
-import miezepy
 import sys
 from PyQt5 import QtGui, QtCore, QtWidgets
 from miezepy.core.module_mask import MaskStructure
@@ -8,12 +7,13 @@ from miezepy.core.module_mask import MaskStructure
 class Test_mask_system(unittest.TestCase):
 
     def test_init(self):
+        #self.app = QtWidgets.QApplication(sys.argv)
         masks = MaskStructure()
         keys = [key for key in masks.mask_dict.keys()]
         self.assertEqual(len(keys), 0)
 
     def test_add_mask(self):
-        self.app = QtWidgets.QApplication(sys.argv)
+        #self.app = QtWidgets.QApplication(sys.argv)
         masks = MaskStructure()
         masks.addMask('circular at 50 50')
         self.assertIn('circular at 50 50', masks.mask_dict.keys())
@@ -78,9 +78,4 @@ class Test_mask_system(unittest.TestCase):
         self.assertEqual(masks.mask_gen.mask[64, 64], 1)
         self.assertEqual(masks.mask_gen.mask[127, 127], 0)
         self.assertEqual(masks.mask_gen.mask[84, 84], 0)
-
-
-if __name__ == '__main__':
-    print()
-    mask = Test_mask_system()
-    mask.test_add_mask()
+        print(masks)

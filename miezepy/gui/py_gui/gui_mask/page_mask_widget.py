@@ -836,7 +836,7 @@ class PanelPageMaskWidget(PageMaskWidget):
         if not process == None:
             self.contrast_plot.setData(
                 x=process['Axis'][para],
-                y=process['Contrast'][para])
+                y=[process['Contrast'][para][item] for item in process['Axis'][para]])
 
         self.ax.zoomer.zoom()
         self.bx.zoomer.zoom()

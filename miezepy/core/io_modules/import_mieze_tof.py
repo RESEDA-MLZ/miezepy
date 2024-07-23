@@ -163,23 +163,22 @@ class Import_MIEZE_TOF:
             echo_idx = 0
             # loop over and process
             for idx_1, file_path in enumerate(path_iter):
-                f = open(file_path, 'rb')
-                target.addMetadataObject(
-                    self.generate_tof_metadata(f, meta_array))
-                dimensionality = [
-                    int(source[-1].strip("(").strip(")").split("x")[i])
-                    for i in range(len(source[-1].split("x")))]
-                loadeddata = np.fromfile(f, dtype=np.int32)[
-                    :np.prod(dimensionality)]
-                data = loadeddata.reshape(*dimensionality)
-                data = np.transpose(
-                    data, tuple([i for i in range(len(dimensionality)-2)])
-                    + (len(dimensionality)-1,)
-                    + (len(dimensionality)-2,))
-                print(tuple([i for i in range(len(dimensionality)-2)])
-                      + (len(dimensionality)-1,)
-                      + (len(dimensionality)-2,))
-                f.close()
+                with open(file_path, 'rb') as f:
+                    target.addMetadataObject(
+                        self.generate_tof_metadata(f, meta_array))
+                    dimensionality = [
+                        int(source[-1].strip("(").strip(")").split("x")[i])
+                        for i in range(len(source[-1].split("x")))]
+                    loadeddata = np.fromfile(f, dtype=np.int32)[
+                        :np.prod(dimensionality)]
+                    data = loadeddata.reshape(*dimensionality)
+                    data = np.transpose(
+                        data, tuple([i for i in range(len(dimensionality)-2)])
+                        + (len(dimensionality)-1,)
+                        + (len(dimensionality)-2,))
+                    print(tuple([i for i in range(len(dimensionality)-2)])
+                        + (len(dimensionality)-1,)
+                        + (len(dimensionality)-2,))
 
                 # fill the data into the target
                 for idx_2 in range(extra_dim[0]):

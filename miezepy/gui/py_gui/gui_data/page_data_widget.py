@@ -42,10 +42,15 @@ class PageDataWidget(Ui_data_import):
     def __init__(self, stack, parent):
 
         Ui_data_import.__init__(self)
-        self.parent = parent
+        self._parent = parent
         self.stack = stack
+        
         self.local_widget = QtWidgets.QWidget()
-        self.setupUi(self.local_widget)
+        v_layout = QtWidgets.QVBoxLayout(self.local_widget)
+        self._work_area = QtWidgets.QWidget(self.local_widget)
+        v_layout.addWidget(self._work_area)
+        
+        self.setupUi(self._work_area)
         self.setup()
         self.connect()
         self.initialize()
@@ -115,13 +120,58 @@ class PageDataWidget(Ui_data_import):
         self.my_canvas.canvas_nodes[0][0][0].grid_layout.setMargin(0)
         self.ax.draw()
 
-    def link(self, io_core):
+        self._createCenterProgess()
+        
+    def _createCenterProgess(self):
+        '''
+        '''
+        # Create the center item
+        self.progress_widget = QtWidgets.QWidget(self.local_widget)
+        self.progress_layout = QtWidgets.QVBoxLayout(self.progress_widget)
+        self.progress_widget.setObjectName("progress_widget_2")
+        self.progress_widget.setStyleSheet(
+            "#progress_widget_2{background-color: rgb(179, 179, 179);}")
+        
+        # Create the items
+        self.progress_bar = QtWidgets.QProgressBar(self.progress_widget)
+        self.progress_bar.setProperty("value", 24)
+        self.progress_bar.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.progress_label = QtWidgets.QLabel("Some text", self.progress_widget)
+        
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.progress_label.setSizePolicy(sizePolicy)
+        self.progress_bar.setSizePolicy(sizePolicy)
+        
+        self.progress_widget.setFixedHeight(self.progress_widget.sizeHint().height())
+
+        self.progress_layout.addWidget(self.progress_bar)
+        self.progress_layout.addWidget(self.progress_label)
+        self.progress_widget.setFixedHeight(self.progress_widget.sizeHint().height())
+        
+        # ductape (ugly)
+        self._work_area.resizeEvent = (
+            lambda old_method: (
+                lambda event: (self.centerProgressWidget(event), old_method(event))[-1]))(self._work_area.resizeEvent)
+        self.centerProgressWidget(None)
+        self.hideActivity()
+        
+    def centerProgressWidget(self,event):
+        '''
+        The progress widget is floating and should therefore be 
+        center upon resizes etc.
+        '''
+        self.progress_widget.setFixedWidth(min([self._work_area.rect().width()/2, 500]))
+        self.progress_widget.move(self._work_area.rect().center() - self.progress_widget.rect().center())
+
+    def link(self, env):
         '''
         This routine will link to the io manager class
         from the core.
         '''
         self.initialize()
-        self.io_core = io_core
+        self.env = env
+        self.io_core = env.io
         self.populateAll()
 
     def unlink(self):
@@ -166,15 +216,15 @@ class PageDataWidget(Ui_data_import):
         '''
         if len(self.elements) == 0:
             dialog(
-                parent=self.local_widget,
+                parent=self._work_area,
                 icon='error',
                 title='No data element set',
                 message='No data element initialized. Add one first...',
                 add_message='You can add a dataset by going to File>add element.')
 
         else:
-            self.parent.window_manager.newWindow('MetaWindow')
-            self.parent.window_manager.active_windows['MetaWindow'].target.link(
+            self._parent.window_manager.newWindow('MetaWindow')
+            self._parent.window_manager.active_windows['MetaWindow'].target.link(
                 self.meta_handler)
 
     def hide_preview(self):
@@ -193,16 +243,16 @@ class PageDataWidget(Ui_data_import):
         '''
         This routine will launch the metadat window.
         '''
-        self.parent.window_manager.newWindow('RawVisual')
-        self.parent.window_manager.active_windows['RawVisual'].target.link(
+        self._parent.window_manager.newWindow('RawVisual')
+        self._parent.window_manager.active_windows['RawVisual'].target.link(
             self.import_object)
 
     def openVisualWindow4D(self):
         '''
         This routine will launch the metadat window.
         '''
-        self.parent.window_manager.newWindow('RawVisual')
-        self.parent.window_manager.active_windows['RawVisual'].target.link(
+        self._parent.window_manager.newWindow('RawVisual')
+        self._parent.window_manager.active_windows['RawVisual'].target.link(
             self.import_object, mode='4D')
 
     def removeMeta(self):
@@ -339,7 +389,7 @@ class PageDataWidget(Ui_data_import):
         '''
         if len(self.elements) == 0:
             dialog(
-                parent=self.local_widget,
+                parent=self._work_area,
                 icon='error',
                 title='No data element set',
                 message='No data element initialized. Add one first...',
@@ -350,7 +400,7 @@ class PageDataWidget(Ui_data_import):
             file_name = QtWidgets.QFileDialog()
             file_name.setFileMode(QtWidgets.QFileDialog.ExistingFiles)
             names = file_name.getOpenFileNames(
-                self.parent.window,
+                self._parent.window,
                 'Select files ...',
                 '',
                 filter)
@@ -432,7 +482,7 @@ class PageDataWidget(Ui_data_import):
         except:
             if warning:
                 dialog(
-                    parent=self.local_widget,
+                    parent=self._work_area,
                     icon='error',
                     title='Echo time not processed',
                     message='The echo time has not been processed. This is probably due to a lack of deinitions. See details...',
@@ -443,45 +493,75 @@ class PageDataWidget(Ui_data_import):
         This routine will call the generator for the
         currently active object.
         '''
-        self.parent.setActivity(
+        self._parent.setActivity(
             "Populating data",
             0,
             len(self.io_core.import_objects))
 
         for i in range(len(self.io_core.import_objects)):
-            self.parent.setProgress("Adding element "+str(i+1), i+1)
+            self._parent.setProgress("Adding element "+str(i+1), i+1)
             self.addElementSilent(i)
-            self.parent.setProgress("Populating element "+str(i+1), i+1)
+            self._parent.setProgress("Populating element "+str(i+1), i+1)
             self.populate(warning=False)
 
-        self.parent.fadeActivity()
+        self._parent.fadeActivity()
 
     def generateDataset(self):
         '''
         This routine will call the generator for the
         currently active object.
         '''
-        sanity = self.io_core.generate()
-        print(sanity)
+        self.env.thread_wrapper.started.connect(self.env.thread_wrapper.generateDataset)
+        self.env.thread_wrapper.success.connect(self._handleSuccess)
+        self.env.thread_wrapper.action.connect(self._handleProgress)
+        self.env.thread_wrapper.action_setup.connect(self._handleProgressStart)
+        self.env.thread_wrapper.error.connect(self._handleError)
+        self.env.thread_wrapper.finished.connect(self.finishGenerateDataset)
+        self.env.thread_wrapper.start()
 
-        if sanity[0] is None:
-            self.parent.widgetClasses[0].refreshData()
-            self.parent.widgetClasses[3].link(self.parent.handler.current_env)
-        elif sanity[0] == 'Echo issue':
-            dialog(
-                parent=self.local_widget,
-                icon='error',
-                title='Data echo time point has no reference. ',
-                message='Some echo time values could not be found in the reference:\n' +
-                str(sanity[1][0]),
-                add_message='The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
-        elif sanity[0] == 'No reference':
-            dialog(
-                parent=self.local_widget,
-                icon='error',
-                title='No reference set',
-                message='You did not specify which one of the measurements should be set as reference. See details...',
-                add_message='The reference measurment is important to process the contrast value. There should be one measuremnt for every echo time of the dataset. You can specify which measurement should be the reference by checking the reference checkbox within the widget.')
+    def finishGenerateDataset(self):
+        '''
+        Since we are threaded handle the finising touch on finished
+        '''
+        self.env.thread_wrapper.error.disconnect(self._handleError)
+        self.env.thread_wrapper.action.disconnect(self._handleProgress)
+        self.env.thread_wrapper.action_setup.disconnect(self._handleProgressStart)
+        self.env.thread_wrapper.success.disconnect(self._handleSuccess)
+        self.env.thread_wrapper.finished.disconnect(self.finishGenerateDataset)
+        self.env.thread_wrapper.started.disconnect(self.env.thread_wrapper.generateDataset)
+        
+    def _handleProgressStart(self, items):
+        '''
+        The processes being threaded we need to tell the app to
+        init the progressbars and so on
+        '''
+        self.setActivity(0, 100)    
+
+    def _handleProgress(self, progress):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.setProgress(*progress)
+
+    def _handleSuccess(self, success):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.setProgress(*success)
+        self.hideActivity()
+        self.env.thread_wrapper.stop()
+
+    def _handleError(self, error):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.hideActivity()
+        dialog(
+            parent=self._work_area,
+            **error)
 
     def save(self):
         '''
@@ -491,7 +571,7 @@ class PageDataWidget(Ui_data_import):
         filters = "mieze_save.py"
 
         file_path = QtWidgets.QFileDialog.getSaveFileName(
-            self.parent.window,
+            self._parent.window,
             'Select file',
             filters)[0]
         self.io_core.saveToPython(file_path)
@@ -504,7 +584,7 @@ class PageDataWidget(Ui_data_import):
         filters = "*.py"
 
         file_path = QtWidgets.QFileDialog.getOpenFileName(
-            self.parent.window,
+            self._parent.window,
             'Select file',
             filters)[0]
 
@@ -537,7 +617,7 @@ class PageDataWidget(Ui_data_import):
                         folder_string.append(
                             'Invalid file folder location: ' + element[1][1])
                 dialog(
-                    parent=self.local_widget,
+                    parent=self._work_area,
                     icon='warning',
                     title='Could not load all files',
                     message='Some files and folders seem to either have moved or not exist. Please rebase them manually in the import file located at:\n'+file_path,
@@ -569,3 +649,62 @@ class PageDataWidget(Ui_data_import):
             str(self.data_handler.dimension[1]))
         self.data_input_pix_x.setText(str(self.data_handler.dimension[2]))
         self.data_input_pix_y.setText(str(self.data_handler.dimension[3]))
+
+    def setActivity(self, min_val, max_val):
+        '''
+
+        '''
+        # make it visible in case it was hidden
+        self.progress_widget.show()
+
+        # in case it was faded
+        self._unfade(self.progress_widget)
+
+        self.progress_bar.setMinimum(min_val)
+        self.progress_bar.setMaximum(max_val)
+        
+        for child in self._work_area.children():
+            if child is self.progress_widget:
+                continue 
+            child.setEnabled(False)
+
+    def hideActivity(self):
+        '''
+        '''
+        self.progress_widget.hide()
+        for child in self._work_area.children():
+            if child is self.progress_widget:
+                continue 
+            child.setEnabled(True)
+
+    def fadeActivity(self):
+        '''
+        '''
+        self._fade(self.progress_widget)
+        
+    def _unfade(self, widget):
+        '''
+        '''
+        effect = QtWidgets.QGraphicsOpacityEffect()
+        effect.setOpacity(1)
+        widget.setGraphicsEffect(effect)
+
+    def _fade(self, widget):
+        '''
+        '''
+        widget.effect = QtWidgets.QGraphicsOpacityEffect()
+        widget.setGraphicsEffect(widget.effect)
+
+        widget.animation = QtCore.QPropertyAnimation(widget.effect, b"opacity")
+        widget.animation.setDuration(1000)
+        widget.animation.setStartValue(1)
+        widget.animation.setEndValue(0)
+        widget.animation.start()
+
+    def setProgress(self, label, val):
+        '''
+
+        '''
+        self.progress_bar.setValue(val)
+        self.progress_label.setText(label)
+        

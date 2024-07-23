@@ -1,12 +1,12 @@
 import unittest
-import numpy as np
 from miezepy.core.mask_modules.rectangle import Rectangle
 from miezepy.core.mask_modules.triangle import Triangle
 from miezepy.core.mask_modules.circle_arc import CircleArc
+from miezepy.core.mask_modules.ellipse import Ellipse
 
 
 class Test_square(unittest.TestCase):
-
+    
     def test_square_init(self):
         square = Rectangle()
         para = square.parameters
@@ -203,6 +203,70 @@ class Test_arc(unittest.TestCase):
         self.assertEqual(arc.mask[0, 0], 0)
         self.assertEqual(arc.mask[37, 50], 1)
 
+class Test_ellipse(unittest.TestCase):
+
+    def test_ellipse_init(self):
+        ellipse = Ellipse()
+        para = ellipse.parameters
+
+        self.assertEqual(para['Position'], [0, 0])
+        self.assertEqual(para['Angle'], 0)
+        self.assertEqual(para['Diameters'], [10., 10.])
+
+    def test_ellipse_move_absolute(self):
+        ellipse = Ellipse()
+        para = ellipse.parameters
+
+        self.assertEqual(para['Position'], [0, 0])
+        ellipse.move(absolute=(10, 10))
+        self.assertEqual(para['Position'], [10, 10])
+
+    def test_ellipse_move_relative(self):
+        ellipse = Ellipse()
+        para = ellipse.parameters
+
+        self.assertEqual(para['Position'], [0, 0])
+        ellipse.move(relative=(20, 20))
+        self.assertEqual(para['Position'], [20, 20])
+
+    def test_ellipse_rotate_absolute(self):
+        ellipse = Ellipse()
+        para = ellipse.parameters
+
+        self.assertEqual(para['Angle'], 0)
+        ellipse.rotate(absolute=45)
+        self.assertEqual(para['Angle'], 45)
+
+        ellipse.generate(128, 128)
+        self.assertEqual(ellipse.mask[0, 0], 1)
+
+    def test_ellipse_rotate_relative(self):
+        ellipse = Ellipse()
+        para = ellipse.parameters
+
+        self.assertEqual(para['Angle'], 0)
+        ellipse.rotate(relative=45)
+        self.assertEqual(para['Angle'], 45)
+
+        ellipse.generate(128, 128)
+        self.assertEqual(ellipse.mask[0, 0], 1)
+
+    def test_ellipse_generate(self):
+        ellipse = Ellipse()
+        ellipse.generate(128, 128)
+
+        # test the mask value
+        self.assertEqual(ellipse.mask[0, 0], 1)
+        self.assertEqual(ellipse.mask[0, 12], 0)
+        self.assertEqual(ellipse.mask[12, 0], 0)
+        self.assertEqual(ellipse.mask[127, 127], 0)
+
+        # test the move and mask values
+        ellipse.move(relative=(50, 50))
+        ellipse.generate(128, 128)
+        self.assertEqual(ellipse.mask[50, 37], 0)
+        self.assertEqual(ellipse.mask[0, 0], 0)
+        self.assertEqual(ellipse.mask[37, 50], 0)
 
 # class Test_radial_composition(unittest.TestCase):
 

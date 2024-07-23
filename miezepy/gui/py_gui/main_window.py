@@ -156,26 +156,26 @@ class MainWindowLayout(Ui_MIEZETool):
             partial(
                 self.actionDispatcher, 3, 
                 self.widgetClasses[3].loadScripts))
-        self.actionImport.triggered.connect(
-            partial(
-                self.actionDispatcher, 3, 
-                partial(self.widgetClasses[3].run,0)))
-        self.actionPhase.triggered.connect(
-            partial(
-                self.actionDispatcher, 3, 
-                partial(self.widgetClasses[3].run,1)))
-        self.actionReduction.triggered.connect(
-            partial(
-                self.actionDispatcher, 3, 
-                partial(self.widgetClasses[3].run,2)))
-        self.actionVisual.triggered.connect(
-            partial(
-                self.actionDispatcher, 3, 
-                partial(self.widgetClasses[3].run,3)))
-        self.actionAll.triggered.connect(
-            partial(
-                self.actionDispatcher, 3, 
-                self.widgetClasses[3].runAll))
+        # self.actionImport.triggered.connect(
+        #     partial(
+        #         self.actionDispatcher, 3, 
+        #         partial(self.widgetClasses[3].run,0)))
+        # self.actionPhase.triggered.connect(
+        #     partial(
+        #         self.actionDispatcher, 3, 
+        #         partial(self.widgetClasses[3].run,1)))
+        # self.actionReduction.triggered.connect(
+        #     partial(
+        #         self.actionDispatcher, 3, 
+        #         partial(self.widgetClasses[3].run,2)))
+        # self.actionVisual.triggered.connect(
+        #     partial(
+        #         self.actionDispatcher, 3, 
+        #         partial(self.widgetClasses[3].run,3)))
+        # self.actionAll.triggered.connect(
+        #     partial(
+        #         self.actionDispatcher, 3, 
+        #         self.widgetClasses[3].runAll))
 
         #io
         self.actionLoad_Session.triggered.connect(
@@ -211,7 +211,7 @@ class MainWindowLayout(Ui_MIEZETool):
 
             if index == 1:
                 if not self.widgetClasses[1].io_core == self.handler.current_env.io:
-                    self.widgetClasses[1].link(self.handler.current_env.io)
+                    self.widgetClasses[1].link(self.handler.current_env)
                 self.refreshChecked(1)
 
             if index == 2:

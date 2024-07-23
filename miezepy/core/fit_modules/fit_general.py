@@ -55,11 +55,11 @@ class FitHandler():
         Input: target (Data_Structure)
         '''
         if key == 'error':
-            return self.log.return_last_log('error')
+            return self.log.returnLastLog('error')
         elif key == 'info':
-            return self.log.return_last_log('info')
+            return self.log.returnLastLog('info')
         elif key == 'warning':
-            return self.log.return_last_log('warning')
+            return self.log.returnLastLog('warning')
         else:
             return self.fun_dict[key]
 

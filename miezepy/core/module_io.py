@@ -22,10 +22,12 @@
 # *****************************************************************************
 
 
+import csv
 import os
 import re
 import glob
 import numpy as np
+import time
 
 from .io_modules.import_mieze_tof import Import_MIEZE_TOF
 from .io_modules.import_sans_pad import Import_SANS_PAD
@@ -33,6 +35,9 @@ from .module_data import DataStructure
 from .fit_modules.library_fit import miezeTauCalculation
 
 
+IO_NO_PATH = 'The environement has no save path set. Please first save the environemnt.'
+IO_PATH_DELETED = 'The initially defined path of the environment does not exist. Was the project moved ?'
+IO_PATH_PERMISSION = 'The creation of the result directory failed. It could be a write permission issue.'
 def loadData(env, gui):
     return ''
 
@@ -43,9 +48,16 @@ class IOStructure:
 
         self.verbose = True
         self.env = env
+        self.path = None
         self.generator = Generator()
         self.import_objects = []
         self.extra_folders = []
+
+    def setEnvPath(self, path):
+        self.path = path
+
+    def envPath(self):
+        return self.path
 
     def grabFromOther(self, other):
         '''
@@ -130,9 +142,8 @@ class IOStructure:
             script += indent * "    " + "data_files_found = [True,'']\n"
             script += element.script(indent)
 
-        f = open(path, 'w')
-        f.write(script)
-        f.close()
+        with open(path, 'w') as f:
+            f.write(script)
 
     def loadFromPython(self, path, gui=None, extra_folder=[]):
         '''
@@ -162,13 +173,13 @@ class IOStructure:
         '''
         print('I am a text')
 
-    def generate(self):
+    def generate(self, thread=None):
         '''
         This is the method that will create a data
         structure populate it and then send it's
         content to the main environment handler.
         '''
-        data, sanity = self.generator.generate(self.import_objects)
+        data, sanity = self.generator.generate(self.import_objects, thread=thread)
         if not sanity[0] is None:
             return sanity
         else:
@@ -197,24 +208,154 @@ class IOStructure:
         PAD format.
         '''
         Import_SANS_PAD(load_path, self.env.current_data)
+        
+    def prepareResultDump(self, append_name):
+        '''
+        This function will handle the management of the results
+        dumping after each consecutive run. Here we are going to 
+        check the 
+        '''
+        if self.path is None:
+            return ('io_no_path_provided', IO_NO_PATH)
+        
+        if not os.path.exists(self.path):
+            return ('io_path_deleted', IO_PATH_DELETED)
+        
+        if not os.path.exists(os.path.join(self.path, 'results')):
+            try:
+                os.mkdir(os.path.join(self.path, 'results'))
+            except:
+                return ('io_path_permission_1', IO_PATH_PERMISSION)
+            
+        try:
+            path = os.path.join(self.path, 'results', time.strftime("%Y%m%d-%H%M%S_result"))
+            os.mkdir(path+'_'+append_name)
+        except:
+            return ('io_path_permission_2', IO_PATH_PERMISSION)
+        
+        return path+'_'+append_name
 
+    def dumpResultMeta(self, dir_path, mask=None):
+        '''
+        This function will handle the csv dumping
+        '''
+        dir_name = os.path.basename(dir_path)
+        date_rep = dir_name.split('-')
+        date = date_rep[0]
+        time = date_rep[1]
+        meta_list = [
+            dir_name,
+            dir_name,
+            ' '.join([
+                '.'.join([date[:4], date[4:6], date[6:8]]),
+                'at',
+                ':'.join([time[:2], time[2:4], time[4:6]])])]
+        
+        with open(os.path.join(dir_path, 'meta.txt'), 'w') as meta_file:
+            meta_file.write('\n'.join(meta_list) + '\n')
+        
+    def dumpCSVResults(self, data, path):
+        '''
+        This function will handle the csv dumping
+        '''
+        #-------------------------------------------------------
+        # This is for the corrected data
+        lines = []
+
+        #Build the header
+        header = []
+        for key in data[0]:
+            for pointer, name in {'x': 'tau_ns', 'y': 'contrast', 'y_error': 'cerr'}.items():
+                header.append(key+'_'+name)
+        lines.append(header)
+        
+        # Set the data
+        end_reached = False
+        line_num = -1
+        while not end_reached:
+            line_num +=1
+            line = []
+            for key in data[0]:
+                for pointer, name in {'x': 'tau_ns', 'y': 'contrast', 'y_error': 'cerr'}.items():
+                    line.append(data[2][key][pointer][line_num] if line_num<len(data[2][key][pointer]) else None)
+                    
+            if all([item is None for item in line]):
+                end_reached = True
+                break
+            
+            lines.append(line)
+            
+        # Write to file
+        with open(os.path.join(path, 'contrast_result.csv'), 'w') as f:
+            writer = csv.writer(f, lineterminator='\n')
+            writer.writerows(lines)
+        
+        #-------------------------------------------------------
+        # This is for the non-corrected data
+        lines = []
+        
+        #Build the header
+        header = []
+        for key in data[0]:
+            for pointer, name in {'x': 'tau_ns', 'y_raw': 'contrast', 'y_raw_error': 'cerr'}.items():
+                header.append(key+'_'+name)
+        lines.append(header)
+        
+        # Set the data
+        end_reached = False
+        line_num = -1
+        while not end_reached:
+            line_num +=1
+            line = []
+            for key in data[0]:
+                for pointer, name in {'x': 'tau_ns_raw', 'y_raw': 'contrast_raw', 'y_raw_error': 'cerr_raw'}.items():
+                    line.append(data[2][key][pointer][line_num] if line_num<len(data[2][key][pointer]) else None)
+                    
+            if all([item is None for item in line]):
+                end_reached = True
+                break
+            
+            lines.append(line)
+            
+        # Write to file
+        with open(os.path.join(path, 'raw_result.csv'), 'w') as f:
+            writer = csv.writer(f, lineterminator='\n')
+            writer.writerows(lines)
 
 class Generator:
 
-    def generate(self, import_objects):
+    def generate(self, import_objects, thread=None):
         '''
         Main generator function that will manage the
         import of all the required elements
         '''
+        if thread is not None: 
+            thread.action.emit(['Spawned dataset generator', 0])
+            
+        if thread is not None: 
+            thread.action.emit(['Processed data axes', 10])
         axes, idx = self._getAxes(import_objects)
-        data = self._populateData(axes, idx, import_objects)
+        
+        if thread is not None: 
+            thread.action.emit(['Read data', 25])
+        data = self._populateData(axes, idx, import_objects, thread=thread)
+        
+        if thread is not None: 
+            thread.action.emit(['Generate axes for data', 50])
         data = self._setAxes(data, axes)
+        
+        if thread is not None: 
+            thread.action.emit(['Sanity check', 75])
         sanity = self._axesSanityCheck(axes, import_objects)
+        
+        if thread is not None: 
+            thread.action.emit(['Complete', 100])
         return data, sanity
 
     def _axesSanityCheck(self, axes, import_objects):
         '''
-        Check the sanity of the axes and all definitions
+        Check the sanity of the axes and a
+        ll definitions
         '''
         reference = self._getReference(import_objects)
         if reference is None:
@@ -287,25 +428,29 @@ class Generator:
 
         return data
 
-    def _populateData(self, axes, idx, import_objects):
+    def _populateData(self, axes, idx, import_objects, thread=None):
         '''
         compute the axes from all the import objects
         and then stick them together and finally
         remove repetitions through sets
         '''
         data_structure = DataStructure()
+        
+        total_length = [len([path for path in import_object.file_handler.total_path_files]) for import_object in import_objects]
 
         for i, import_object in enumerate(import_objects):
             for j, path in enumerate(import_object.file_handler.total_path_files):
                 data_structure.addMetadataObject(
                     self._generateMetadata(import_object, j))
-
-                f = open(path, 'rb')
-                loadeddata = np.fromfile(f, dtype=np.int32)[
-                    :np.prod(import_object.data_handler.dimension)]
-                data = loadeddata.reshape(
-                    *import_object.data_handler.dimension)
-                f.close()
+                
+                if thread is not None: 
+                    thread.action.emit(['Generate axes for data', 50+10/sum(total_length)*(sum(total_length[:i])+j)])
+                    
+                with open(path, 'rb') as f:
+                    loadeddata = np.fromfile(f, dtype=np.int32)[
+                        :np.prod(import_object.data_handler.dimension)]
+                    data = loadeddata.reshape(
+                        *import_object.data_handler.dimension)
 
                 for idx_1 in range(import_object.data_handler.dimension[0]):
                     for idx_2 in range(import_object.data_handler.dimension[1]):
@@ -665,24 +810,22 @@ class MetaHandler:
         self.path = file_path
         self.metadata_temp = []
         if not self.path == '':
-            f = open(file_path, 'rb')
-            line = f.readlines()
+            with open(file_path, 'rb') as f:
+                line = f.readlines()
 
-            for binaryLine in line:
-                try:
-                    line = binaryLine.decode('ascii').replace('\n', '')
-                    nums = re.findall('-?\d*\.?\d+', line.split(" : ")[1])
-                    if len(nums) == 0:
+                for binaryLine in line:
+                    try:
+                        line = binaryLine.decode('ascii').replace('\n', '')
+                        nums = re.findall('-?\d*\.?\d+', line.split(" : ")[1])
+                        if len(nums) == 0:
+                            pass
+                        else:
+                            self.metadata_temp.append([
+                                False,
+                                line.split(" : ")[0].replace(" ", ""),
+                                line.split(" : ")[1].split(nums[len(nums) - 1])[1].replace(" ", "").replace(")", "")])
+                    except:
                         pass
-                    else:
-                        self.metadata_temp.append([
-                            False,
-                            line.split(" : ")[0].replace(" ", ""),
-                            line.split(" : ")[1].split(nums[len(nums) - 1])[1].replace(" ", "").replace(")", "")])
-                except:
-                    pass
-
-            f.close()
 
     def flipBool(self, name, value):
         '''
@@ -765,8 +908,9 @@ class MetaHandler:
     def extractMeta(self, file_path):
         '''
         '''
-        f = open(file_path, 'rb')
-        line = f.readlines()
+        with open(file_path, 'rb') as f:
+            line = f.readlines()
+            
         for element in self.selected_meta:
             self.values_set[element[0]] = False
 

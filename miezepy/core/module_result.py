@@ -142,44 +142,44 @@ class ResultStructure:
 
             return None
 
-    def setResult(self, name='', position=['None'], value=None):
-        '''
-        This will set a value for a given result. This
-        can be used to manually inject a value.
-        '''
-        ##############################################
-        # dictionary mode
-        if self.mode == 'Dict':
-            eval_string = "self.results['" + str(name) + "']"
+    # def setResult(self, name='', position=['None'], value=None):
+    #     '''
+    #     This will set a value for a given result. This
+    #     can be used to manually inject a value.
+    #     '''
+    #     ##############################################
+    #     # dictionary mode
+    #     if self.mode == 'Dict':
+    #         eval_string = "self.results['" + str(name) + "']"
 
-        ##############################################
-        # List mode
-        else:
-            eval_string = "self.results[i]"
+    #     ##############################################
+    #     # List mode
+    #     else:
+    #         eval_string = "self.results[i]"
 
-        ##############################################
-        # Common part
-        for element in position:
-            if isinstance(element, str):
-                eval_string += "['"+str(element)+"']"
-            elif isinstance(element, int):
-                eval_string += "['"+int(element)+"']"
-            else:
-                eval_string += "["+str(element)+"]"
-        eval_string += " = value"
+    #     ##############################################
+    #     # Common part
+    #     for element in position:
+    #         if isinstance(element, str):
+    #             eval_string += "['"+str(element)+"']"
+    #         elif isinstance(element, int):
+    #             eval_string += "['"+int(element)+"']"
+    #         else:
+    #             eval_string += "["+str(element)+"]"
+    #     eval_string += " = value"
 
-        ##############################################
-        # dictionary mode
-        if self.mode == 'Dict':
-            exec(eval_string)
+    #     ##############################################
+    #     # dictionary mode
+    #     if self.mode == 'Dict':
+    #         exec(eval_string)
 
-        ##############################################
-        # List mode
-        else:
-            for i in range(len(self.results) - 1, -1, -1):
-                if self.results[i]['name'] == name:
-                    exec(eval_string)
-                    return 0
+    #     ##############################################
+    #     # List mode
+    #     else:
+    #         for i in range(len(self.results) - 1, -1, -1):
+    #             if self.results[i]['name'] == name:
+    #                 exec(eval_string)
+    #                 return 0
 
 
 class ResultObject:

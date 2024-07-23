@@ -129,11 +129,16 @@ class DataStructure:
         Input:
         - index (int/slice array) position if the elements
         '''
-        # process input
+        if len(self.data_objects) == 0 :
+            return None
+        
         if isinstance(index, int):
-            id_array = self.axes.get_id_for_index([index])
-        else:
-            id_array = self.axes.get_id_for_index(index)
+            index = [index]
+
+        if len(index) < len(self.data_objects[0].index):
+            index += ['-' for i in range(len(self.data_objects[0].index) - len(index))]
+            
+        id_array = self.axes.get_id_for_index(index)
 
         if len(id_array) == 0:
             return False
@@ -535,7 +540,7 @@ class DataStructure:
         equivalence = new_data.axes.clean_axes()
         new_data.clean_data(equivalence)
 
-        new_data.create_map()
+        new_data.createMap()
         self.log.addLog(
             'info',
             'Successfully removed points from axis')
@@ -875,7 +880,7 @@ class Metadata:
         output += "The selected metadata has the current information: \n"
         for key, row in self.metadata.items():
 
-            output += row[0]+": "+row[2]+" "+row[3]+" ("+row[1]+") "+"\n"
+            output += str(row[0])+": "+str(row[2])+" "+str(row[3])+" ("+str(row[1])+") "+"\n"
 
         output += "##########################################################\n\n"
 

@@ -1,8 +1,4 @@
 import unittest
-import numpy as np
-import time
-import os
-
 from miezepy.core.module_instrument import InstrumentStructure
 
 

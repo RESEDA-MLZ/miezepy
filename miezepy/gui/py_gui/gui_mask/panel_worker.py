@@ -98,6 +98,7 @@ class PanelWorker(QtCore.QObject):
         except:
             self.fit = None
 
+
         try:
             self.method(self.para, self.foil)
             self.process = self.results.getLastResult('Contrast calculation')

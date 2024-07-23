@@ -25,6 +25,7 @@
 # import general components
 import json
 import numpy as np
+import os
 
 #############################
 # import child components
@@ -158,33 +159,43 @@ class MaskStructure:
         '''
         Writes a mask to json
         '''
-        f = open(path, 'w')
-        f.write(json.dumps(self.mask_dict[self.current_mask]))
-        f.close()
+        with open(path, 'w') as f:
+            f.write(json.dumps(self.mask_dict[self.current_mask]))
+
+    def dumpUsedMask(self, path):
+        '''
+        Writes a the current mask to json
+        '''
+        with open(os.path.join(path, 'used_mask.json'), 'w') as f:
+            f.write(json.dumps(self.mask_dict[self.current_mask]))
+
+    def dumpAllMasks(self, path):
+        '''
+        Writes a the current mask to json
+        '''
+        with open(os.path.join(path, 'all_masks.json'), 'w') as f:
+            f.write(json.dumps(self.mask_dict[self.current_mask]))
 
     def saveAllMasks(self, path):
         '''
         Writes a mask to json
         '''
-        f = open(path, 'w')
-        f.write(json.dumps(self.mask_dict))
-        f.close()
+        with open(path, 'w') as f:
+            f.write(json.dumps(self.mask_dict))
 
     def loadSingleMask(self, path):
         '''
         Writes a mask to json
         '''
-        f = open(path, 'r')
-        self.mask_dict[self.current_mask] = json.load(f)
-        f.close()
+        with open(path, 'w') as f:
+            self.mask_dict[self.current_mask] = json.load(f)
 
     def loadAllMasks(self, path):
         '''
         Writes a mask to json
         '''
-        f = open(path, 'r')
-        self.mask_dict = json.load(f)
-        f.close()
+        with open(path, 'r') as f:
+            self.mask_dict = json.load(f)
 
     def generateDefaults(self):
         '''

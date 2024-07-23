@@ -1,14 +1,14 @@
-import os
-import nose
+import unittest
+import os 
 
-argv = [
-    '-v',
-    '-s',
-    '-w',
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'miezepy', 'tests'),
-    '--processes', '0']
+def suite():
+
+    loader = unittest.TestLoader()
+    tests = loader.discover(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'miezepy', 'tests'))
+
+    return tests
 
 if __name__ == '__main__':
-    nose.main(argv=argv)
+
+    runner = unittest.TextTestRunner(verbosity=2, buffer=True)
+    runner.run(suite())

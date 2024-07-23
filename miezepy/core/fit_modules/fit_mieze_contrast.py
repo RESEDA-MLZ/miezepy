@@ -335,7 +335,7 @@ class ContrastProcessing:
 
         return output
 
-    def calcContrastRef(self, target, mask, results):
+    def calcContrastRef(self, target, mask, results, thread=None):
         """
         uses self.shifted to combine foils and
         calculates contrast for chosen foils for
@@ -352,6 +352,13 @@ class ContrastProcessing:
         results : ResultStructure
             The current active result structure
         """
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+        
         # Initialize the output dictionary with all def.
         local_results = results.generateResult(
             name='Reference contrast calculation')
@@ -396,7 +403,7 @@ class ContrastProcessing:
         # close up the result
         local_results.setComplete()
 
-    def calcContrastMain(self, target, mask, results, select=False, foil=None, no_bg=False):
+    def calcContrastMain(self, target, mask, results, select=False, foil=None, no_bg=False, thread=None):
         """
         This is the main contrast calculation routine.
 
@@ -411,6 +418,13 @@ class ContrastProcessing:
         results : ResultStructure
             The current active result structure
         """
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+
         # Initialize the output dictionary with all def.
         local_results = results.generateResult(name='Contrast calculation')
         sum_foils = self.para_dict['sum_foils']
@@ -451,6 +465,15 @@ class ContrastProcessing:
         contrast_error = {}
 
         for para in axis.keys():
+            if thread is not None and thread.isCanceled():
+                '''
+                The thread was canceled
+                close the result gracefully and exit
+                '''
+                local_results.addLog('info', 'The computation was aborted')
+                local_results.setComplete()
+                return
+            
             if 'BG_result' in locals():
                 BG_target = BG_result[BG][0]
             else:
@@ -499,7 +522,7 @@ class ContrastProcessing:
             'Info',
             'Computation of the contrast was was a success')
 
-    def contrastFit(self, target, mask, results):
+    def contrastFit(self, target, mask, results, thread=None):
         """
         In this function we will process the fit of
         the data to allow fitting later on
@@ -517,6 +540,13 @@ class ContrastProcessing:
         results : ResultStructure
             The current active result structure
         """
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+
         # Initialize the output dictionary with all def.
         local_results = results.generateResult(name='Contrast fit')
         sum_foils = self.para_dict['sum_foils']
@@ -693,3 +723,17 @@ class ContrastProcessing:
             foil_weights.append((temp_weigths / np.sum(temp_weigths)).tolist())
 
         return foil_weights
+
+    def getEndResults(self, results):
+        """
+        """
+        data = None
+        result  = results.getLastResult(name = 'Contrast fit')
+
+        if not result is None:
+            data = [
+                result.result_dict['Select'],
+                result.result_dict['Axis'],
+                result.result_dict['Parameters']]
+            
+        return data

@@ -112,9 +112,9 @@ class LogHandler:
         'error'+'warnings'+'information'
         '''
         log_array = self.return_single_array(level=level)
-        file = open(path, 'w')
-        for line in log_array:
-            file.write(str(line[0])+' '+line[2]+' '+line[1]+'\n')
+        with open(path, 'w') as f:
+            for line in log_array:
+                f.write(str(line[0])+' '+line[2]+' '+line[1]+'\n')
 
     def dump_to_console(self, level=0):
         '''

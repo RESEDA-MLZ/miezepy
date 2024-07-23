@@ -1,0 +1,5 @@
+[run]
+omit = */gui/*,*tests*,*__init__.py, *import_sans_pad.py, *fit_sans.py, *Temp*
+
+[report]
+omit = */gui/*,*tests*,*__init__.py, *import_sans_pad.py, *fit_sans.py, *Temp*

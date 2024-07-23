@@ -31,6 +31,7 @@ from simpleplot.models.widget_constructors import comboBoxConstructor
 from .mask_tree_view import MaskTreeView
 from .mask_model import MaskModel
 from .mask_node import MaskNode
+from .mask_reduction_table import ReductionTableView
 
 import sys
 
@@ -289,6 +290,18 @@ class MaskInterface(QtCore.QObject):
 
         return combobox
 
+    def getListView(self, connect=True):
+        '''
+        return a predefined and connected
+        custom treeview
+        '''
+        list_view = ReductionTableView()
+        list_view.setModel(self._item_model)
+        return list_view
+
+    def setMultipleAllowed(self, state):
+        self._multi_allowed = (state == 2)
+        
     def _checkBeforeProcess(self, index):
         if not self._mask_model.data(index, role=QtCore.Qt.DisplayRole) == None:
             self._generateMaskDict()

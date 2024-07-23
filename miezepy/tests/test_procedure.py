@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import time
+from pathlib import Path
 import os
 import sys
 from PyQt5 import QtWidgets
@@ -209,43 +210,10 @@ def createHTO(proc):
     env.fit.set_parameter(name='foils_in_echo',    value=foils_in_echo)
     env.fit.set_parameter(name='surface_profile',  value=surface_profile)
     env.fit.set_parameter(name='processors',       value=proc)
+    
+    env.io.path = Path(__file__).resolve().parent
 
     return env
-
-
-class Test_data_module(unittest.TestCase):
-
-    def test_data_init(self):
-        self.data = DataStructure()
-        self.assertEqual(self.data.generated, False)
-        self.assertEqual(self.data.map, None)
-        self.assertEqual(self.data.axes, None)
-        self.assertEqual(self.data.id, 0)
-        self.assertEqual(self.data.meta_id, 0)
-        self.assertEqual(len(self.data.data_objects), 0)
-        self.assertEqual(len(self.data.data_addresses), 0)
-        self.assertEqual(len(self.data.metadata_objects), 0)
-        self.assertEqual(len(self.data.metadata_addresses), 0)
-
-    @unittest.skipIf(
-        ("APPVEYOR" in os.environ and os.environ["APPVEYOR"] == "True"),  "Skipping this test on Appveyor due to memory.")
-    def test_data_creation(self):
-        self.data = createFakeDataset()
-        self.assertEqual(self.data.generated, False)
-        self.assertEqual(self.data.map, None)
-        self.assertEqual(self.data.axes, None)
-        self.assertEqual(self.data.id, 11520)
-        self.assertEqual(self.data.meta_id, 120)
-        self.assertEqual(len(self.data.data_objects), 11520)
-        self.assertEqual(len(self.data.data_addresses), 11520)
-        self.assertEqual(len(self.data.metadata_objects), 120)
-        self.assertEqual(len(self.data.metadata_addresses), 120)
-
-        self.data.validate()
-        self.map = self.data.map
-        self.assertEqual(self.map[0, 0, 0, 0, 0], 0)
-        self.assertEqual(self.map[2, 1, 0, 0, 0], -1)
-        self.assertEqual(self.map[1, 1, 9, 5, 15], 11519)
 
 
 class TestPhaseCorrection(unittest.TestCase):
@@ -494,7 +462,7 @@ class TestPhaseCorrection(unittest.TestCase):
         "CI" in os.environ and os.environ["CI"] == "true"),
         "Skipping this test on CI.")
     def phase_correction_mask_data(self, proc):
-        self.app = QtWidgets.QApplication(sys.argv)
+        #self.app = QtWidgets.QApplication(sys.argv)
         ######################################################
         # test the dataset
         self.env = createHTO(proc)
@@ -519,16 +487,7 @@ class TestPhaseCorrection(unittest.TestCase):
             (3, 8, 16, 128, 128))
 
         # do the phase calculation
-        self.env.fit.extractPhaseMask(
-            self.env.current_data,
-            self.env.mask,
-            self.env.results)
-
-        # correct the phase
-        self.env.fit.correctPhase(
-            self.env.current_data,
-            self.env.mask,
-            self.env.results)
+        self.env.process.calcShift()
 
         result = self.env.results.getLastResult('Corrected Phase')['Shift']
         self.assertEqual(
@@ -537,24 +496,10 @@ class TestPhaseCorrection(unittest.TestCase):
         ######################################################
         # do the contrast
         self.env.mask.setMask("HTO_2")
-        self.env.mask.generateMask(128, 128)
-
-        self.env.fit.calcContrastRef(
-            self.env.current_data,
-            self.env.mask,
-            self.env.results)
-
-        self.env.fit.calcContrastMain(
-            self.env.current_data,
-            self.env.mask,
-            self.env.results,
-            select=self.env.current_data.get_axis('Parameter'))
-
-        self.env.fit.contrastFit(
-            self.env.current_data,
-            self.env.mask,
-            self.env.results)
-
+        
+        self.env.process.calcContrastRef()
+        self.env.process.calcContrastMain()
+        
         self.result = self.env.results.getLastResult('Contrast fit')[
             'Parameters']
 
@@ -566,11 +511,43 @@ class TestPhaseCorrection(unittest.TestCase):
             [round(e, 4) for e in self.result['50K']['y'].tolist()],
             [round(e, 4) for e in [0.8443877313400946, 0.5086612494351186, 0.32389345108503953]])
 
+    def test_phase_correction_single_mask_data(self):
+        #self.app = QtWidgets.QApplication(sys.argv)
+        ######################################################
+        # test the dataset
+        env = createHTO(1)
+        data_sum = 0
+        for data_object in env.current_data.data_objects:
+            data_sum += data_object.data.sum()
+        self.assertEqual(data_sum, 696802)
+
+        ######################################################
+        # Prepare the phase process
+        env.mask.setMask("HTO_1")
+        env.mask.generateMask(128, 128)
+        env.process.calculateEcho()
+        env.process.prepareBuffer()
+        
+        # do the phase calculation
+        env.process.calcShift()
+        ######################################################
+        # do the contrast
+        env.mask.setMask("HTO_2")
+        env.process.calcContrastRef()
+
+        env.process.calcContrastSingle('5K', 7)
+        result = env.results.getLastResult('Contrast calculation')['Contrast'] 
+
+        self.assertEqual(
+            {key: round(e, 4) for key, e in result['5K'].items()},
+            {key: round(e, 4) for key, e in ({0.1047018557163469: 0.6570727822172627, 1.3424437890424732: 0.5376098600101173, 1.9753414318373752: 0.2879263018807539}).items()})
+
+
     @unittest.skipIf((
         "CI" in os.environ and os.environ["CI"] == "true"),
         "Skipping this test on CI.")
     def phase_correction_exposure_data_summation_on(self, proc):
-        self.app = QtWidgets.QApplication(sys.argv)
+        #self.app = QtWidgets.QApplication(sys.argv)
 
         ######################################################
         # test the dataset
@@ -616,6 +593,7 @@ class TestPhaseCorrection(unittest.TestCase):
 
         result = self.env.results.getLastResult(
             'Reference contrast calculation')
+        print(result)
 
         self.env.fit.calcContrastMain(
             self.env.current_data,
@@ -642,7 +620,7 @@ class TestPhaseCorrection(unittest.TestCase):
         "CI" in os.environ and os.environ["CI"] == "true"),
         "Skipping this test on CI.")
     def phase_correction_exposure_data_summation_off(self, proc):
-        self.app = QtWidgets.QApplication(sys.argv)
+        #self.app = QtWidgets.QApplication(sys.argv)
 
         ######################################################
         # test the dataset

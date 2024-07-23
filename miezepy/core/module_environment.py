@@ -21,6 +21,8 @@
 #
 # *****************************************************************************
 
+from PyQt5 import QtCore
+
 #############################
 # import child components
 from .module_mask import MaskStructure
@@ -31,9 +33,10 @@ from .module_process import getProcessStructure
 from .module_io import IOStructure
 from .module_instrument import InstrumentStructure
 from .module_scripts import ScriptStructure
+from .module_thread_wrapper import ThreadWrapper
 
 
-class Environment:
+class Environment(QtCore.QObject):
     '''
     This will define the heart of each single measurement. It will
     incorporate the data structure, mask system, the reduction
@@ -52,6 +55,9 @@ class Environment:
         title: str
             the name of the current environnement
         '''
+        # Init the object property of the current object for threading
+        super(Environment, self).__init__()
+        
         # set up
         self.env_handler = env_handler
         self.name = title
@@ -64,6 +70,7 @@ class Environment:
         '''
         self.data = []
 
+        self._initThreadWrapper()
         self._initDataStructure()
         self._initFitStructure()
         self._initProcessStructure()
@@ -72,6 +79,14 @@ class Environment:
         self._initIOHandler()
         self._initInstrumentStructure()
         self._initScriptStructure()
+
+    def _initThreadWrapper(self):
+        '''
+        This will init the thread structure and then will 
+        at the end move all objects to the thread.
+        '''
+        self.thread_wrapper = ThreadWrapper(self)
+        self.moveToThread(self.thread_wrapper)
 
     def _initDataStructure(self):
         '''
@@ -152,9 +167,9 @@ class Environment:
             "env = handler.new_environment('"+str(self.name)+"')\n"
         script += indent * "    " + "return env\n"
 
-        f = open(path, 'w')
-        f.write(script)
-        f.close()
+        with open(path, 'w') as f:
+            f.write(script)
+
 
     def setCurrentData(self, idx=None):
         '''

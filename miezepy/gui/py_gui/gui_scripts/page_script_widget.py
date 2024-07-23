@@ -25,15 +25,15 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import traceback
 from functools import partial
-import numpy as np
 import os
+
+from miezepy.gui.py_gui.gui_scripts.results_tab_handler import ResultsTabHandler
 
 # private dependencies
 from ...qt_gui.main_script_ui import Ui_script_widget
 from ..gui_mask.page_mask_widget import PanelPageMaskWidget
 from ..gui_common.dialog import dialog
 from ..gui_common.code_editor import CodeEditor
-
 from .foil_delegate import FoilDelegate
 
 
@@ -62,11 +62,20 @@ class PageScriptWidget(Ui_script_widget):
         area.
         '''
         self.setupUi(self.local_widget)
-        self._setEditors()
+        self._setUpEditors()
+        self._setUpResults()
+        self._setUpRunButtons()
+        self._createCenterProgess()
 
-        self.process_box_mask_fit = self.mask_interface.getComboBox()
+        self.process_box_mask_fit = self.mask_interface.getListView()
         self.fit_select_layout.addWidget(self.process_box_mask_fit)
-
+        self.process_box_mask_fit.selectionModel().selectionChanged.connect(self._synthesizeReduction)
+        
+        self.process_box_mask_multiple_allowed = QtWidgets.QCheckBox('Allow multiple')
+        self.fit_select_layout.addWidget(self.process_box_mask_multiple_allowed)
+        self.process_box_mask_multiple_allowed.stateChanged.connect(self.mask_interface.setMultipleAllowed)
+        self.process_box_mask_multiple_allowed.stateChanged.connect(self.process_box_mask_fit.setMultipleAllowed)
+        
         self.process_box_masks = self.mask_interface.getComboBox(connect=False)
         self.phase_mask_layout.addWidget(self.process_box_masks)
 
@@ -108,7 +117,109 @@ class PageScriptWidget(Ui_script_widget):
             self.path = f.readline()
             self.script_line_def_save.setText(self.path)
 
-    def _setEditors(self):
+    def _setUpResults(self):
+        '''
+        Create the tesult tab in a distinct handler
+        '''
+        self._result_tab_handler = ResultsTabHandler(self)
+
+    def _setUpRunButtons(self):
+        '''
+        Here we decided to create only three conventional run buttons
+        that will then be used to do the phase correction, the reduction
+        and the user specific script
+        '''
+        # Create the frame
+        self.groupBox_100 = QtWidgets.QGroupBox(self.frame_2)
+        self.groupBox_100.setTitle("Process")
+        self.groupBox_100.setObjectName("groupBox_100")
+        self.verticalLayout_100 = QtWidgets.QVBoxLayout(self.groupBox_100)
+        self.verticalLayout_100.setContentsMargins(6, -1, 6, -1)
+        self.verticalLayout_100.setObjectName("verticalLayout_100")
+        
+        # Create the buttons
+        self.process_button_phase = QtWidgets.QPushButton(self.groupBox_100)
+        self.process_status_phase = QtWidgets.QLabel(self.groupBox_100)
+        self.process_button_reduce = QtWidgets.QPushButton(self.groupBox_100)
+        self.process_button_user = QtWidgets.QPushButton(self.groupBox_100)
+        
+        self.process_button_phase.setText("Phase Correction")
+        self.process_status_phase.setText("Phase not corrected")
+        self.process_button_reduce.setText("Data Reduction")
+        self.process_button_user.setText("User Script")
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        
+        # Place the buttons
+        self.verticalLayout_100.addWidget(self.process_button_phase)
+        self.verticalLayout_100.addWidget(self.process_status_phase)
+        self.verticalLayout_100.addWidget(self.process_button_reduce)
+        self.verticalLayout_100.addWidget(self.process_button_user)
+        self.verticalLayout_100.addItem(spacerItem)
+        
+        # Connect the buttons
+        self.process_button_phase.clicked.connect(self.runPhaseCorrection)
+        self.process_button_reduce.clicked.connect(self.runReduction)
+        self.process_button_user.clicked.connect(self.runUserScript)
+        
+        # Place the group
+        self.verticalLayout_18.addWidget(self.groupBox_100)
+
+    def _createCenterProgess(self):
+        '''
+        '''
+        # Create the center item
+        self.progress_widget = QtWidgets.QWidget(self.tabWidget)
+        self.progress_layout = QtWidgets.QVBoxLayout(self.progress_widget)
+        self.progress_widget.setObjectName("progress_widget")
+        self.progress_widget.setStyleSheet(
+            "#progress_widget{background-color: rgb(179, 179, 179);}")
+        
+        # Create the items
+        self.progress_bar = QtWidgets.QProgressBar(self.progress_widget)
+        self.progress_bar.setProperty("value", 24)
+        self.progress_bar.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.progress_label = QtWidgets.QLabel("Some text", self.progress_widget)
+        
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.progress_label.setSizePolicy(sizePolicy)
+        self.progress_bar.setSizePolicy(sizePolicy)
+        
+        self.progress_cancel_layout = QtWidgets.QHBoxLayout()
+        self.progress_cancel_button = QtWidgets.QPushButton('Abort',self.progress_widget)
+        self.progress_cancel_layout.addStretch()
+        self.progress_cancel_layout.addWidget(self.progress_cancel_button)
+        self.progress_cancel_button.clicked.connect(lambda: setattr(self.env.thread_wrapper, 'canceled', True))
+        
+        self.progress_layout.addWidget(self.progress_bar)
+        self.progress_layout.addWidget(self.progress_label)
+        self.progress_layout.addLayout(self.progress_cancel_layout)
+        
+        # ductape (ugly)
+        self.process_tab.resizeEvent = (
+            lambda old_method: (
+                lambda event: (self.centerProgressWidget(event), old_method(event))[-1]))(self.process_tab.resizeEvent)
+        self.centerProgressWidget(None)
+        
+        # hide old interface (because why not)
+        self.process_button_run_data.hide()
+        self.process_button_run_phase.hide()
+        self.process_button_run_fit.hide()
+        self.process_button_run_post.hide()
+        self.script_label_running.hide()
+        self.scrip_label_action.hide()
+        self.script_label_action_2.hide()
+        self.script_bar_running.hide()
+        
+    def centerProgressWidget(self,event):
+        '''
+        The progress widget is floating and should therefore be 
+        center upon resizes etc.
+        '''
+        self.progress_widget.setFixedWidth(min([self.process_tab.rect().width()/2, 500]))
+        self.progress_widget.move(self.process_tab.rect().center() - self.progress_widget.rect().center())
+  
+    def _setUpEditors(self):
         '''
         locally create the editors to allow custom ones. These parts
         have been engineered through the pyqt framework and then
@@ -287,16 +398,16 @@ class PageScriptWidget(Ui_script_widget):
         '''
         Connect all Qt slots to their respective methods.
         '''
-        self.button_widgets[0].clicked.connect(partial(self.run, 0))
-        self.button_widgets[2].clicked.connect(partial(self.run, 0))
-        self.button_widgets[2].clicked.connect(partial(self.run, 1))
-        self.button_widgets[3].clicked.connect(partial(self.run, 2))
-        self.button_widgets[4].clicked.connect(partial(self.run, 3))
+        # self.button_widgets[0].clicked.connect(partial(self.run, 0))
+        # self.button_widgets[2].clicked.connect(partial(self.run, 0))
+        # self.button_widgets[2].clicked.connect(partial(self.run, 1))
+        # self.button_widgets[3].clicked.connect(partial(self.run, 2))
+        # self.button_widgets[4].clicked.connect(partial(self.run, 3))
 
-        self.button_widgets[5].clicked.connect(partial(self.run, 0))
-        self.button_widgets[6].clicked.connect(partial(self.run, 1))
-        self.button_widgets[7].clicked.connect(partial(self.run, 2))
-        self.button_widgets[8].clicked.connect(partial(self.run, 3))
+        # self.button_widgets[5].clicked.connect(partial(self.run, 0))
+        # self.button_widgets[6].clicked.connect(partial(self.run, 1))
+        # self.button_widgets[7].clicked.connect(partial(self.run, 2))
+        # self.button_widgets[8].clicked.connect(partial(self.run, 3))
 
         self.button_widgets[13].clicked.connect(
             partial(self.link, None))
@@ -386,7 +497,7 @@ class PageScriptWidget(Ui_script_widget):
         self.synthesize_scripts = True
         self.tabWidget.setCurrentIndex(0)
         self.script_tabs.setCurrentIndex(0)
-        self.run(0)
+        self._result_tab_handler.updateResultList()
 
     def unlink(self):
         '''
@@ -606,8 +717,8 @@ class PageScriptWidget(Ui_script_widget):
         # Reduction mask
         if not self.container['reduction_mask'] == None:
             try:
-                self.process_box_mask_fit.setCurrentIndex(
-                    [key for key in self.env.mask.mask_dict.keys()].index(self.container['reduction_mask']))
+                self.process_box_mask_fit.setCurrentIndexes(None)
+                    # [key for key in self.env.mask.mask_dict.keys()].index(self.container['reduction_mask']))
             except:
                 pass
 
@@ -1016,30 +1127,123 @@ class PageScriptWidget(Ui_script_widget):
         self.tabWidget.setCurrentIndex(2)
         self.script_tabs.setCurrentIndex(index)
 
-    def run(self, index):
+    def _handleProgressStart(self, items):
+        '''
+        The processes being threaded we need to tell the app to
+        init the progressbars and so on
+        '''
+        self.script_label_running.setText('Script running')
+        self.scrip_label_action.setText('Command:')
+        self.setActivity(0, len(items[1]))
+        
+    def _handleProgress(self, progress):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.setProgress(*progress)
+        
+    def _handleSuccess(self, success):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.setProgress(*success)
+        self.hideActivity()
+        self.env.thread_wrapper.stop()
+        
+    def _handleError(self, error):
+        '''
+        The processes being threaded we need to tell the app to
+        move on the progress
+        '''
+        self.hideActivity()
+        dialog(
+            parent=self.local_widget,
+            **error)
+        
+    def runPhaseCorrection(self):
+        '''
+        This is the run method that will determine the measure
+        to undertake.
+        '''
+        if not self.env == None:
+            self.mask_to_reset = self.env.mask.current_mask
+            
+            self.env.thread_wrapper.started.connect(self.env.thread_wrapper.runPhaseCorrection)
+            self.env.thread_wrapper.success.connect(self._handleSuccess)
+            self.env.thread_wrapper.action.connect(self._handleProgress)
+            self.env.thread_wrapper.action_setup.connect(self._handleProgressStart)
+            self.env.thread_wrapper.error.connect(self._handleError)
+            self.env.thread_wrapper.finished.connect(self.finishPhaseCorrection)
+            self.env.thread_wrapper.start()
+            
+    def finishPhaseCorrection(self):
+        '''
+        Since we are threaded handle the finising touch on finished
+        '''
+        self.env.mask.setMask(self.mask_to_reset)
+        
+        self.env.thread_wrapper.error.disconnect(self._handleError)
+        self.env.thread_wrapper.action.disconnect(self._handleProgress)
+        self.env.thread_wrapper.action_setup.disconnect(self._handleProgressStart)
+        self.env.thread_wrapper.success.disconnect(self._handleSuccess)
+        self.env.thread_wrapper.finished.disconnect(self.finishPhaseCorrection)
+        self.env.thread_wrapper.started.disconnect(self.env.thread_wrapper.runPhaseCorrection)
+        
+    def runReduction(self):
+        '''
+        This is the run method that will determine the measure
+        to undertake.
+        '''
+        if not self.env == None:
+            self.mask_to_reset = self.env.mask.current_mask
+            
+            self.env.thread_wrapper.mask_ids = self.process_box_mask_fit.allTexts()
+            self.env.thread_wrapper.started.connect(self.env.thread_wrapper.runReduction)
+            self.env.thread_wrapper.success.connect(self._handleSuccess)
+            self.env.thread_wrapper.action.connect(self._handleProgress)
+            self.env.thread_wrapper.action_setup.connect(self._handleProgressStart)
+            self.env.thread_wrapper.error.connect(self._handleError)
+            self.env.thread_wrapper.finished.connect(self.finishReduction)
+            self.env.thread_wrapper.start()
+            
+    def finishReduction(self):
+        '''
+        Since we are threaded handle the finising touch on finished
+        '''
+        self.env.mask.setMask(self.mask_to_reset)
+        
+        self._result_tab_handler.updateResultList()
+        
+        # Put the right one back
+        container = {}
+        container['mask'] = str(self.mask_to_reset)
+        self.env.scripts.synthesizeReductionScript(container)
+        self._refresh()
+        
+        self.env.mask.setMask(self.mask_to_reset)
+        
+        self.env.thread_wrapper.error.disconnect(self._handleError)
+        self.env.thread_wrapper.action.disconnect(self._handleProgress)
+        self.env.thread_wrapper.action_setup.disconnect(self._handleProgressStart)
+        self.env.thread_wrapper.success.disconnect(self._handleSuccess)
+        self.env.thread_wrapper.finished.disconnect(self.finishReduction)
+        self.env.thread_wrapper.started.disconnect(self.env.thread_wrapper.runReduction)
+
+    def runUserScript(self):
         '''
         This is the run method that will determine the measure
         to undertake.
         '''
         if not self.env == None:
             mask_to_reset = self.env.mask.current_mask
-            if index < 5:
-                if index == 0:
-                    self._runPythonCode(index)
-                    self._runPythonCode(index+1)
-                else:
-                    self._runPythonCode(index+1)
+            success = True
+            success = self._runPythonCode(1)
+            success = self._runPythonCode(4) if success else False
             self.env.mask.setMask(mask_to_reset)
-            # self.mask_interface.setModel()
 
-    def runAll(self):
-        '''
-        Run all the scripts.
-        '''
-        for i in range(4):
-            self.run(i)
-
-    def _runPythonCode(self, index):
+    def _runPythonCode(self, index:int)->bool:
         '''
         Parse and run python code.
         '''
@@ -1066,6 +1270,7 @@ class PageScriptWidget(Ui_script_widget):
                     det_message=traceback.format_exc())
                 success = False
                 break
+
         if success:
             self.setProgress('Script ended with success', len(meta_array))
             self.fadeActivity()
@@ -1074,6 +1279,10 @@ class PageScriptWidget(Ui_script_widget):
             self.script_label_running.setText('Aborted')
             self.scrip_label_action.setText('Error: ')
             self.setProgress(str(error), i)
+            self.fadeActivity()
+            
+        self.hideActivity()
+        return success
 
     def saveScripts(self):
         '''
@@ -1112,42 +1321,36 @@ class PageScriptWidget(Ui_script_widget):
 
         '''
         # make it visible in case it was hidden
-        self.script_label_running.show()
-        self.script_bar_running.show()
-        self.scrip_label_action.show()
-        self.script_label_action_2.show()
+        self.progress_widget.show()
 
         # in case it was faded
-        self._unfade(self.script_label_running)
-        self._unfade(self.script_bar_running)
-        self._unfade(self.scrip_label_action)
-        self._unfade(self.script_label_action_2)
+        self._unfade(self.progress_widget)
 
-        self.script_bar_running.setMinimum(min_val)
-        self.script_bar_running.setMaximum(max_val)
+        self.progress_bar.setMinimum(min_val)
+        self.progress_bar.setMaximum(max_val)
+        
+        
+        for child in self.tabWidget.children():
+            if child is self.progress_widget:
+                continue 
+            child.setEnabled(False)
 
     def hideActivity(self):
         '''
-
         '''
-        self.script_label_running.hide()
-        self.script_bar_running.hide()
-        self.scrip_label_action.hide()
-        self.script_label_action_2.hide()
+        self.progress_widget.hide()
+        for child in self.tabWidget.children():
+            if child is self.progress_widget:
+                continue 
+            child.setEnabled(True)
 
     def fadeActivity(self):
         '''
-
         '''
-        self._fade(self.script_label_running)
-        self._fade(self.script_bar_running)
-        self._fade(self.scrip_label_action)
-        self._fade(self.script_label_action_2)
-
+        self._fade(self.progress_widget)
+        
     def _unfade(self, widget):
         '''
-
-
         '''
         effect = QtWidgets.QGraphicsOpacityEffect()
         effect.setOpacity(1)
@@ -1155,7 +1358,6 @@ class PageScriptWidget(Ui_script_widget):
 
     def _fade(self, widget):
         '''
-
         '''
         widget.effect = QtWidgets.QGraphicsOpacityEffect()
         widget.setGraphicsEffect(widget.effect)
@@ -1170,6 +1372,6 @@ class PageScriptWidget(Ui_script_widget):
         '''
 
         '''
-        self.script_bar_running.setValue(val)
-        self.script_label_action_2.setText(label)
+        self.progress_bar.setValue(val)
+        self.progress_label.setText(label)
         self.parent.window_manager.app.processEvents()

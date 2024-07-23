@@ -1,11 +1,7 @@
 import unittest
 import numpy as np
-from scipy import special as sp
 from scipy import integrate as integrate
-from scipy import special as sp
 from scipy import constants as co
-from scipy import optimize as op
-from scipy import stats as st
 
 from miezepy.core.fit_modules.library_iminuit import CosineMinuit
 from miezepy.core.fit_modules.library_iminuit import ExpMinuit

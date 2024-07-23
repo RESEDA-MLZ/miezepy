@@ -34,25 +34,25 @@ class ScriptStructure:
         will now handle it.
         '''
         self.default_scripts = []
-        with open(
-                os.path.dirname(os.path.realpath(__file__))
-                + '/script_modules/import_process.py', 'r') as f:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'script_modules', 'import_process.py'), 'r') as f:
             self.default_scripts.append(f.read())
-        with open(
-                os.path.dirname(os.path.realpath(__file__))
-                + '/script_modules/set_fit_process.py', 'r') as f:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'script_modules', 'set_fit_process.py'), 'r') as f:
             self.default_scripts.append(f.read())
-        with open(
-                os.path.dirname(os.path.realpath(__file__))
-                + '/script_modules/phase_process.py', 'r') as f:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'script_modules', 'phase_process.py'), 'r') as f:
             self.default_scripts.append(f.read())
-        with open(
-                os.path.dirname(os.path.realpath(__file__))
-                + '/script_modules/reduction_process.py', 'r') as f:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'script_modules', 'reduction_process.py'), 'r') as f:
             self.default_scripts.append(f.read())
-        with open(os.path.dirname(
-                os.path.realpath(__file__))
-                + '/script_modules/post_process.py', 'r') as f:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                'script_modules', 'post_process.py'), 'r') as f:
             self.default_scripts.append(f.read())
 
         self.editable_scripts = list(self.default_scripts)
@@ -152,9 +152,33 @@ class ScriptStructure:
             + self.editable_scripts[4]
             + "\n##--POST--##\n")
 
-        f = open(path, 'w')
-        f.write(string)
-        f.close()
+        with open(path, 'w') as f:
+            f.write(string)
+
+
+    def dumpScripts(self, path):
+        '''
+        Initialize the default python scipts so that
+        the system can be set.
+
+        Parameters
+        ----------
+        path : string
+            The file path to be saved
+
+        strings : string array
+            The list of scripts to be saved
+        '''
+        scripts = {
+            'import': self.editable_scripts[0],
+            'fit': self.editable_scripts[1],
+            'phsase': self.editable_scripts[2],
+            'reduction': self.editable_scripts[3],
+            'post': self.editable_scripts[4]}
+
+        for name, item in scripts.items():
+            with open(os.path.join(path, '%s.py'%name), 'w') as f:
+                f.write(item)
 
     def reformatScript(self, text):
         '''
@@ -639,3 +663,4 @@ class ScriptStructure:
                 output += line + "\n"
 
         return output
+    

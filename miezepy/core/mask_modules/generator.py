@@ -105,3 +105,5 @@ class MaskGenerator:
 
         self.mask == np.amin(self.mask)
         self.mask = self.mask.transpose()
+
+        return self.mask

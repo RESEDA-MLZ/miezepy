@@ -21,7 +21,6 @@
 #
 # *****************************************************************************
 
-import iminuit
 import numpy as np
 
 #functions for processing the phase through pregroup masks
@@ -103,7 +102,7 @@ class PhaseProcessing():
             'info',
             'Computation of the shift was a success')
 
-    def correctPhase(self,target, mask, results):
+    def correctPhase(self,target, mask, results, thread=None):
         '''
         This function is the main callable
         to process with the change of the phase.
@@ -121,7 +120,13 @@ class PhaseProcessing():
         results : ResultStructure
             The current active result structure
         '''
-
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+        
         #Initialize the output dictionary with all def.
         local_results = results.generateResult( name = 'Corrected Phase')
 
@@ -149,7 +154,16 @@ class PhaseProcessing():
             for m1 in range(1,premask.max()+1)
             for m2 in range(target.get_axis_len(foil_name))]
 
-        worker_pool = WorkerPool(self.para_dict['processors'])
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+        
+        worker_pool = WorkerPool(self.para_dict['processors'], thread=thread)
         index_array = []
         for key, meas, echo in loop:
             index_array.append([key,meas, echo])
@@ -175,6 +189,15 @@ class PhaseProcessing():
             idx += 1
 
         temp = worker_pool.startPool()
+        if temp is None:
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+        
         temp_reorganized = reorganizeResult(temp, index_array, loop)
 
         ##############################################
@@ -190,7 +213,7 @@ class PhaseProcessing():
             'info',
             'Computation of the shift was a success')
 
-    def extractPhaseMask(self, target, mask, results):
+    def extractPhaseMask(self, target, mask, results, thread=None):
         '''
         This part will try to correct the phase anomalies through the
         fit of each mask region an then fit it the sinus form. After
@@ -208,6 +231,13 @@ class PhaseProcessing():
         results : ResultStructure
             The current active result structure
         '''
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+
         #Initialize the output dictionary with all def.
         local_results   = results.generateResult( name = 'Phase calculation')
         selected_ref    = self.para_dict['Reference']
@@ -247,7 +277,16 @@ class PhaseProcessing():
                 target.data_objects[0].dim[0],
                 target.data_objects[0].dim[1]))
 
-        worker_pool = WorkerPool(self.para_dict['processors'])
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+        
+        worker_pool = WorkerPool(self.para_dict['processors'], thread=thread)
         index_array = []
         for echo, foil in loop_2:
             index_array.append([echo, foil])
@@ -262,6 +301,16 @@ class PhaseProcessing():
                 chan_num, premask, self.para_dict['time_channels']])
             idx += 1
         temp = worker_pool.startPool()
+
+        if temp is None:
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+
         for idx in range(len(index_array)):
             phase_shift[index_array[idx][0]][index_array[idx][1],:,:] = temp[idx][:,:]
 
@@ -279,7 +328,7 @@ class PhaseProcessing():
             'Info',
             'Fit of the phase was a success')
 
-    def correctPhaseExposure(self, target, mask, instrument, results):
+    def correctPhaseExposure(self, target, mask, instrument, results, thread=None):
         '''
         This function is the main callable
         to process with the change of the phase.
@@ -297,7 +346,13 @@ class PhaseProcessing():
         results : ResultStructure
             The current active result structure
         '''
-
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            return
+        
         #Initialize the output dictionary with all def.
         local_results = results.generateResult( name = 'Corrected Phase')
 
@@ -340,7 +395,16 @@ class PhaseProcessing():
             echo_axis,velocities,
             d_sam_det,freq)
 
-        worker_pool = WorkerPool(self.para_dict['processors'])
+        if thread is not None and thread.isCanceled():
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+        
+        worker_pool = WorkerPool(self.para_dict['processors'], thread=thread)
         index_array = []
         for key, meas, echo in loop_main:
             index_array.append([key,meas, echo])
@@ -365,6 +429,15 @@ class PhaseProcessing():
             idx += 1
 
         temp = worker_pool.startPool()
+        if temp is None:
+            '''
+            The thread was canceled
+            close the result gracefully and exit
+            '''
+            local_results.addLog('info', 'The computation was aborted')
+            local_results.setComplete()
+            return
+        
         temp_reorganized = reorganizeResult(temp, index_array, loop_main)
 
         ##############################################
@@ -374,6 +447,7 @@ class PhaseProcessing():
         #write the dictionary entries
         local_results.addLog('info', 'Computation of the shift was a success')
         local_results.setComplete()
+
 
         #tell fit handler what happened
         self.log.addLog(
