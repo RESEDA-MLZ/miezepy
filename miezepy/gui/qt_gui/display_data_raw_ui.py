@@ -13,7 +13,7 @@ class Ui_raw_display(object):
         raw_display.setObjectName("raw_display")
         raw_display.resize(800, 600)
         raw_display.setStyleSheet("#main_widget{\n"
-"background-color: rgb(64, 66, 68);}")
+"background-color: rgb(98, 12, 53);}")
         self.main_widget = QtWidgets.QWidget(raw_display)
         self.main_widget.setObjectName("main_widget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.main_widget)
