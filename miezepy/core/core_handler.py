@@ -360,7 +360,8 @@ class CoreHandler:
 
             # the setEnv method is overwritten in the load file
             env = setEnv(self)
-            env.io.setEnvPath(os.path.dirname(path))
+            #env.io.setEnvPath(os.path.dirname(path))
+            env.io.setEnvPath(os.path.dirname(os.path.dirname(path))) 
             if not self.prep_load_list[1][i] is None:
                 if not main_window is None:
                     main_window.setProgress('Loading data '+str(i), i)

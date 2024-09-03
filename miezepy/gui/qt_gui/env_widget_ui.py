@@ -45,6 +45,14 @@ class Ui_env_widget(object):
         self.env_input_name.setAcceptDrops(False)
         self.env_input_name.setObjectName("env_input_name")
         self.verticalLayout_3.addWidget(self.env_input_name)
+        self.env_path_name = QtWidgets.QLineEdit(self.env_frame)        
+        self.env_path_name.setSizePolicy(sizePolicy)                    
+        self.env_path_name.setAcceptDrops(False)                        
+        self.env_path_name.setObjectName("env_path_name")               
+        self.verticalLayout_3.addWidget(self.env_path_name)             
+        self.env_path_button = QtWidgets.QToolButton(self.env_frame)    
+        self.env_path_button.setObjectName("env_path_button")           
+        self.verticalLayout_3.addWidget(self.env_path_button)  
         self.verticalLayout.addLayout(self.verticalLayout_3)
         spacerItem = QtWidgets.QSpacerItem(0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -67,4 +75,5 @@ class Ui_env_widget(object):
         _translate = QtCore.QCoreApplication.translate
         env_widget.setWindowTitle(_translate("env_widget", "Form"))
         self.env_label_name.setText(_translate("env_widget", "Name:"))
+        self.env_path_button.setText(_translate("env_widget", "..."))
 

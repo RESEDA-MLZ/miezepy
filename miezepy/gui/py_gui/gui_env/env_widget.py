@@ -27,6 +27,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from ...qt_gui.env_widget_ui import Ui_env_widget
 from .drag_env_items import DraggableButton, DropLabel, DropWidget
 
+import os
 
 class EnvWidget(Ui_env_widget, QtCore.QObject):
     '''
@@ -85,6 +86,15 @@ class EnvWidget(Ui_env_widget, QtCore.QObject):
         initialize the widget and set the stage
         '''
         self.env_input_name.setText(self.env.name)
+
+        if self.env.io.envPath() != None:                       
+            try:
+                self.env_path_name.setText(self.env.io.envPath())
+            except:
+                pass
+        else:
+            self.env_path_name.setPlaceholderText("Set output path here...")
+
         self.refreshData()
         self.connect()
 
@@ -93,11 +103,15 @@ class EnvWidget(Ui_env_widget, QtCore.QObject):
         connect
         '''
         self.env_input_name.textChanged.connect(self.nameEdit)
+        self.env_path_name.textChanged.connect(self.pathEdit)       
+        self.env_path_button.clicked.connect(self.getPath)
         self.env_button_load.clicked.connect(self.loadClicked)
         self.env_button_mask.clicked.connect(self.maskClicked)
         self.env_button_scripts.clicked.connect(self.scriptClicked)
 
         self.env_input_name.installEventFilter(self)
+        self.env_path_name.installEventFilter(self)                 
+        self.env_path_button.installEventFilter(self)
         self.env_button_load.installEventFilter(self)
         self.env_button_mask.installEventFilter(self)
         self.env_button_scripts.installEventFilter(self)
@@ -134,6 +148,23 @@ class EnvWidget(Ui_env_widget, QtCore.QObject):
         connect
         '''
         self.env.name = self.env_input_name.text()
+
+    def pathEdit(self):  
+        '''
+        connect
+        '''                                       
+        self.env.io.setEnvPath(self.env_path_name.text())  
+
+    def getPath(self):                                         
+        '''
+        connect
+        '''
+        try:
+            file_path = QtWidgets.QFileDialog.getExistingDirectory() 
+            self.env_path_name.setText(os.path.abspath(file_path))  
+        except:
+            pass
+
 
     def eventFilter(self, in_object, event):
         '''
