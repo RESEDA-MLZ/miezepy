@@ -833,10 +833,16 @@ class PanelPageMaskWidget(PageMaskWidget):
                 x=x_1,
                 y=fit['amplitude']*np.cos(x_1/16.*2*np.pi+fit['phase'])+fit['mean'])
 
+        print('We are in dev_plots')
         if not process == None:
+            temp_foil = int(process['Foil'])
+            temp_y = np.array(list(process['Contrast'][para].values()))
             self.contrast_plot.setData(
                 x=process['Axis'][para],
-                y=[process['Contrast'][para][item] for item in process['Axis'][para]])
+                #y=[process['Contrast'][para][item] for item in process['Axis'][para]])
+                y = temp_y[:,temp_foil])
+            
+            self.dx.zoomer['Zoom fixed range'] = [0, 1, 0, max(temp_y[:,temp_foil])+0.2]
 
         self.ax.zoomer.zoom()
         self.bx.zoomer.zoom()
