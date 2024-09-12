@@ -13,7 +13,7 @@ class Ui_foil_display(object):
         foil_display.setObjectName("foil_display")
         foil_display.resize(805, 600)
         foil_display.setStyleSheet("#main_widget{\n"
-"background-color: rgb(64, 66, 68);}")
+"background-color: rgb(98, 12, 53);}")
         self.main_widget = QtWidgets.QWidget(foil_display)
         self.main_widget.setObjectName("main_widget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.main_widget)

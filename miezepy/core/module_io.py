@@ -221,14 +221,20 @@ class IOStructure:
         if not os.path.exists(self.path):
             return ('io_path_deleted', IO_PATH_DELETED)
         
-        if not os.path.exists(os.path.join(self.path, 'results')):
+        if not os.path.exists(os.path.join(self.path, self.env.name)): 
             try:
-                os.mkdir(os.path.join(self.path, 'results'))
+                os.mkdir(os.path.join(self.path, self.env.name))
+            except:
+                return ('io_path_permission_0', IO_PATH_PERMISSION)    
+        
+        if not os.path.exists(os.path.join(self.path, self.env.name, 'results')):
+            try:
+                os.mkdir(os.path.join(self.path, self.env.name, 'results'))
             except:
                 return ('io_path_permission_1', IO_PATH_PERMISSION)
             
         try:
-            path = os.path.join(self.path, 'results', time.strftime("%Y%m%d-%H%M%S_result"))
+            path = os.path.join(self.path, self.env.name, 'results', time.strftime("%Y%m%d-%H%M%S_result"))
             os.mkdir(path+'_'+append_name)
         except:
             return ('io_path_permission_2', IO_PATH_PERMISSION)

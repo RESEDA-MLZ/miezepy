@@ -13,7 +13,7 @@ class Ui_MIEZETool(object):
         MIEZETool.setObjectName("MIEZETool")
         MIEZETool.resize(1337, 1060)
         MIEZETool.setStyleSheet("#main_widget{\n"
-"background-color: rgb(64, 66, 68);}")
+"background-color: rgb(98, 12, 53);}")
         self.main_widget = QtWidgets.QWidget(MIEZETool)
         self.main_widget.setStyleSheet("")
         self.main_widget.setObjectName("main_widget")
