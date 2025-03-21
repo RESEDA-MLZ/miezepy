@@ -24,15 +24,18 @@
 #public dependencies
 from PyQt5 import QtWidgets, QtGui, QtCore
 import numpy as np
+import pyqtgraph as pg
+import matplotlib.pyplot as plt
+
 
 #private dependencies
 from ...qt_gui.main_result_ui   import Ui_result_widget
 from ..gui_common.dialog        import dialog 
-from .result_list_handler       import ResultHandlerUI
-from .drag_drop_trees           import ResultTree, PlotTree
+#from .result_list_handler       import ResultHandlerUI
+#from .drag_drop_trees           import ResultTree, PlotTree
 
 #private plotting library
-from simpleplot.canvas.multi_canvas import MultiCanvasItem
+#from simpleplot.canvas.multi_canvas import MultiCanvasItem
 
 class PageResultWidget(Ui_result_widget):
     
@@ -53,193 +56,219 @@ class PageResultWidget(Ui_result_widget):
         area.
         '''
         self.setupUi(self.local_widget)
-        self.process_tree = ResultTree(self.data_group)
-        self.verticalLayout_4.addWidget(self.process_tree)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.process_refresh_button = QtWidgets.QPushButton('Refresh', self.data_group)
-        self.process_refresh_button.setObjectName("process_refresh_button")
-        self.horizontalLayout.addWidget(self.process_refresh_button)
-        self.verticalLayout_4.addLayout(self.horizontalLayout)
-
-        self.process_list_plot = PlotTree(self.plot_items_group)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.process_list_plot.sizePolicy().hasHeightForWidth())
-        self.verticalLayout_2.addWidget(self.process_list_plot)
-
-        self.my_canvas = MultiCanvasItem(
-            self.process_widget_plot,
-            grid        = [[True]],
-            x_ratios    = [1],
-            y_ratios    = [1],
-            background  = "w",
-            highlightthickness = 0)
-        self.ax = self.my_canvas.getSubplot(0,0)
-        self.ax.pointer.pointer_handler['Sticky'] = 3
-        self.my_canvas.canvas_nodes[0][0][0].grid_layout.setMargin(0)
-
-        self.result_handler_ui  = ResultHandlerUI(
-            self, 
-            self.process_tree,
-            self.process_list_plot)
+        self.env_checkbox_list = []
+        self.results_to_plot = {}
+        log_x = self.plot_widget.getPlotItem().getAxis('bottom').logMode
+        log_y = self.plot_widget.getPlotItem().getAxis('left').logMode
+        if log_x:
+            self.process_check_log_x.setChecked(True)
+        if log_y:
+            self.process_check_log_y.setChecked(True)
 
     def _connect(self):
         '''
         Connect all Qt slots to their respective methods.
         '''
-        self.result_handler_ui.result_model.dataChanged.connect(
-            self._resize_tree)
-        self.process_refresh_button.clicked.connect(
-            self.result_handler_ui.refreshDict)
-        self.process_list_plot.dropAccepted.connect(
-            self.result_handler_ui.processDrop)
-        self.process_list_plot.clicked.connect(
-            self.result_handler_ui.setPlotItem)
+        self.process_refresh_button.clicked.connect(self.refresh_dataset)
+        self.plotitems_button.clicked.connect(self.plot_selected)            
 
-        self.remove_plot.clicked.connect(
-            self.result_handler_ui.removePlotElements)
-        self.reset_intern.clicked.connect(
-            self.result_handler_ui.removeAllIntElement)
-        self.reset_external.clicked.connect(
-            self.result_handler_ui.removeAllExtElement)
+        self.process_check_log_x.toggled.connect(lambda checked, checkbox=self.process_check_log_x: self.setLogX(checkbox, checked))
+        self.process_check_log_y.toggled.connect(lambda checked, checkbox=self.process_check_log_y: self.setLogY(checkbox, checked))
+        self.process_check_grid_x.toggled.connect(lambda checked, checkbox=self.process_check_grid_x: self.setGridX(checkbox, checked))
+        self.process_check_grid_y.toggled.connect(lambda checked, checkbox=self.process_check_grid_y: self.setGridY(checkbox, checked))
 
-        self.process_button_plot_plot.clicked.connect(
-            self._updatePlot)
-        self.set_rainbow.clicked.connect(
-            self.result_handler_ui.setRainbow)
-            
-        self.process_check_log_x.clicked.connect(
-            self.manageLog)
-        self.process_check_log_y.clicked.connect(
-            self.manageLog)
-        self.my_canvas._model.dataChanged.connect(
-            self.setLog)
+        self.func1.toggled.connect(lambda checked, checkbox=self.func1: self.func_checkbox_toggled(checkbox, checked))
+        self.func2.toggled.connect(lambda checked, checkbox=self.func2: self.func_checkbox_toggled(checkbox, checked))
+        self.func3.toggled.connect(lambda checked, checkbox=self.func3: self.func_checkbox_toggled(checkbox, checked))
 
-    def _resize_tree(self):
-        '''
-        process with the log
-        '''
-        self.process_tree.resizeColumnToContents(0)
 
-    def manageLog(self):
+    def refresh_dataset(self):
         '''
-        process with the log
+        Refresh the dictionary of environments to 
+        take into account. 
         '''
-        self.my_canvas._model.dataChanged.disconnect(self.setLog)
-        self.ax.axes.general_handler['Log'] = [
-            self.process_check_log_x.isChecked(),
-            self.process_check_log_y.isChecked()]
-        self.my_canvas._model.dataChanged.connect(self.setLog)
-        
-    def setLog(self):
+        # first clean what was there before
+        self.clean_checkbox_list()
+
+        names = [env.name for env in self.env_handler.env_array]
+
+        for name in names:
+            target  = self.env_handler.getEnv(name)
+            result  = target.results.getLastResult(name = 'Contrast fit')
+            if not result is None:
+                self.add_env_label(name)
+                
+                for ds in result['Parameters'].keys():
+                    self.results_to_plot.setdefault(name+'__'+ds,{})['x'] = result['Parameters'][ds]['x']
+                    self.results_to_plot.setdefault(name+'__'+ds,{})['y'] = result['Parameters'][ds]['y']
+                    self.results_to_plot.setdefault(name+'__'+ds,{})['y_error'] = result['Parameters'][ds]['y_error']
+                    self.results_to_plot.setdefault(name+'__'+ds,{})['to_plot'] = 'False'
+
+                    if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__x'] = result['Curve Axis'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__y'] = result['Curve'][ds]
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func2'] = 
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func2'] = 
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func3'] = 
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func3'] = 
+
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__to_plot'] = 'False'
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__to_plot'] = 'False'
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__to_plot'] = 'False'                   
+
+                    self.add_env_checkbox(name, ds)
+
+        self.verticalLayout_41.addStretch(1)
+
+    def add_env_label(self, name):
         '''
-        process with the log
+        comment
         '''
-        self.process_check_log_x.setChecked(
-            self.ax.axes.general_handler['Log'][0])
-        self.process_check_log_y.setChecked(
-            self.ax.axes.general_handler['Log'][1])
+        env_label = QtWidgets.QLabel(self.data_group)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(env_label.sizePolicy().hasHeightForWidth())
+        env_label.setSizePolicy(sizePolicy)
+        env_label.setObjectName("env_label"+name)
+        self.verticalLayout_41.addWidget(env_label)
+        env_label.setText(QtCore.QCoreApplication.translate("result_widget", name))
+
+        #self.env_label_list.append(env_label)
+
+    def add_env_checkbox(self, envname, cboxname):
+        '''
+        comment
+        '''
+        env_checkbox = QtWidgets.QCheckBox(self.data_group)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(env_checkbox.sizePolicy().hasHeightForWidth())
+        env_checkbox.setSizePolicy(sizePolicy)
+        env_checkbox.setMinimumSize(QtCore.QSize(75, 0))
+        env_checkbox.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        env_checkbox.setObjectName(envname+"__"+cboxname) # before changing name of the checkbox, remember that it is related to the results_to_plot
+        env_checkbox.setStyleSheet("QCheckBox { padding-left: 40px; }")
+        self.verticalLayout_41.addWidget(env_checkbox)
+        env_checkbox.setText(QtCore.QCoreApplication.translate("result_widget", cboxname))
+
+        self.env_checkbox_list.append(env_checkbox)
+
+        env_checkbox.toggled.connect(lambda checked, checkbox=env_checkbox: self.env_checkbox_toggled(checkbox, checked))
+
+    def env_checkbox_toggled(self, checkbox, checked):
+        """ Slot to handle checkbox state change. """
+        self.results_to_plot[checkbox.objectName()]['to_plot'] = checked
+
+    def func_checkbox_toggled(self, checkbox, checked):
+        """ Slot to handle checkbox state change. """
+        k = checkbox.objectName()+'__to_plot'
+        for key in self.results_to_plot.keys():
+            if key in self.results_to_plot and k in self.results_to_plot[key]:
+                self.results_to_plot[key][k] = checked
+
+    def clean_checkbox_list(self):
+        '''
+        '''
+        self.results_to_plot.clear()
+
+        if self.verticalLayout_41 is not None:
+            while self.verticalLayout_41.count():  # Loop through items in layout
+                item = self.verticalLayout_41.takeAt(0)  # Take item from layout
+                widget = item.widget()
+                
+                if isinstance(widget, QtWidgets.QCheckBox): 
+                    widget.toggled.disconnect()
+
+                if widget is not None:
+                    widget.deleteLater()  # Delete widget safely
+                else:
+                    self.verticalLayout_41.removeItem(item)  # This removes stretches and empty spaces
+
+        self.env_checkbox_list.clear()
+
+    def plot_selected(self):
+        self.plot_widget.clear()
+
+        for i, key in enumerate(self.results_to_plot.keys()):
+            if self.results_to_plot[key]['to_plot']==True :
+                x = self.results_to_plot[key]['x']
+                y = self.results_to_plot[key]['y']
+                y_err = self.results_to_plot[key]['y_error']
+                color = plt.cm.hsv(1 - ((i/6) - i//6) )
+                rgb = tuple(int(c * 255) for c in color[:3])  # Convert to RGB
+                self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None) #pg.mkPen(color=rgb, width=3))
+                #error_bars = pg.ErrorBarItem(x=x, y=y, height=y_err, beam=0.2, pen=rgb)
+                #self.plot_widget.addItem(error_bars)
+                
+                if self.func1.objectName()+'__to_plot' in self.results_to_plot[key].keys():
+                    if self.results_to_plot[key][self.func1.objectName()+'__to_plot']==True :
+                        try:
+                            x_func1 = self.results_to_plot[key][self.func1.objectName()+'__x']
+                            y_func1 = self.results_to_plot[key][self.func1.objectName()+'__y']
+                            self.plot_widget.plot(x_func1, y_func1, pen=pg.mkPen(color=rgb, width=3))
+                        except:
+                           pass
+
+                if self.func2.objectName()+'__to_plot' in self.results_to_plot[key].keys():
+                    if self.results_to_plot[key][self.func2.objectName()+'__to_plot']==True :
+                        try:
+                            x_func2 = self.results_to_plot[key][self.func2.objectName()+'__x']
+                            y_func2 = self.results_to_plot[key][self.func2.objectName()+'__y']
+                            self.plot_widget.plot(x_func2, y_func2, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashLine))     
+                        except:
+                            pass
+
+                if self.func3.objectName()+'__to_plot' in self.results_to_plot[key].keys():
+                    if self.results_to_plot[key][self.func3.objectName()+'__to_plot']==True :
+                        try:
+                            x_func3 = self.results_to_plot[key][self.func3.objectName()+'__x']
+                            y_func3 = self.results_to_plot[key][self.func3.objectName()+'__y']
+                            self.plot_widget.plot(x_func3, y_func3, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
+                        except:
+                            pass
+
+    def setLogX(self, checkbox, checked):
+        '''
+        '''
+        if checked: 
+            self.plot_widget.setLogMode(x=True)
+        else: 
+            self.plot_widget.setLogMode(x=False)
+
+    def setLogY(self, checkbox, checked):
+        '''
+        '''   
+        if checked: 
+            self.plot_widget.setLogMode(y=True)
+        else: 
+            self.plot_widget.setLogMode(y=False)
+
+    def setGridX(self, checkbox, checked):
+        '''
+        '''
+        if checked: 
+            self.plot_widget.showGrid(x=True, alpha=0.5)
+        else:
+            self.plot_widget.showGrid(x=False)
+
+    def setGridY(self, checkbox, checked):
+        '''
+        '''
+        if checked: 
+            self.plot_widget.showGrid(y=True, alpha=0.5)
+        else:
+            self.plot_widget.showGrid(y=False)
+
 
     def link(self, env_handler = None):
         '''
         Link the GUI to the environment that will be  read and
         taken care of.
         '''
+        print('link in page result widget, env_handler = ', env_handler) #to del
         if not env_handler == None:
             self.env_handler = env_handler
         
-        self.result_handler_ui.link(env_handler)
-
-    def _updatePlot(self):
-        '''
-
-        '''
-        self.ax.clear()
-
-        #get the instructions
-        instructions = self.result_handler_ui._processPlot()
-
-        #set up the offsets
-        idx = 0
-        for key in instructions.keys():
-            if self.process_check_offset.isChecked() and instructions[key]['link'] == None:
-                instructions[key]['offset'] += self.process_spin_offset_total.value() + idx * self.process_spin_offset.value()
-                idx+=1
-
-        for key in instructions.keys():
-            if not instructions[key]['link'] == None and instructions[key]['link'] in instructions.keys():
-                instructions[key]['offset'] = instructions[instructions[key]['link']]['offset']
-
-        #plot all
-        for key in instructions.keys():
-            if len(instructions[key]['style']) == 0:
-                pass
-            elif not 'y' in instructions[key].keys():
-                pass
-            elif not 'x' in instructions[key].keys() and not 'e' in instructions[key].keys():
-                self._plotSingleY(instructions[key], key)
-            elif 'x' in instructions[key].keys() and not 'e' in instructions[key].keys():
-                self._plotDoubleY(instructions[key], key)
-            elif 'x' in instructions[key].keys() and 'e' in instructions[key].keys():
-                self._plotTripleY(instructions[key], key)
-
-        self.ax.draw()
-
-    def _plotSingleY(self, instruction, key):
-        '''
-        Plot a curve where only the y axes is defined.
-        '''
-        y = instruction['y']
-        x = np.array([i for i in range(len(y))])
-
-        self.ax.addPlot(
-            'Scatter', 
-            Name        = key,
-            x           = x, 
-            y           = y+instruction['offset'],
-            Style       = instruction['style'], 
-            Thickness   = instruction['thickness'],
-            Color       = instruction['color'])
-
-    def _plotDoubleY(self, instruction, key):
-        '''
-        Plot a curve where only the y and x axes are defined.
-        '''
-        y = instruction['y']
-        x = instruction['x']
-        sort_idx = x.argsort()
-
-        self.ax.addPlot(
-            'Scatter', 
-            Name        = key,
-            x           = x[sort_idx], 
-            y           = y[sort_idx]+instruction['offset'],
-            Style       = instruction['style'], 
-            Thickness   = instruction['thickness'],
-            Color       = instruction['color'])
-
-    def _plotTripleY(self, instruction, key):
-        '''
-        Plot a curve where all axes are defined.
-        '''
-        y = instruction['y']
-        x = instruction['x']
-        e = instruction['e']
-        sort_idx = x.argsort()
-        error = {
-                'height':None,
-                'width' : None,
-                'bottom':e[sort_idx],
-                'top'   :e[sort_idx]}
-
-        self.ax.addPlot(
-            'Scatter', 
-            Name        = key,
-            x           = x[sort_idx], 
-            y           = y[sort_idx]+instruction['offset'],
-            error       = error,
-            Style       = instruction['style'], 
-            Thickness   = instruction['thickness'],
-            Color       = instruction['color'])
 
