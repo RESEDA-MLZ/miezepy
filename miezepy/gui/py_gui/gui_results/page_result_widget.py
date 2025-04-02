@@ -267,7 +267,6 @@ class PageResultWidget(Ui_result_widget):
         Link the GUI to the environment that will be  read and
         taken care of.
         '''
-        print('link in page result widget, env_handler = ', env_handler) #to del
         if not env_handler == None:
             self.env_handler = env_handler
         

@@ -79,6 +79,9 @@ class Ui_result_widget(object):
         spacer_vert11 = QtWidgets.QSpacerItem(20, 50, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.verticalLayout_61.addItem(spacer_vert11)
         # functions for fitting
+        self.fit_label = QtWidgets.QLabel("Fit function:")
+        self.fit_label.setStyleSheet("font-weight: bold;")
+        self.verticalLayout_61.addWidget(self.fit_label)
         self.func1 = QtWidgets.QCheckBox(self.itemselect_group)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -103,6 +106,13 @@ class Ui_result_widget(object):
         self.func3.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.func3.setObjectName("func3")
         self.verticalLayout_61.addWidget(self.func3)
+        self.func4 = QtWidgets.QCheckBox(self.itemselect_group)
+        sizePolicy.setHeightForWidth(self.func4.sizePolicy().hasHeightForWidth())
+        self.func4.setSizePolicy(sizePolicy)
+        self.func4.setMinimumSize(QtCore.QSize(75, 0))
+        self.func4.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.func4.setObjectName("func4")
+        self.verticalLayout_61.addWidget(self.func4)
         # vertical most bottom spacer 
         spacer_vert1 = QtWidgets.QSpacerItem(20, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_61.addItem(spacer_vert1)
@@ -212,9 +222,26 @@ class Ui_result_widget(object):
 
 
         self.add_errorbars.setText(_translate("result_widget", "Error bars"))
-        self.func1.setText(_translate("result_widget", "Function 1"))
-        self.func2.setText(_translate("result_widget", "Function 2"))
-        self.func3.setText(_translate("result_widget", "Function 3"))
+        self.func1.setText(_translate("result_widget", "Exp. "))
+        self.func1.setToolTip(  "<div style='white-space: nowrap;'>"
+                                "Simple exponential decay <br>"
+                                " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)"
+                                "</div>")
+        self.func2.setText(_translate("result_widget", "Stretched exp. "))
+        self.func2.setToolTip(  "<div style='white-space: nowrap;'>"
+                                "Stretched exponential decay <br>"
+                                " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup>"
+                                "</div>")
+        self.func3.setText(_translate("result_widget", "Str. exp. +El. BGRD"))
+        self.func3.setToolTip(  "<div style='white-space: nowrap;'>"
+                                "Stretched exponential decay with elastic component (background)<br>"
+                                " I(q, &tau;) = A + (1 - A) exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup>"
+                                "</div>")
+        self.func4.setText(_translate("result_widget", "Str. exp. +INS"))
+        self.func4.setToolTip(  "<div style='white-space: nowrap;'>"
+                                "Stretched exponential decay with small inelastic contribution<br>"
+                                " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup> cos(E &tau; / ℏ)"
+                                "</div>") 
         self.process_check_log_x.setText(_translate("result_widget", "Set Log X"))
         self.process_check_log_y.setText(_translate("result_widget", "Set Log Y"))
         self.process_check_grid_x.setText(_translate("result_widget", "Set Grid X"))
