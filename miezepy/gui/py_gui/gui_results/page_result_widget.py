@@ -118,7 +118,7 @@ class PageResultWidget(Ui_result_widget):
 
                     self.add_env_checkbox(name, ds)
 
-        self.verticalLayout_41.addStretch(1)
+        self.verticalLayout_411.addStretch(1)
 
     def add_env_label(self, name):
         '''
@@ -131,7 +131,7 @@ class PageResultWidget(Ui_result_widget):
         sizePolicy.setHeightForWidth(env_label.sizePolicy().hasHeightForWidth())
         env_label.setSizePolicy(sizePolicy)
         env_label.setObjectName("env_label"+name)
-        self.verticalLayout_41.addWidget(env_label)
+        self.verticalLayout_411.addWidget(env_label)
         env_label.setText(QtCore.QCoreApplication.translate("result_widget", name))
 
         #self.env_label_list.append(env_label)
@@ -150,7 +150,7 @@ class PageResultWidget(Ui_result_widget):
         env_checkbox.setMaximumSize(QtCore.QSize(16777215, 16777215))
         env_checkbox.setObjectName(envname+"__"+cboxname) # before changing name of the checkbox, remember that it is related to the results_to_plot
         env_checkbox.setStyleSheet("QCheckBox { padding-left: 40px; }")
-        self.verticalLayout_41.addWidget(env_checkbox)
+        self.verticalLayout_411.addWidget(env_checkbox)
         env_checkbox.setText(QtCore.QCoreApplication.translate("result_widget", cboxname))
 
         self.env_checkbox_list.append(env_checkbox)
@@ -173,9 +173,9 @@ class PageResultWidget(Ui_result_widget):
         '''
         self.results_to_plot.clear()
 
-        if self.verticalLayout_41 is not None:
-            while self.verticalLayout_41.count():  # Loop through items in layout
-                item = self.verticalLayout_41.takeAt(0)  # Take item from layout
+        if self.verticalLayout_411 is not None:
+            while self.verticalLayout_411.count():  # Loop through items in layout
+                item = self.verticalLayout_411.takeAt(0)  # Take item from layout
                 widget = item.widget()
                 
                 if isinstance(widget, QtWidgets.QCheckBox): 
@@ -184,7 +184,7 @@ class PageResultWidget(Ui_result_widget):
                 if widget is not None:
                     widget.deleteLater()  # Delete widget safely
                 else:
-                    self.verticalLayout_41.removeItem(item)  # This removes stretches and empty spaces
+                    self.verticalLayout_411.removeItem(item)  # This removes stretches and empty spaces
 
         self.env_checkbox_list.clear()
 
