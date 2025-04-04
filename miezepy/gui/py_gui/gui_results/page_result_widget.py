@@ -91,6 +91,7 @@ class PageResultWidget(Ui_result_widget):
         self.clean_checkbox_list()
 
         names = [env.name for env in self.env_handler.env_array]
+        self.scroll_widget.setMinimumWidth(self.scroll_area.width() + 20)  # Adjust width dynamically
 
         for name in names:
             target  = self.env_handler.getEnv(name)
@@ -133,8 +134,9 @@ class PageResultWidget(Ui_result_widget):
         env_label.setObjectName("env_label"+name)
         self.verticalLayout_411.addWidget(env_label)
         env_label.setText(QtCore.QCoreApplication.translate("result_widget", name))
+        env_label.adjustSize() 
 
-        #self.env_label_list.append(env_label)
+        self.adjust_scroll_size(env_label.width(),self.scroll_widget.width())
 
     def add_env_checkbox(self, envname, cboxname):
         '''
@@ -152,10 +154,18 @@ class PageResultWidget(Ui_result_widget):
         env_checkbox.setStyleSheet("QCheckBox { padding-left: 40px; }")
         self.verticalLayout_411.addWidget(env_checkbox)
         env_checkbox.setText(QtCore.QCoreApplication.translate("result_widget", cboxname))
+        env_checkbox.adjustSize()
+
+        self.adjust_scroll_size(env_checkbox.width(),self.scroll_widget.width())
 
         self.env_checkbox_list.append(env_checkbox)
 
         env_checkbox.toggled.connect(lambda checked, checkbox=env_checkbox: self.env_checkbox_toggled(checkbox, checked))
+
+    def adjust_scroll_size(self,item_width, scroll_width):
+        if item_width+150 >= scroll_width:
+            self.scroll_widget.setMinimumWidth(item_width+150)
+            self.scroll_widget.adjustSize()
 
     def env_checkbox_toggled(self, checkbox, checked):
         """ Slot to handle checkbox state change. """
