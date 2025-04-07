@@ -28,7 +28,7 @@ class Ui_result_widget(object):
         self.data_group = QtWidgets.QGroupBox(self.splitter)
         self.data_group.setObjectName("data_group")
         self.data_group.setMinimumWidth(400)
-        self.data_group.setStyleSheet("QGroupBox { background-color: white; }")
+        self.data_group.setStyleSheet("QGroupBox { background-color: white; border: 0;}")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.data_group)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         #
@@ -135,6 +135,7 @@ class Ui_result_widget(object):
 
         # right
         self.groupBox_3 = QtWidgets.QGroupBox(self.splitter)
+        self.groupBox_3.setStyleSheet("QGroupBox {  border: 0; }")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -143,17 +144,28 @@ class Ui_result_widget(object):
         self.groupBox_3.setObjectName("groupBox_3")
         self.verticalLayout_20 = QtWidgets.QVBoxLayout(self.groupBox_3)
         self.verticalLayout_20.setObjectName("verticalLayout_20")
+        margins = self.verticalLayout_20.contentsMargins()
+        self.verticalLayout_20.setContentsMargins(margins.left(), 0, margins.right(), margins.bottom())
         # the plot
         self.plot_widget = pg.PlotWidget()
-        self.plot_widget.setTitle("Plot title", color='black')
-        self.plot_widget.setLabel('bottom', 'X-Axis: echo time', color='black', size='14pt')
-        self.plot_widget.setLabel('left', 'Y-Axis: Contrast', color='black', size='14pt')
-        self.plot_widget.getAxis('bottom').setPen(pg.mkPen(color='black', width=2))  # Bottom X-axis
-        self.plot_widget.getAxis('left').setPen(pg.mkPen(color='black', width=2))  # Left Y-axis
-        self.plot_widget.getAxis('bottom').setTextPen(pg.mkPen(color='black'))  # X-axis numbers (bottom)
-        self.plot_widget.getAxis('left').setTextPen(pg.mkPen(color='black'))  # Y-axis numbers (left)
-        self.plot_widget.setLogMode(x=True, y=False)
+        #self.plot_widget.setTitle("Plot title", color='black',size='14pt')
+        self.plot_widget.getAxis('bottom').setPen(pg.mkPen(color='black', width=2))  
+        self.plot_widget.getAxis('left').setPen(pg.mkPen(color='black', width=2))  
+        self.plot_widget.getAxis('top').setPen(pg.mkPen(color='black', width=2))  
+        self.plot_widget.getAxis('right').setPen(pg.mkPen(color='black', width=2))         
+        self.plot_widget.getAxis('bottom').setTextPen(pg.mkPen(color='black'))  
+        self.plot_widget.getAxis('left').setTextPen(pg.mkPen(color='black'))  
+        self.plot_widget.getAxis('top').setStyle(showValues=False)
+        self.plot_widget.getAxis('right').setStyle(showValues=False)
+        self.plot_widget.showAxis('top')
+        self.plot_widget.showAxis('right')
+        self.plot_widget.setLogMode(x=False, y=False)
         self.plot_widget.setBackground('w')
+        plot_item = self.plot_widget.getPlotItem()
+        plot_item.setContentsMargins(20, 60, 60, 20) # left, top, right, bottom
+        plot_item.getAxis('left').setLabel(text='Contrast',**{'color': 'black', 'font-size': '12pt'})
+        plot_item.getAxis('bottom').setLabel(text='Echo time (ns)',**{'color': 'black', 'font-size': '12pt'})
+
         self.verticalLayout_20.addWidget(self.plot_widget)
 
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()

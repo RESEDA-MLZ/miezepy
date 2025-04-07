@@ -80,14 +80,13 @@ class PageResultWidget(Ui_result_widget):
         self.func1.toggled.connect(lambda checked, checkbox=self.func1: self.func_checkbox_toggled(checkbox, checked))
         self.func2.toggled.connect(lambda checked, checkbox=self.func2: self.func_checkbox_toggled(checkbox, checked))
         self.func3.toggled.connect(lambda checked, checkbox=self.func3: self.func_checkbox_toggled(checkbox, checked))
-
+        self.func4.toggled.connect(lambda checked, checkbox=self.func4: self.func_checkbox_toggled(checkbox, checked))
 
     def refresh_dataset(self):
         '''
         Refresh the dictionary of environments to 
         take into account. 
         '''
-        # first clean what was there before
         self.clean_checkbox_list()
 
         names = [env.name for env in self.env_handler.env_array]
@@ -112,10 +111,13 @@ class PageResultWidget(Ui_result_widget):
                         #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func2'] = 
                         #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func3'] = 
                         #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func3'] = 
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func4'] = 
+                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func4'] = 
 
                         self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__to_plot'] = 'False'
                         self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__to_plot'] = 'False'
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__to_plot'] = 'False'                   
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__to_plot'] = 'False'  
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__to_plot'] = 'False'                 
 
                     self.add_env_checkbox(name, ds)
 
@@ -150,7 +152,7 @@ class PageResultWidget(Ui_result_widget):
         env_checkbox.setSizePolicy(sizePolicy)
         env_checkbox.setMinimumSize(QtCore.QSize(75, 0))
         env_checkbox.setMaximumSize(QtCore.QSize(16777215, 16777215))
-        env_checkbox.setObjectName(envname+"__"+cboxname) # before changing name of the checkbox, remember that it is related to the results_to_plot
+        env_checkbox.setObjectName(envname+"__"+cboxname) 
         env_checkbox.setStyleSheet("QCheckBox { padding-left: 40px; }")
         self.verticalLayout_411.addWidget(env_checkbox)
         env_checkbox.setText(QtCore.QCoreApplication.translate("result_widget", cboxname))
@@ -184,17 +186,17 @@ class PageResultWidget(Ui_result_widget):
         self.results_to_plot.clear()
 
         if self.verticalLayout_411 is not None:
-            while self.verticalLayout_411.count():  # Loop through items in layout
-                item = self.verticalLayout_411.takeAt(0)  # Take item from layout
+            while self.verticalLayout_411.count():  
+                item = self.verticalLayout_411.takeAt(0)  
                 widget = item.widget()
                 
                 if isinstance(widget, QtWidgets.QCheckBox): 
                     widget.toggled.disconnect()
 
                 if widget is not None:
-                    widget.deleteLater()  # Delete widget safely
+                    widget.deleteLater()  
                 else:
-                    self.verticalLayout_411.removeItem(item)  # This removes stretches and empty spaces
+                    self.verticalLayout_411.removeItem(item)  
 
         self.env_checkbox_list.clear()
 
@@ -207,8 +209,8 @@ class PageResultWidget(Ui_result_widget):
                 y = self.results_to_plot[key]['y']
                 y_err = self.results_to_plot[key]['y_error']
                 color = plt.cm.hsv(1 - ((i/6) - i//6) )
-                rgb = tuple(int(c * 255) for c in color[:3])  # Convert to RGB
-                self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None) #pg.mkPen(color=rgb, width=3))
+                rgb = tuple(int(c * 255) for c in color[:3])  
+                self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None) 
                 #error_bars = pg.ErrorBarItem(x=x, y=y, height=y_err, beam=0.2, pen=rgb)
                 #self.plot_widget.addItem(error_bars)
                 
@@ -236,6 +238,15 @@ class PageResultWidget(Ui_result_widget):
                             x_func3 = self.results_to_plot[key][self.func3.objectName()+'__x']
                             y_func3 = self.results_to_plot[key][self.func3.objectName()+'__y']
                             self.plot_widget.plot(x_func3, y_func3, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
+                        except:
+                            pass
+
+                if self.func4.objectName()+'__to_plot' in self.results_to_plot[key].keys():
+                    if self.results_to_plot[key][self.func4.objectName()+'__to_plot']==True :
+                        try:
+                            x_func4 = self.results_to_plot[key][self.func4.objectName()+'__x']
+                            y_func4 = self.results_to_plot[key][self.func4.objectName()+'__y']
+                            self.plot_widget.plot(x_func4, y_func4, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
                         except:
                             pass
 
