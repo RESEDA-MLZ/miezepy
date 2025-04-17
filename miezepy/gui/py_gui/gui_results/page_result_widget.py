@@ -90,7 +90,7 @@ class PageResultWidget(Ui_result_widget):
         self.clean_checkbox_list()
 
         names = [env.name for env in self.env_handler.env_array]
-        self.scroll_widget.setMinimumWidth(self.scroll_area.width() + 20)  # Adjust width dynamically
+        #self.scroll_widget.setMinimumWidth(self.scroll_area.width() + 20)  
 
         for name in names:
             target  = self.env_handler.getEnv(name)
@@ -104,15 +104,16 @@ class PageResultWidget(Ui_result_widget):
                     self.results_to_plot.setdefault(name+'__'+ds,{})['y_error'] = result['Parameters'][ds]['y_error']
                     self.results_to_plot.setdefault(name+'__'+ds,{})['to_plot'] = 'False'
 
+                    #['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
                     if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__x'] = result['Curve Axis'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__y'] = result['Curve'][ds]
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func2'] = 
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func2'] = 
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func3'] = 
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func3'] = 
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['x_func4'] = 
-                        #self.results_to_plot.setdefault(name+'__'+ds,{})['y_func4'] = 
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__y'] = result['Curve']['Exp'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__x'] = result['Curve Axis']['StrExp'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__y'] = result['Curve']['StrExp'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__x'] = result['Curve Axis']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__y'] = result['Curve']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__x'] = result['Curve Axis']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__y'] = result['Curve']['StrExp_InElast'][ds]
 
                         self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__to_plot'] = 'False'
                         self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__to_plot'] = 'False'
@@ -122,6 +123,13 @@ class PageResultWidget(Ui_result_widget):
                     self.add_env_checkbox(name, ds)
 
         self.verticalLayout_411.addStretch(1)
+
+        self.func1.setChecked(False)
+        self.func2.setChecked(False)
+        self.func3.setChecked(False)
+        self.func4.setChecked(False)
+        self.add_errorbars.setChecked(False)
+
 
     def add_env_label(self, name):
         '''
@@ -228,7 +236,7 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func2 = self.results_to_plot[key][self.func2.objectName()+'__x']
                             y_func2 = self.results_to_plot[key][self.func2.objectName()+'__y']
-                            self.plot_widget.plot(x_func2, y_func2, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashLine))     
+                            self.plot_widget.plot(x_func2, y_func2, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashLine))     
                         except:
                             pass
 
@@ -237,7 +245,7 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func3 = self.results_to_plot[key][self.func3.objectName()+'__x']
                             y_func3 = self.results_to_plot[key][self.func3.objectName()+'__y']
-                            self.plot_widget.plot(x_func3, y_func3, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
+                            self.plot_widget.plot(x_func3, y_func3, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
                         except:
                             pass
 
@@ -246,7 +254,7 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func4 = self.results_to_plot[key][self.func4.objectName()+'__x']
                             y_func4 = self.results_to_plot[key][self.func4.objectName()+'__y']
-                            self.plot_widget.plot(x_func4, y_func4, pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
+                            self.plot_widget.plot(x_func4, y_func4, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashDotLine))
                         except:
                             pass
 

@@ -37,7 +37,7 @@ class Ui_result_widget(object):
         self.scroll_layout = QtWidgets.QVBoxLayout(self.scroll_widget)
         self.scroll_layout.setContentsMargins(0, 0, 0, 0)
         self.scroll_layout.setSpacing(0)
-        self.scroll_widget.setMinimumWidth(300)  # Set a larger minimum width
+        #self.scroll_widget.setMinimumWidth(300)  # Set a larger minimum width
         self.scroll_widget.setSizePolicy(QtWidgets.QScrollArea().sizePolicy())  # Allow it to expand if needed
         #
         self.dataselect_group = QtWidgets.QGroupBox(self.data_group)
@@ -163,7 +163,7 @@ class Ui_result_widget(object):
         self.plot_widget.setBackground('w')
         plot_item = self.plot_widget.getPlotItem()
         plot_item.setContentsMargins(20, 60, 60, 20) # left, top, right, bottom
-        plot_item.getAxis('left').setLabel(text='Contrast',**{'color': 'black', 'font-size': '12pt'})
+        plot_item.getAxis('left').setLabel(text='Contrast (a.u.)',**{'color': 'black', 'font-size': '12pt'})
         plot_item.getAxis('bottom').setLabel(text='Echo time (ns)',**{'color': 'black', 'font-size': '12pt'})
 
         self.verticalLayout_20.addWidget(self.plot_widget)

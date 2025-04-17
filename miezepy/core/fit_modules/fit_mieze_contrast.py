@@ -577,13 +577,20 @@ class ContrastProcessing:
             np.log10(np.amin(echo_time)) if np.amin(echo_time) > 1e-9 else 0,
             np.log10(np.amax(echo_time)) if np.amax(echo_time) > 1e-9 else 0, 100)
 
+        # fit functions
+        fit_functions = ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
         # initialize the output
         Output = {}
-        Output['Gamma'] = {}
-        Output['Gamma_error'] = {}
-        Output['Curve'] = {}
+        for func in fit_functions:
+            Output.setdefault('Gamma',{})[func] = {}
+            Output.setdefault('Gamma_error',{})[func] = {}
+            Output.setdefault('Amplitude',{})[func] = {}
+            Output.setdefault('Amplitude_error',{})[func] = {}
+            Output.setdefault('Beta',{})[func] = {}
+            Output.setdefault('Beta_error',{})[func] = {}            
+            Output.setdefault('Curve',{})[func] = {}
+            Output.setdefault('Curve Axis',{})[func] = {}
         Output['Parameters'] = {}
-        Output['Curve Axis'] = {}
 
         # process thecomputation
         for key in contrast.keys():
@@ -638,9 +645,6 @@ class ContrastProcessing:
                 y = np.abs(data if sum_foils else sum_fit_data)
                 y_error = data_error
 
-            # fit the data
-            fit = fitter.fitExp(y, x, y_error, x_display_axis)
-
             # prepare the result
             Output['Parameters'][key] = {
                 'x': x,
@@ -650,17 +654,31 @@ class ContrastProcessing:
                 'y_error': y_error,
                 'y_raw_error': data_error}
 
-            Output['Gamma'][key] = fit['Gamma']
-            Output['Gamma_error'][key] = fit['Gamma_error']
-            Output['Curve'][key] = fit['Curve']
-            Output['Curve Axis'][key] = fit['Curve Axis']
+            
+            for func in fit_functions:
+                fit = fitter.fitExp(y, x, y_error, x_display_axis, func)
+
+                Output['Gamma'][func][key] = fit['Gamma']
+                Output['Gamma_error'][func][key] = fit['Gamma_error']
+                Output['Amplitude'][func][key] = fit['Amplitude']
+                Output['Amplitude_error'][func][key] = fit['Amplitude_error']
+                Output['Beta'][func][key] = fit['Beta']
+                Output['Beta_error'][func][key] = fit['Beta_error']
+                Output['Curve'][func][key] = fit['Curve']
+                Output['Curve Axis'][func][key] = fit['Curve Axis']
+
 
         # set the other information
-        local_results['Gamma'] = [Output['Gamma'][T] for T in select]
-        local_results['Gamma_error'] = [Output['Gamma_error'][T]
-                                        for T in select]
-        local_results['Curve'] = Output['Curve']
-        local_results['Curve Axis'] = Output['Curve Axis']
+        for func in fit_functions:
+            local_results['Gamma'] = Output['Gamma']
+            local_results['Gamma_error'] = Output['Gamma_error']
+            local_results['Amplitude'] = Output['Amplitude']
+            local_results['Amplitude_error'] = Output['Amplitude_error']
+            local_results['Beta'] = Output['Beta']
+            local_results['Beta_error'] = Output['Beta_error']         
+            local_results['Curve'] = Output['Curve']
+            local_results['Curve Axis'] = Output['Curve Axis']
+
         local_results['Parameters'] = Output['Parameters']
         local_results['Select'] = select
         local_results['BG'] = BG

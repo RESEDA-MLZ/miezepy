@@ -99,7 +99,7 @@ class CosineMinuit:
 
 class ExpMinuit:
 
-    def fitExp(self, contrast, SpinEchoTime, contrastError, x_display_axis):
+    def fitExp(self, contrast, SpinEchoTime, contrastError, x_display_axis, input_func):
         '''
         Creates the minuit fit function and runs
         leastsquarefit.
@@ -114,6 +114,8 @@ class ExpMinuit:
 
         contrastError : float array
 
+        input_func : name of the fitting function
+
         Returns
         -------
         fit : fit result dictionary
@@ -123,39 +125,115 @@ class ExpMinuit:
         self.argument_dict['SpinEchoTime'] = SpinEchoTime
         self.argument_dict['contrastError'] = contrastError
 
+        self.func_name = input_func
+
         minuit_dict = {}
         minuit_dict['Gamma'] = 10
+        minuit_dict['Amplitude'] = 1
+        minuit_dict['Beta'] = 1
 
-        fit = iminuit.Minuit(self.exp, **minuit_dict)
+        self.fit_functions = {
+            'Exp': self.exp,
+            'StrExp': self.str_exp,
+            'StrExp_Elast': self.str_exp_elast,
+            'StrExp_InElast': self.str_exp_inelast,
+        }
+
+        fit = iminuit.Minuit(self.cost_func, **minuit_dict)
+        if self.func_name == 'Exp': 
+            fit.fixed['Amplitude'] = True
+            fit.fixed['Beta'] = True
+        elif self.func_name == 'StrExp': 
+            fit.fixed['Amplitude'] = True
+        elif self.func_name == 'StrExp_InElast': 
+            fit.fixed['Amplitude'] = True 
+
+
         fit.errordef = iminuit.Minuit.LEAST_SQUARES
         fit.migrad()
 
         params = fit.values
         chi2 = fit.fval
+
+        Gamma = fit.values['Gamma'] if fit.covariance is not None else None
+        Amp = fit.values['Amplitude'] if fit.covariance is not None else None
+        Beta = fit.values['Beta'] if fit.covariance is not None else None
+
         cov = fit.covariance
-        Cov = np.array(cov).reshape([1, 1])
-        Gamma = fit.values['Gamma']
+        Cov = np.array(cov).reshape([3, 3]) if fit.covariance is not None else None
         Gammaerr = np.sqrt(Cov[0][0]) if fit.covariance is not None else None
+        Amperr = np.sqrt(Cov[1][1]) if fit.covariance is not None else None
+        Betaerr = np.sqrt(Cov[2][2]) if fit.covariance is not None else None
+
+        Curve = np.full(len(x_display_axis), np.nan)
+        if self.func_name in self.fit_functions:
+            Curve = self.fit_functions[self.func_name](Gamma, Amp, Beta, x_display_axis) if fit.covariance is not None else None
+        else:
+            print(f"Unknown fit function: {self.func_name}")
 
         return {'Gamma': Gamma,
                 'Gamma_error': Gammaerr,
-                'Curve': np.exp(-Gamma*1e-6*co.e*x_display_axis*1e-9/co.hbar),
+                'Amplitude' : Amp,
+                'Amplitude_error' : Amperr,
+                'Beta' : Beta,
+                'Beta_error' : Betaerr,                
+                'Curve': Curve,
                 'Curve Axis': x_display_axis}
 
-    def exp(self, Gamma):
+
+    def cost_func(self, Gamma, Amplitude, Beta):
         '''
         Gamma exponential fit minimizer function
 
-        Parameters
+        Parameters (fitting parameters):
         ----------
-        phase : float
-            Phase of the sinus oscillation
+        Gamma : float
+            Relaxation rate
 
-        offset : float
-            Offset along the y absice
+        Amplitude : float
+            Amplitude of the function
 
-        amplitude : float
-            Amplitude of the sinus oscillation
+        Beta : float
+            Stretching parameter
+
+        Returns
+        -------
+        fit result : float
+        '''
+
+        with warnings.catch_warnings():
+            try:
+                if self.func_name in self.fit_functions:
+                    func = self.fit_functions[self.func_name](Gamma, Amplitude, Beta, self.argument_dict['SpinEchoTime'])
+                else:
+                    print(f"Unknown fit function: {self.func_name}")
+
+                return sum(
+                    ((f-c)**2. / e**2.
+                     for f, c, e in zip(
+                         func,
+                         self.argument_dict['contrast'],
+                         self.argument_dict['contrastError'])))
+            except:
+                return np.nan
+
+    def exp(self, Gamma, Amp, Beta, t):
+        '''
+        Fit function
+
+        Parameters (fitting parameters):
+        ----------
+        Gamma : float
+            Relaxation rate
+
+        Amplitude : float
+            Amplitude of the function
+
+        Beta : float
+            Stretching parameter
+
+        t : float
+            Spin echo time
 
         Returns
         -------
@@ -163,12 +241,99 @@ class ExpMinuit:
         '''
         with warnings.catch_warnings():
             try:
-                return sum(
-                    ((np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)-c)**2.
-                     / e**2.
-                     for c, t, e in zip(
-                         self.argument_dict['contrast'],
-                         self.argument_dict['SpinEchoTime'],
-                         self.argument_dict['contrastError'])))
+                return (Amp*np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar))
             except:
                 return np.nan
+            
+
+    def str_exp(self, Gamma, Amp, Beta, t):
+        '''
+        Fit function
+
+        Parameters (fitting parameters):
+        ----------
+        Gamma : float
+            Relaxation rate
+
+        Amplitude : float
+            Amplitude of the function
+
+        Beta : float
+            Stretching parameter
+
+        t : float
+            Spin echo time
+
+        Returns
+        -------
+        fit result : float
+        '''
+        with warnings.catch_warnings():
+            try:
+                return (Amp*np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)**Beta)
+            except:
+                return np.nan
+
+
+    def str_exp_elast(self, Gamma, Amp, Beta, t):
+        '''
+        Fit function
+
+        Parameters (fitting parameters):
+        ----------
+        Gamma : float
+            Relaxation rate
+
+        Amplitude : float
+            Amplitude of the function
+
+        Beta : float
+            Stretching parameter
+
+        t : float
+            Spin echo time
+
+        Returns
+        -------
+        fit result : float
+        '''
+        with warnings.catch_warnings():
+            try:
+                return (Amp+(1-Amp)*np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)**Beta)
+            except:
+                return np.nan
+
+
+    def str_exp_inelast(self, Gamma, Amp, Beta, t):
+        '''
+        Fit function
+
+        Parameters (fitting parameters):
+        ----------
+        Gamma : float
+            Relaxation rate
+
+        Amplitude : float
+            Amplitude of the function
+
+        Beta : float
+            Stretching parameter
+
+        t : float
+            Spin echo time
+
+        Returns
+        -------
+        fit result : float
+        '''
+        with warnings.catch_warnings():
+            try:
+                return (Amp*np.exp(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar)**Beta 
+                        * np.cos(-Gamma*1.e-6*co.e*t*1.e-9/co.hbar))
+            except:
+                return np.nan    
+
+
+
+
+
