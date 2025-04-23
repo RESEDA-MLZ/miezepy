@@ -166,7 +166,14 @@ class Ui_result_widget(object):
         plot_item.getAxis('left').setLabel(text='Contrast (a.u.)',**{'color': 'black', 'font-size': '12pt'})
         plot_item.getAxis('bottom').setLabel(text='Echo time (ns)',**{'color': 'black', 'font-size': '12pt'})
 
+        self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'black', width=1))
+        self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'black', width=1))
+
         self.verticalLayout_20.addWidget(self.plot_widget)
+
+        self.xy_label = QtWidgets.QLabel("")
+        self.xy_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.verticalLayout_20.addWidget(self.xy_label)
 
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setContentsMargins(-1, 0, -1, -1)
@@ -183,7 +190,7 @@ class Ui_result_widget(object):
         self.process_check_log_x.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.process_check_log_x.setObjectName("process_check_log_x")
         self.horizontalLayout_10.addWidget(self.process_check_log_x)
-        spacerItem2 = QtWidgets.QSpacerItem(50, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(25, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem2)
         # Log Y checkboxe
         self.process_check_log_y = QtWidgets.QCheckBox(self.groupBox_3)
@@ -196,7 +203,7 @@ class Ui_result_widget(object):
         self.process_check_log_y.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.process_check_log_y.setObjectName("process_check_log_y")
         self.horizontalLayout_10.addWidget(self.process_check_log_y)
-        spacerItem21 = QtWidgets.QSpacerItem(100, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem21 = QtWidgets.QSpacerItem(75, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem21)
         # Grid X checkboxe
         self.process_check_grid_x = QtWidgets.QCheckBox(self.groupBox_3)
@@ -209,7 +216,7 @@ class Ui_result_widget(object):
         self.process_check_grid_x.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.process_check_grid_x.setObjectName("process_check_grid_x")
         self.horizontalLayout_10.addWidget(self.process_check_grid_x)
-        spacerItem22 = QtWidgets.QSpacerItem(50, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
+        spacerItem22 = QtWidgets.QSpacerItem(25, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem22)
         # Grid Y checkboxe
         self.process_check_grid_y = QtWidgets.QCheckBox(self.groupBox_3)
@@ -222,6 +229,20 @@ class Ui_result_widget(object):
         self.process_check_grid_y.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.process_check_grid_y.setObjectName("process_check_grid_y")
         self.horizontalLayout_10.addWidget(self.process_check_grid_y)
+        spacerItem23 = QtWidgets.QSpacerItem(25, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_10.addItem(spacerItem23)
+        # Crosshairs checkboxe
+        self.process_check_crosshairs = QtWidgets.QCheckBox(self.groupBox_3)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.process_check_crosshairs.sizePolicy().hasHeightForWidth())
+        self.process_check_crosshairs.setSizePolicy(sizePolicy)
+        self.process_check_crosshairs.setMinimumSize(QtCore.QSize(75, 0))
+        self.process_check_crosshairs.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.process_check_crosshairs.setObjectName("process_check_crosshairs")
+        self.horizontalLayout_10.addWidget(self.process_check_crosshairs)
+
         spacerItem3 = QtWidgets.QSpacerItem(0, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem3)
         self.verticalLayout_20.addLayout(self.horizontalLayout_10)
@@ -259,5 +280,7 @@ class Ui_result_widget(object):
         self.process_check_log_y.setText(_translate("result_widget", "Set Log Y"))
         self.process_check_grid_x.setText(_translate("result_widget", "Set Grid X"))
         self.process_check_grid_y.setText(_translate("result_widget", "Set Grid Y"))
+        self.process_check_crosshairs.setText(_translate("result_widget", "Set Crosshairs"))
+
 
 

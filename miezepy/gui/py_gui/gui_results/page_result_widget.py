@@ -76,6 +76,7 @@ class PageResultWidget(Ui_result_widget):
         self.process_check_log_y.toggled.connect(lambda checked, checkbox=self.process_check_log_y: self.setLogY(checkbox, checked))
         self.process_check_grid_x.toggled.connect(lambda checked, checkbox=self.process_check_grid_x: self.setGridX(checkbox, checked))
         self.process_check_grid_y.toggled.connect(lambda checked, checkbox=self.process_check_grid_y: self.setGridY(checkbox, checked))
+        self.process_check_crosshairs.toggled.connect(lambda checked, checkbox=self.process_check_crosshairs: self.setCrosshairs(checkbox, checked))
 
         self.func1.toggled.connect(lambda checked, checkbox=self.func1: self.func_checkbox_toggled(checkbox, checked))
         self.func2.toggled.connect(lambda checked, checkbox=self.func2: self.func_checkbox_toggled(checkbox, checked))
@@ -258,6 +259,60 @@ class PageResultWidget(Ui_result_widget):
                         except:
                             pass
 
+
+        self.plot_widget.addItem(self.v_line, ignoreBounds=True)
+        self.plot_widget.addItem(self.h_line, ignoreBounds=True)
+        self.v_line.setVisible(False)
+        self.h_line.setVisible(False)
+
+        self.plot_widget.setMouseTracking(True)
+        self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
+
+
+
+    def mouse_moved(self, evt):
+        mouse_point = self.plot_widget.getPlotItem().vb.mapSceneToView(evt)
+        x = mouse_point.x()
+        y = mouse_point.y()
+
+             
+        self.v_line.setPos(x)
+        self.h_line.setPos(y)
+
+        if self.process_check_crosshairs.isChecked():
+            self.v_line.setVisible(True)
+            self.h_line.setVisible(True)  
+        else:
+            self.v_line.setVisible(False)
+            self.h_line.setVisible(False)
+        
+
+
+        if self.plot_widget.getPlotItem().ctrl.logXCheck.isChecked():
+            x = 10 ** x 
+
+        self.xy_label.setText(f"x = {x:.4e},    y = {y:.2f}")
+
+        ## Optional: Snap to nearest point
+        #nearest_index = min(range(len(self.x_data)), key=lambda i: abs(self.x_data[i] - x))
+        #x_nearest = self.x_data[nearest_index]
+        #y_nearest = self.y_data[nearest_index]
+
+        #if abs(x - x_nearest) < 0.2:  # Snap sensitivity (tweak as needed)
+        #    self.label.setText(f"Near point: ({x_nearest:.2f}, {y_nearest:.2f})")
+        #else:
+        #    self.label.setText(f"x = {x:.2f}, y = {y:.2f}")
+
+    
+    def setCrosshairs(self, checkbox, checked):
+
+        if checked: 
+            self.v_line.setVisible(True)
+            self.h_line.setVisible(True)
+        else: 
+            self.v_line.setVisible(False)
+            self.h_line.setVisible(False)
+    
     def setLogX(self, checkbox, checked):
         '''
         '''
