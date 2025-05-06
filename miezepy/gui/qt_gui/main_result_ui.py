@@ -158,10 +158,6 @@ class Ui_result_widget(object):
 
         self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'black', width=1))
         self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'black', width=1))
-        self.plot_widget.addItem(self.v_line, ignoreBounds=True)
-        self.plot_widget.addItem(self.h_line, ignoreBounds=True)
-        self.v_line.setVisible(False)
-        self.h_line.setVisible(False)
         
         self.verticalLayout_20.addWidget(self.plot_widget)
 

@@ -294,14 +294,8 @@ class PageResultWidget(Ui_result_widget):
                             pass
 
         self.setErrorBars(self.add_errorbars, self.add_errorbars.isChecked())
-        
-        #for err_b in self.error_bars_list:
-        #    self.plot_widget.addItem(err_b)
+        self.setCrosshairs(self.process_check_crosshairs, self.process_check_crosshairs.isChecked())
 
-        #self.error_bars.hide()
-
-        #if self.add_errorbars.isChecked():
-        #    self.error_bars.show()
 
     def mouse_moved(self, evt):
         '''
@@ -310,38 +304,14 @@ class PageResultWidget(Ui_result_widget):
         x = mouse_point.x()
         y = mouse_point.y()
 
-             
         self.v_line.setPos(x)
         self.h_line.setPos(y)
 
-        if self.process_check_crosshairs.isChecked():
-            #print('plot crosshairs/mouse_moved')
-            self.v_line.setVisible(True)
-            self.h_line.setVisible(True)  
-            self.v_line.setZValue(1000)  # bring to front
-            self.h_line.setZValue(1000)
-        else:
-            self.v_line.setVisible(False)
-            self.h_line.setVisible(False)
-        #print(self.v_line.pos(), self.v_line.isVisible())
-        #print(self.plot_widget.getPlotItem().vb.viewRange())
-        
         if self.plot_widget.getPlotItem().ctrl.logXCheck.isChecked():
             x = 10 ** x 
 
         self.xy_label.setText(f"x = {x:.4e},    y = {y:.2f}")
 
-        ## Optional: Snap to nearest point
-        #nearest_index = min(range(len(self.x_data)), key=lambda i: abs(self.x_data[i] - x))
-        #x_nearest = self.x_data[nearest_index]
-        #y_nearest = self.y_data[nearest_index]
-
-        #if abs(x - x_nearest) < 0.2:  # Snap sensitivity (tweak as needed)
-        #    self.label.setText(f"Near point: ({x_nearest:.2f}, {y_nearest:.2f})")
-        #else:
-        #    self.label.setText(f"x = {x:.2f}, y = {y:.2f}")
-
-    
     def setErrorBars(self, checkbox, checked):
         '''
         '''
@@ -372,14 +342,6 @@ class PageResultWidget(Ui_result_widget):
                 except:
                     pass        
 
-        if self.process_check_crosshairs.isChecked():
-            #print('plot crosshairs/setErrorBars')
-            self.v_line.setVisible(True)
-            self.h_line.setVisible(True)  
-        else:
-            self.v_line.setVisible(False)
-            self.h_line.setVisible(False)
-        
     def removeErrorBars(self):
         ''''''
         try:
@@ -398,17 +360,17 @@ class PageResultWidget(Ui_result_widget):
     def setCrosshairs(self, checkbox, checked):
         ''''''
         if checked: 
-            #print('plot crosshairs/setCrosshairs')
-            self.v_line.setVisible(True)
-            self.h_line.setVisible(True)
-            is_visible = self.v_line.isVisible() and self.h_line.isVisible()
-            #print("Crosshairs visible?", is_visible)
-            self.v_line.setZValue(1000)  # bring to front
-            self.h_line.setZValue(1000)
+            self.removeCrosshairs()
+            self.plot_widget.addItem(self.v_line, ignoreBounds=True)
+            self.plot_widget.addItem(self.h_line, ignoreBounds=True)
         else: 
-            self.v_line.setVisible(False)
-            self.h_line.setVisible(False)
+            self.removeCrosshairs()
     
+    def removeCrosshairs(self):
+        ''''''
+        self.plot_widget.removeItem(self.v_line)
+        self.plot_widget.removeItem(self.h_line)
+
     def setLogX(self, checkbox, checked):
         '''
         '''
