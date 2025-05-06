@@ -57,6 +57,10 @@ class PageResultWidget(Ui_result_widget):
         '''
         self.setupUi(self.local_widget)
         self.env_checkbox_list = []
+        self.error_bars_list = []
+        self.error_bars_logX_list = []        
+        self.error_bars_logY_list = []
+        self.error_bars_logXY_list = []        
         self.results_to_plot = {}
         log_x = self.plot_widget.getPlotItem().getAxis('bottom').logMode
         log_y = self.plot_widget.getPlotItem().getAxis('left').logMode
@@ -70,18 +74,29 @@ class PageResultWidget(Ui_result_widget):
         Connect all Qt slots to their respective methods.
         '''
         self.process_refresh_button.clicked.connect(self.refresh_dataset)
-        self.plotitems_button.clicked.connect(self.plot_selected)            
+        self.plotitems_button.clicked.connect(self.plot_selected)   
+
+        self.process_check_grid_x.toggled.connect(lambda checked, checkbox=self.process_check_grid_x: self.setGridX(checkbox, checked))
+        self.process_check_grid_y.toggled.connect(lambda checked, checkbox=self.process_check_grid_y: self.setGridY(checkbox, checked))  
+
+        self.process_check_crosshairs.toggled.connect(lambda checked, checkbox=self.process_check_crosshairs: self.setCrosshairs(checkbox, checked))      
 
         self.process_check_log_x.toggled.connect(lambda checked, checkbox=self.process_check_log_x: self.setLogX(checkbox, checked))
         self.process_check_log_y.toggled.connect(lambda checked, checkbox=self.process_check_log_y: self.setLogY(checkbox, checked))
-        self.process_check_grid_x.toggled.connect(lambda checked, checkbox=self.process_check_grid_x: self.setGridX(checkbox, checked))
-        self.process_check_grid_y.toggled.connect(lambda checked, checkbox=self.process_check_grid_y: self.setGridY(checkbox, checked))
-        self.process_check_crosshairs.toggled.connect(lambda checked, checkbox=self.process_check_crosshairs: self.setCrosshairs(checkbox, checked))
+        self.plot_widget.getPlotItem().ctrl.logXCheck.stateChanged.connect(lambda state: self.process_check_log_x.setChecked(state == QtCore.Qt.Checked))
+        self.plot_widget.getPlotItem().ctrl.logYCheck.stateChanged.connect(lambda state: self.process_check_log_y.setChecked(state == QtCore.Qt.Checked))
+
+        self.add_errorbars.toggled.connect(lambda checked, checkbox=self.add_errorbars: self.setErrorBars(checkbox, checked))        
+        self.process_check_log_x.toggled.connect(lambda checked, checkbox=self.add_errorbars: self.setErrorBars(checkbox, checked))
+        self.process_check_log_y.toggled.connect(lambda checked, checkbox=self.add_errorbars: self.setErrorBars(checkbox, checked))
 
         self.func1.toggled.connect(lambda checked, checkbox=self.func1: self.func_checkbox_toggled(checkbox, checked))
         self.func2.toggled.connect(lambda checked, checkbox=self.func2: self.func_checkbox_toggled(checkbox, checked))
         self.func3.toggled.connect(lambda checked, checkbox=self.func3: self.func_checkbox_toggled(checkbox, checked))
         self.func4.toggled.connect(lambda checked, checkbox=self.func4: self.func_checkbox_toggled(checkbox, checked))
+
+        self.plot_widget.setMouseTracking(True)
+        self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
 
     def refresh_dataset(self):
         '''
@@ -129,7 +144,6 @@ class PageResultWidget(Ui_result_widget):
         self.func2.setChecked(False)
         self.func3.setChecked(False)
         self.func4.setChecked(False)
-        self.add_errorbars.setChecked(False)
 
 
     def add_env_label(self, name):
@@ -211,18 +225,38 @@ class PageResultWidget(Ui_result_widget):
 
     def plot_selected(self):
         self.plot_widget.clear()
+        self.plot_widget.getPlotItem().enableAutoRange('xy', True)
+        self.error_bars_list.clear()
+        self.error_bars_logX_list.clear()
+        self.error_bars_logY_list.clear()
+        self.error_bars_logXY_list.clear()
 
         for i, key in enumerate(self.results_to_plot.keys()):
             if self.results_to_plot[key]['to_plot']==True :
                 x = self.results_to_plot[key]['x']
                 y = self.results_to_plot[key]['y']
-                y_err = self.results_to_plot[key]['y_error']
+                y_errors = self.results_to_plot[key]['y_error']
                 color = plt.cm.hsv(1 - ((i/6) - i//6) )
                 rgb = tuple(int(c * 255) for c in color[:3])  
                 self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None) 
-                #error_bars = pg.ErrorBarItem(x=x, y=y, height=y_err, beam=0.2, pen=rgb)
-                #self.plot_widget.addItem(error_bars)
-                
+
+                # calculate errorbars
+                error_bars = pg.ErrorBarItem(x=x, y=y,  top=y_errors, bottom=y_errors, beam=0.02, pen=rgb)
+                self.error_bars_list.append(error_bars)
+
+                error_bars = pg.ErrorBarItem(x=np.log10(x), y=y,  top=y_errors, bottom=y_errors, beam=0.05, pen=rgb)
+                self.error_bars_logX_list.append(error_bars)
+
+                y_err_t = np.log10(y + y_errors) - np.log10(y)
+                y_err_b = np.log10(y) - np.log10(y - y_errors)
+                error_bars = pg.ErrorBarItem(x=x, y=np.log10(y),  top=y_err_t, bottom=y_err_b, beam=0.02, pen=rgb)
+                self.error_bars_logY_list.append(error_bars)
+
+                error_bars = pg.ErrorBarItem(x=np.log10(x), y=np.log10(y),  top=y_err_t, bottom=y_err_b, beam=0.05, pen=rgb)
+                self.error_bars_logXY_list.append(error_bars)                    
+
+
+                # plot fit functions 
                 if self.func1.objectName()+'__to_plot' in self.results_to_plot[key].keys():
                     if self.results_to_plot[key][self.func1.objectName()+'__to_plot']==True :
                         try:
@@ -259,18 +293,19 @@ class PageResultWidget(Ui_result_widget):
                         except:
                             pass
 
+        self.setErrorBars(self.add_errorbars, self.add_errorbars.isChecked())
+        
+        #for err_b in self.error_bars_list:
+        #    self.plot_widget.addItem(err_b)
 
-        self.plot_widget.addItem(self.v_line, ignoreBounds=True)
-        self.plot_widget.addItem(self.h_line, ignoreBounds=True)
-        self.v_line.setVisible(False)
-        self.h_line.setVisible(False)
+        #self.error_bars.hide()
 
-        self.plot_widget.setMouseTracking(True)
-        self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
-
-
+        #if self.add_errorbars.isChecked():
+        #    self.error_bars.show()
 
     def mouse_moved(self, evt):
+        '''
+        '''
         mouse_point = self.plot_widget.getPlotItem().vb.mapSceneToView(evt)
         x = mouse_point.x()
         y = mouse_point.y()
@@ -280,14 +315,17 @@ class PageResultWidget(Ui_result_widget):
         self.h_line.setPos(y)
 
         if self.process_check_crosshairs.isChecked():
+            #print('plot crosshairs/mouse_moved')
             self.v_line.setVisible(True)
             self.h_line.setVisible(True)  
+            self.v_line.setZValue(1000)  # bring to front
+            self.h_line.setZValue(1000)
         else:
             self.v_line.setVisible(False)
             self.h_line.setVisible(False)
+        #print(self.v_line.pos(), self.v_line.isVisible())
+        #print(self.plot_widget.getPlotItem().vb.viewRange())
         
-
-
         if self.plot_widget.getPlotItem().ctrl.logXCheck.isChecked():
             x = 10 ** x 
 
@@ -304,11 +342,69 @@ class PageResultWidget(Ui_result_widget):
         #    self.label.setText(f"x = {x:.2f}, y = {y:.2f}")
 
     
-    def setCrosshairs(self, checkbox, checked):
+    def setErrorBars(self, checkbox, checked):
+        '''
+        '''
+        self.removeErrorBars()
+        if self.add_errorbars.isChecked(): 
+            if not self.process_check_log_x.isChecked() and not self.process_check_log_y.isChecked():
+                try:
+                    for err_b in self.error_bars_list:
+                        self.plot_widget.addItem(err_b)
+                except:
+                    pass
+            elif self.process_check_log_x.isChecked() and not self.process_check_log_y.isChecked():
+                try:
+                    for err_b in self.error_bars_logX_list:
+                        self.plot_widget.addItem(err_b)
+                except:
+                    pass
+            elif not self.process_check_log_x.isChecked() and self.process_check_log_y.isChecked():
+                try:
+                    for err_b in self.error_bars_logY_list:
+                        self.plot_widget.addItem(err_b)
+                except:
+                    pass
+            elif self.process_check_log_x.isChecked() and self.process_check_log_y.isChecked():
+                try:
+                    for err_b in self.error_bars_logXY_list:
+                        self.plot_widget.addItem(err_b)
+                except:
+                    pass        
 
+        if self.process_check_crosshairs.isChecked():
+            #print('plot crosshairs/setErrorBars')
+            self.v_line.setVisible(True)
+            self.h_line.setVisible(True)  
+        else:
+            self.v_line.setVisible(False)
+            self.h_line.setVisible(False)
+        
+    def removeErrorBars(self):
+        ''''''
+        try:
+            for err_b in self.error_bars_list:
+                self.plot_widget.removeItem(err_b)
+            for err_b in self.error_bars_logX_list:
+                self.plot_widget.removeItem(err_b)
+            for err_b in self.error_bars_logY_list:
+                self.plot_widget.removeItem(err_b)
+            for err_b in self.error_bars_logXY_list:
+                self.plot_widget.removeItem(err_b)
+        except:
+            pass
+
+
+    def setCrosshairs(self, checkbox, checked):
+        ''''''
         if checked: 
+            #print('plot crosshairs/setCrosshairs')
             self.v_line.setVisible(True)
             self.h_line.setVisible(True)
+            is_visible = self.v_line.isVisible() and self.h_line.isVisible()
+            #print("Crosshairs visible?", is_visible)
+            self.v_line.setZValue(1000)  # bring to front
+            self.h_line.setZValue(1000)
         else: 
             self.v_line.setVisible(False)
             self.h_line.setVisible(False)
