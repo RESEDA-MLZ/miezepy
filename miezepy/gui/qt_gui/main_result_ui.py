@@ -158,7 +158,7 @@ class Ui_result_widget(object):
 
         self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'black', width=1))
         self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'black', width=1))
-        
+
         self.verticalLayout_20.addWidget(self.plot_widget)
 
         self.xy_label = QtWidgets.QLabel("")

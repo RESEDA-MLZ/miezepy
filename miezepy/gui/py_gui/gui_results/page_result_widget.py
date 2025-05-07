@@ -115,26 +115,27 @@ class PageResultWidget(Ui_result_widget):
                 self.add_env_label(name)
                 
                 for ds in result['Parameters'].keys():
-                    self.results_to_plot.setdefault(name+'__'+ds,{})['x'] = result['Parameters'][ds]['x']
-                    self.results_to_plot.setdefault(name+'__'+ds,{})['y'] = result['Parameters'][ds]['y']
-                    self.results_to_plot.setdefault(name+'__'+ds,{})['y_error'] = result['Parameters'][ds]['y_error']
-                    self.results_to_plot.setdefault(name+'__'+ds,{})['to_plot'] = 'False'
+                    new_key = name+'__'+ds
+                    self.results_to_plot.setdefault(new_key,{})['x'] = result['Parameters'][ds]['x']
+                    self.results_to_plot.setdefault(new_key,{})['y'] = result['Parameters'][ds]['y']
+                    self.results_to_plot.setdefault(new_key,{})['y_error'] = result['Parameters'][ds]['y_error']
+                    self.results_to_plot.setdefault(new_key,{})['to_plot'] = 'False'
 
                     #['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
                     if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__y'] = result['Curve']['Exp'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__x'] = result['Curve Axis']['StrExp'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__y'] = result['Curve']['StrExp'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__x'] = result['Curve Axis']['StrExp_Elast'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__y'] = result['Curve']['StrExp_Elast'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__x'] = result['Curve Axis']['StrExp_InElast'][ds]
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__y'] = result['Curve']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__y'] = result['Curve']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__x'] = result['Curve Axis']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__y'] = result['Curve']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__x'] = result['Curve Axis']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__y'] = result['Curve']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__x'] = result['Curve Axis']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__y'] = result['Curve']['StrExp_InElast'][ds]
 
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func1.objectName()+'__to_plot'] = 'False'
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func2.objectName()+'__to_plot'] = 'False'
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func3.objectName()+'__to_plot'] = 'False'  
-                        self.results_to_plot.setdefault(name+'__'+ds,{})[self.func4.objectName()+'__to_plot'] = 'False'                 
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__to_plot'] = 'False'
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__to_plot'] = 'False'
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__to_plot'] = 'False'  
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__to_plot'] = 'False'                 
 
                     self.add_env_checkbox(name, ds)
 
@@ -223,6 +224,7 @@ class PageResultWidget(Ui_result_widget):
 
         self.env_checkbox_list.clear()
 
+
     def plot_selected(self):
         self.plot_widget.clear()
         self.plot_widget.getPlotItem().enableAutoRange('xy', True)
@@ -230,6 +232,8 @@ class PageResultWidget(Ui_result_widget):
         self.error_bars_logX_list.clear()
         self.error_bars_logY_list.clear()
         self.error_bars_logXY_list.clear()
+        
+        self.legend = self.plot_widget.getPlotItem().addLegend(offset=(-10, 10), labelTextColor='black', pen=pg.mkPen(color='black'))
 
         for i, key in enumerate(self.results_to_plot.keys()):
             if self.results_to_plot[key]['to_plot']==True :
@@ -238,7 +242,7 @@ class PageResultWidget(Ui_result_widget):
                 y_errors = self.results_to_plot[key]['y_error']
                 color = plt.cm.hsv(1 - ((i/6) - i//6) )
                 rgb = tuple(int(c * 255) for c in color[:3])  
-                self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None) 
+                self.plot_widget.plot(x, y, symbol='o', symbolSize=8, symbolBrush=rgb, pen=None, name=key.split('__')[1]) 
 
                 # calculate errorbars
                 error_bars = pg.ErrorBarItem(x=x, y=y,  top=y_errors, bottom=y_errors, beam=0.02, pen=rgb)
@@ -262,7 +266,9 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func1 = self.results_to_plot[key][self.func1.objectName()+'__x']
                             y_func1 = self.results_to_plot[key][self.func1.objectName()+'__y']
-                            self.plot_widget.plot(x_func1, y_func1, pen=pg.mkPen(color=rgb, width=3))
+                            func1_leg = self.plot_widget.plot(x_func1, y_func1, pen=pg.mkPen(color=rgb, width=2))
+                            if i==0:
+                                self.legend.addItem(func1_leg, 'Exp.')
                         except:
                            pass
 
@@ -271,7 +277,9 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func2 = self.results_to_plot[key][self.func2.objectName()+'__x']
                             y_func2 = self.results_to_plot[key][self.func2.objectName()+'__y']
-                            self.plot_widget.plot(x_func2, y_func2, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashLine))     
+                            func2_leg = self.plot_widget.plot(x_func2, y_func2, pen=pg.mkPen(color=rgb, width=2, style=QtCore.Qt.DashLine))     
+                            if i==0:
+                                self.legend.addItem(func2_leg, 'Stretched exp.')
                         except:
                             pass
 
@@ -280,7 +288,9 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func3 = self.results_to_plot[key][self.func3.objectName()+'__x']
                             y_func3 = self.results_to_plot[key][self.func3.objectName()+'__y']
-                            self.plot_widget.plot(x_func3, y_func3, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DotLine))
+                            func3_leg = self.plot_widget.plot(x_func3, y_func3, pen=pg.mkPen(color=rgb, width=2, style=QtCore.Qt.DotLine))
+                            if i==0:
+                                self.legend.addItem(func3_leg, 'Str. exp. +El. BGRD')
                         except:
                             pass
 
@@ -289,12 +299,15 @@ class PageResultWidget(Ui_result_widget):
                         try:
                             x_func4 = self.results_to_plot[key][self.func4.objectName()+'__x']
                             y_func4 = self.results_to_plot[key][self.func4.objectName()+'__y']
-                            self.plot_widget.plot(x_func4, y_func4, pen=pg.mkPen(color=rgb, width=3, style=QtCore.Qt.DashDotLine))
+                            func4_leg = self.plot_widget.plot(x_func4, y_func4, pen=pg.mkPen(color=rgb, width=2, style=QtCore.Qt.DashDotLine))
+                            if i==0:
+                                self.legend.addItem(func4_leg, 'Str. exp. +INS')
                         except:
                             pass
 
         self.setErrorBars(self.add_errorbars, self.add_errorbars.isChecked())
         self.setCrosshairs(self.process_check_crosshairs, self.process_check_crosshairs.isChecked())
+        
 
 
     def mouse_moved(self, evt):
