@@ -224,6 +224,22 @@ class PageResultWidget(Ui_result_widget):
 
         self.env_checkbox_list.clear()
 
+    def select_plot_title(self, key, title):
+        ''''''
+        metrics = QtGui.QFontMetrics(QtGui.QFont("Arial", 14))
+        text_width = metrics.horizontalAdvance(title)
+
+        if text_width < 400:
+            if not '...' in title:
+                if title == '':
+                    title = key.split('__')[0]
+                elif not key.split('__')[0] in title:
+                    if metrics.horizontalAdvance(title + ', ' + key.split('__')[0]) < 400:
+                        title = title + ', ' + key.split('__')[0]
+                    else:
+                        title = title + ', ...'
+
+        return title
 
     def plot_selected(self):
         self.plot_widget.clear()
@@ -235,8 +251,13 @@ class PageResultWidget(Ui_result_widget):
         
         self.legend = self.plot_widget.getPlotItem().addLegend(offset=(-10, 10), labelTextColor='black', pen=pg.mkPen(color='black'))
 
+        plot_title = ''
+
         for i, key in enumerate(self.results_to_plot.keys()):
             if self.results_to_plot[key]['to_plot']==True :
+
+                plot_title = self.select_plot_title(key, plot_title)
+
                 x = self.results_to_plot[key]['x']
                 y = self.results_to_plot[key]['y']
                 y_errors = self.results_to_plot[key]['y_error']
@@ -304,6 +325,8 @@ class PageResultWidget(Ui_result_widget):
                                 self.legend.addItem(func4_leg, 'Str. exp. +INS')
                         except:
                             pass
+
+        self.plot_widget.setTitle(plot_title, color='black',size='14pt')
 
         self.setErrorBars(self.add_errorbars, self.add_errorbars.isChecked())
         self.setCrosshairs(self.process_check_crosshairs, self.process_check_crosshairs.isChecked())
