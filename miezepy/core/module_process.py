@@ -184,20 +184,21 @@ class Process_MIEZE(Process_Handler):
             self.env.current_data.data_objects[0].dim[0],
             self.env.current_data.data_objects[0].dim[1])
 
-        # calculate the contrast
+        # calculate the contrast (per foil)
         self.env.fit.calcContrastMain(
             self.env.current_data,
             self.env.mask,
             self.env.results,
             thread=self.env.thread_wrapper)
-
-        # fit the contrast data
-        self.env.fit.contrastFit(
+        
+        # calculate the contrast (average)
+        # contrast fit is moved to page_result_widget.py
+        self.env.fit.contrastPrep(
             self.env.current_data,
             self.env.mask,
             self.env.results,
             thread=self.env.thread_wrapper)
-        
+
         if self.env.thread_wrapper is not None and self.env.thread_wrapper.isCanceled():
             '''
             The thread was canceled

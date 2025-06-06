@@ -522,7 +522,7 @@ class ContrastProcessing:
             'Info',
             'Computation of the contrast was was a success')
 
-    def contrastFit(self, target, mask, results, thread=None):
+    def contrastPrep(self, target, mask, results, thread=None):
         """
         In this function we will process the fit of
         the data to allow fitting later on
@@ -547,8 +547,9 @@ class ContrastProcessing:
             '''
             return
 
+
         # Initialize the output dictionary with all def.
-        local_results = results.generateResult(name='Contrast fit')
+        local_results = results.generateResult(name='Contrast final')
         sum_foils = self.para_dict['sum_foils']
 
         # get the last contrast computaiton result
@@ -565,34 +566,16 @@ class ContrastProcessing:
         axis = results.getLastResult(
             'Contrast calculation', 'Axis')
 
-        fitter = ExpMinuit()
         select = self.test_parameter('Select', target, mask, results)
         reference = self.test_parameter('Reference', target, mask, results)
         axis_unit = target.axes.units[0]
         x_unit = target.axes.units[0]
 
-        echo_name = self.para_dict['echo_name']
-        echo_time = np.array(target.get_axis(echo_name))
-        x_display_axis = 10 ** np.linspace(
-            np.log10(np.amin(echo_time)) if np.amin(echo_time) > 1e-9 else 0,
-            np.log10(np.amax(echo_time)) if np.amax(echo_time) > 1e-9 else 0, 100)
-
-        # fit functions
-        fit_functions = ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
         # initialize the output
         Output = {}
-        for func in fit_functions:
-            Output.setdefault('Gamma',{})[func] = {}
-            Output.setdefault('Gamma_error',{})[func] = {}
-            Output.setdefault('Amplitude',{})[func] = {}
-            Output.setdefault('Amplitude_error',{})[func] = {}
-            Output.setdefault('Beta',{})[func] = {}
-            Output.setdefault('Beta_error',{})[func] = {}            
-            Output.setdefault('Curve',{})[func] = {}
-            Output.setdefault('Curve Axis',{})[func] = {}
         Output['Parameters'] = {}
 
-        # process thecomputation
+        # process the computation
         for key in contrast.keys():
 
             # load the data
@@ -654,6 +637,83 @@ class ContrastProcessing:
                 'y_error': y_error,
                 'y_raw_error': data_error}
 
+        local_results['Parameters'] = Output['Parameters']
+        local_results['Select'] = select
+        local_results['BG'] = BG
+        local_results['Reference'] = reference
+        local_results['Axis'] = axis
+        local_results['Axis_unit'] = axis_unit
+        local_results['Sum_Foils'] = sum_foils
+
+        # write the dictionary entries
+        local_results.addLog('info', 'Final contrast calculation was a success')
+        local_results.setComplete()
+
+        # tell fit handler what happened
+        self.log.addLog(
+            'info',
+            'Final contrast calculation was a success')
+        
+    def contrastFit(self, results): #thread=None
+        """
+        In this function we will process the fit of
+        the data to allow fitting later on
+        The package will be in dictionaries for each
+        axis value1
+
+        Parameters
+        ----------
+        results : ResultStructure
+            The current active result structure
+        """
+
+        ###if thread is not None and thread.isCanceled():
+        ###    '''
+        ###    The thread was canceled
+        ###    close the result gracefully and exit
+        ###    '''
+        ###    return
+
+        # fit functions
+        fitter = ExpMinuit()
+        fit_functions = ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
+
+        # initialize the output
+        Output = {}
+        for func in fit_functions:
+            Output.setdefault('Gamma',{})[func] = {}
+            Output.setdefault('Gamma_error',{})[func] = {}
+            Output.setdefault('Amplitude',{})[func] = {}
+            Output.setdefault('Amplitude_error',{})[func] = {}
+            Output.setdefault('Beta',{})[func] = {}
+            Output.setdefault('Beta_error',{})[func] = {}            
+            Output.setdefault('Curve',{})[func] = {}
+            Output.setdefault('Curve Axis',{})[func] = {}
+
+        select = results.getLastResult('Contrast final', 'Select')
+        parameters = results.getLastResult('Contrast final', 'Parameters')
+        contrast_results = results.getLastResult('Contrast final')
+
+        local_results = results.generateResult(name='Contrast fit')
+        local_results['Parameters'] = contrast_results['Parameters']
+        local_results['Select'] = contrast_results['Select']
+        local_results['BG'] = contrast_results['BG']
+        local_results['Reference'] = contrast_results['Reference']
+        local_results['Axis'] = contrast_results['Axis']
+        local_results['Axis_unit'] = contrast_results['Axis_unit']
+        local_results['Sum_Foils'] = contrast_results['Sum_Foils']
+
+        # process the computation
+        for key in select:
+
+            # load the data
+            x = np.asarray(parameters[key]['x'])
+            y = np.asarray(parameters[key]['y'])
+            y_error = np.asarray(parameters[key]['y_error'])
+
+            x_display_axis = 10 ** np.linspace(
+            np.log10(np.amin(x)) if np.amin(x) > 1e-9 else 0,
+            np.log10(np.amax(x)) if np.amax(x) > 1e-9 else 0, 100)
             
             for func in fit_functions:
                 fit = fitter.fitExp(y, x, y_error, x_display_axis, func)
@@ -666,8 +726,7 @@ class ContrastProcessing:
                 Output['Beta_error'][func][key] = fit['Beta_error']
                 Output['Curve'][func][key] = fit['Curve']
                 Output['Curve Axis'][func][key] = fit['Curve Axis']
-
-
+                
         # set the other information
         for func in fit_functions:
             local_results['Gamma'] = Output['Gamma']
@@ -678,24 +737,16 @@ class ContrastProcessing:
             local_results['Beta_error'] = Output['Beta_error']         
             local_results['Curve'] = Output['Curve']
             local_results['Curve Axis'] = Output['Curve Axis']
-
-        local_results['Parameters'] = Output['Parameters']
-        local_results['Select'] = select
-        local_results['BG'] = BG
-        local_results['Reference'] = reference
-        local_results['Axis'] = axis
-        local_results['Axis_unit'] = axis_unit
-        local_results['Sum_Foils'] = sum_foils
-
+        
         # write the dictionary entries
-        local_results.addLog('info', 'Fitting of the contrast was a success')
+        local_results.addLog('info', 'Fit of the contrast was a success')
         local_results.setComplete()
 
         # tell fit handler what happened
         self.log.addLog(
             'info',
-            'Fitting of the contrast was a success')
-
+            'Fit of the contrast was a success')
+        
     def _getFoilWeights(self, target, results, para, positions, foils_in_echo):
         """
         """
@@ -746,7 +797,7 @@ class ContrastProcessing:
         """
         """
         data = None
-        result  = results.getLastResult(name = 'Contrast fit')
+        result  = results.getLastResult(name = 'Contrast final')
 
         if not result is None:
             data = [

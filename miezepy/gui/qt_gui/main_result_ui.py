@@ -105,6 +105,16 @@ class Ui_result_widget(object):
         self.func4.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.func4.setObjectName("func4")
         self.verticalLayout_61.addWidget(self.func4)
+        spacer_vert_func = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+        self.verticalLayout_61.addItem(spacer_vert_func)
+        self.funcA = QtWidgets.QCheckBox(self.itemselect_group)
+        sizePolicy.setHeightForWidth(self.funcA.sizePolicy().hasHeightForWidth())
+        self.funcA.setSizePolicy(sizePolicy)
+        self.funcA.setMinimumSize(QtCore.QSize(75, 0))
+        self.funcA.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.funcA.setObjectName("funcA")
+        self.verticalLayout_61.addWidget(self.funcA)
+        #
         self.scroll_layout.addWidget(self.itemselect_group)
         #
         self.scroll_area = QtWidgets.QScrollArea()
@@ -291,6 +301,14 @@ class Ui_result_widget(object):
         self.func4.setToolTip(  "<div style='white-space: nowrap;'>"
                                 "Stretched exponential decay with small inelastic contribution<br>"
                                 " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup> cos(E &tau; / ℏ)"
+                                "</div>") 
+        self.funcA.setText(_translate("result_widget", "Fix parameter A = 1"))
+        self.funcA.setToolTip(  "<div style='white-space: nowrap;'>"
+                                "Check the checkbox to fix the fitting parameter A = 1 <br>"
+                                "for the Exponential, Stretched exponential and <br>" 
+                                "Stretched exponential decay with inelastic contribution. <br>"
+                                "<br>"
+                                "Uncheck the checkbox to free this parameter."
                                 "</div>") 
         self.process_check_log_x.setText(_translate("result_widget", "Set Log X"))
         self.process_check_log_y.setText(_translate("result_widget", "Set Log Y"))

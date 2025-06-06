@@ -67,7 +67,9 @@ class PageResultWidget(Ui_result_widget):
         if log_x:
             self.process_check_log_x.setChecked(True)
         if log_y:
-            self.process_check_log_y.setChecked(True)
+            self.process_checkt_log_y.setChecked(True)
+        self.funcA.setChecked(True)
+    
 
     def _connect(self):
         '''
@@ -110,7 +112,11 @@ class PageResultWidget(Ui_result_widget):
 
         for name in names:
             target  = self.env_handler.getEnv(name)
-            result  = target.results.getLastResult(name = 'Contrast fit')
+
+            # fit contrast with ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
+            target.fit.contrastFit(target.results)
+
+            result  = target.results.getLastResult(name = 'Contrast fit')        
             if not result is None:
                 self.add_env_label(name)
                 
@@ -121,7 +127,6 @@ class PageResultWidget(Ui_result_widget):
                     self.results_to_plot.setdefault(new_key,{})['y_error'] = result['Parameters'][ds]['y_error']
                     self.results_to_plot.setdefault(new_key,{})['to_plot'] = 'False'
 
-                    #['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
                     if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__y'] = result['Curve']['Exp'][ds]
