@@ -99,7 +99,7 @@ class CosineMinuit:
 
 class ExpMinuit:
 
-    def fitExp(self, contrast, SpinEchoTime, contrastError, x_display_axis, input_func):
+    def fitExp(self, contrast, SpinEchoTime, contrastError, x_display_axis, input_func, a_fix=True):
         '''
         Creates the minuit fit function and runs
         leastsquarefit.
@@ -140,13 +140,17 @@ class ExpMinuit:
         }
 
         fit = iminuit.Minuit(self.cost_func, **minuit_dict)
+
         if self.func_name == 'Exp': 
-            fit.fixed['Amplitude'] = True
             fit.fixed['Beta'] = True
-        elif self.func_name == 'StrExp': 
-            fit.fixed['Amplitude'] = True
-        elif self.func_name == 'StrExp_InElast': 
-            fit.fixed['Amplitude'] = True 
+
+        if a_fix == True:
+            if self.func_name == 'Exp': 
+                fit.fixed['Amplitude'] = True
+            elif self.func_name == 'StrExp': 
+                fit.fixed['Amplitude'] = True
+            elif self.func_name == 'StrExp_InElast': 
+                fit.fixed['Amplitude'] = True 
 
 
         fit.errordef = iminuit.Minuit.LEAST_SQUARES

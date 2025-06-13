@@ -302,7 +302,7 @@ class Ui_result_widget(object):
                                 "Stretched exponential decay with small inelastic contribution<br>"
                                 " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup> cos(E &tau; / ℏ)"
                                 "</div>") 
-        self.funcA.setText(_translate("result_widget", "Fix parameter A = 1"))
+        self.funcA.setText(_translate("result_widget", "Fix fit param. A = 1"))
         self.funcA.setToolTip(  "<div style='white-space: nowrap;'>"
                                 "Check the checkbox to fix the fitting parameter A = 1 <br>"
                                 "for the Exponential, Stretched exponential and <br>" 

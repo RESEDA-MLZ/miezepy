@@ -56,7 +56,7 @@ class PageResultWidget(Ui_result_widget):
         area.
         '''
         self.setupUi(self.local_widget)
-        self.env_checkbox_list = []
+        self.env_checkbox_list = {}
         self.error_bars_list = []
         self.error_bars_logX_list = []        
         self.error_bars_logY_list = []
@@ -96,6 +96,8 @@ class PageResultWidget(Ui_result_widget):
         self.func2.toggled.connect(lambda checked, checkbox=self.func2: self.func_checkbox_toggled(checkbox, checked))
         self.func3.toggled.connect(lambda checked, checkbox=self.func3: self.func_checkbox_toggled(checkbox, checked))
         self.func4.toggled.connect(lambda checked, checkbox=self.func4: self.func_checkbox_toggled(checkbox, checked))
+        self.funcA.toggled.connect(lambda checked, checkbox=self.funcA: self.funcA_checkbox_toggled(checkbox, checked))
+
 
         self.plot_widget.setMouseTracking(True)
         self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
@@ -112,20 +114,40 @@ class PageResultWidget(Ui_result_widget):
 
         for name in names:
             target  = self.env_handler.getEnv(name)
-
-            # fit contrast with ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
-            target.fit.contrastFit(target.results)
-
-            result  = target.results.getLastResult(name = 'Contrast fit')        
+            result  = target.results.getLastResult(name = 'Contrast final')
             if not result is None:
                 self.add_env_label(name)
-                
-                for ds in result['Parameters'].keys():
+                for ds in result['Select']:
+                    self.add_env_checkbox(name, ds)
+
+        self.verticalLayout_411.addStretch(1)
+
+        self.read_dataset()
+
+        #self.func1.setChecked(False)
+        #self.func2.setChecked(False)
+        #self.func3.setChecked(False)
+        #self.func4.setChecked(False)
+
+    def read_dataset(self):
+        '''
+        '''
+        self.results_to_plot.clear()
+        names = [env.name for env in self.env_handler.env_array]
+        for name in names:
+            target  = self.env_handler.getEnv(name)
+
+            # fit contrast with ['Exp', 'StrExp', 'StrExp_Elast', 'StrExp_InElast']
+            target.fit.contrastFit(target.results, self.funcA.isChecked())
+
+            result  = target.results.getLastResult(name = 'Contrast fit')   
+            if not result is None:                
+                for ds in result['Select']:
                     new_key = name+'__'+ds
                     self.results_to_plot.setdefault(new_key,{})['x'] = result['Parameters'][ds]['x']
                     self.results_to_plot.setdefault(new_key,{})['y'] = result['Parameters'][ds]['y']
                     self.results_to_plot.setdefault(new_key,{})['y_error'] = result['Parameters'][ds]['y_error']
-                    self.results_to_plot.setdefault(new_key,{})['to_plot'] = 'False'
+                    self.results_to_plot.setdefault(new_key,{})['to_plot'] = self.env_checkbox_list[new_key].isChecked()    #'False'
 
                     if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
@@ -137,19 +159,10 @@ class PageResultWidget(Ui_result_widget):
                         self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__x'] = result['Curve Axis']['StrExp_InElast'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__y'] = result['Curve']['StrExp_InElast'][ds]
 
-                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__to_plot'] = 'False'
-                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__to_plot'] = 'False'
-                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__to_plot'] = 'False'  
-                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__to_plot'] = 'False'                 
-
-                    self.add_env_checkbox(name, ds)
-
-        self.verticalLayout_411.addStretch(1)
-
-        self.func1.setChecked(False)
-        self.func2.setChecked(False)
-        self.func3.setChecked(False)
-        self.func4.setChecked(False)
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__to_plot'] = self.func1.isChecked()
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__to_plot'] = self.func2.isChecked()
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__to_plot'] = self.func3.isChecked()
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__to_plot'] = self.func4.isChecked()    
 
 
     def add_env_label(self, name):
@@ -189,7 +202,8 @@ class PageResultWidget(Ui_result_widget):
 
         self.adjust_scroll_size(env_checkbox.width(),self.scroll_widget.width())
 
-        self.env_checkbox_list.append(env_checkbox)
+        #self.env_checkbox_list.append(env_checkbox)
+        self.env_checkbox_list[envname+"__"+cboxname] = env_checkbox
 
         env_checkbox.toggled.connect(lambda checked, checkbox=env_checkbox: self.env_checkbox_toggled(checkbox, checked))
 
@@ -209,11 +223,14 @@ class PageResultWidget(Ui_result_widget):
             if key in self.results_to_plot and k in self.results_to_plot[key]:
                 self.results_to_plot[key][k] = checked
 
+    def funcA_checkbox_toggled(self, checkbox, checked):
+        '''
+        '''
+        self.read_dataset()
+
     def clean_checkbox_list(self):
         '''
         '''
-        self.results_to_plot.clear()
-
         if self.verticalLayout_411 is not None:
             while self.verticalLayout_411.count():  
                 item = self.verticalLayout_411.takeAt(0)  

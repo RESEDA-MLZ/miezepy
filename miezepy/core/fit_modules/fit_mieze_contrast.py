@@ -654,7 +654,7 @@ class ContrastProcessing:
             'info',
             'Final contrast calculation was a success')
         
-    def contrastFit(self, results): #thread=None
+    def contrastFit(self, results, a_fix): #thread=None
         """
         In this function we will process the fit of
         the data to allow fitting later on
@@ -716,7 +716,7 @@ class ContrastProcessing:
             np.log10(np.amax(x)) if np.amax(x) > 1e-9 else 0, 100)
             
             for func in fit_functions:
-                fit = fitter.fitExp(y, x, y_error, x_display_axis, func)
+                fit = fitter.fitExp(y, x, y_error, x_display_axis, func, a_fix)
 
                 Output['Gamma'][func][key] = fit['Gamma']
                 Output['Gamma_error'][func][key] = fit['Gamma_error']
