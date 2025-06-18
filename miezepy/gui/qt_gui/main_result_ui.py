@@ -32,7 +32,6 @@ class Ui_result_widget(object):
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.data_group)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         #
-        
         self.scroll_widget = QtWidgets.QWidget() 
         self.scroll_widget.setStyleSheet("background-color: white;")
         self.scroll_layout = QtWidgets.QVBoxLayout(self.scroll_widget)
@@ -40,9 +39,7 @@ class Ui_result_widget(object):
         self.scroll_layout.setSpacing(0)
         #self.scroll_widget.setMinimumWidth(300)  # Set a larger minimum width
         self.scroll_widget.setSizePolicy(QtWidgets.QScrollArea().sizePolicy())  # Allow it to expand if needed
-        
         #
-        
         self.dataselect_group = QtWidgets.QGroupBox(self.data_group)
         self.dataselect_group.setStyleSheet("QGroupBox { background-color: white; border: 0;}")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
@@ -63,7 +60,6 @@ class Ui_result_widget(object):
         self.verticalLayout_411.setObjectName("verticalLayout_411")
         self.verticalLayout_411_label.addLayout(self.verticalLayout_411)
         self.verticalLayout_41.addLayout(self.verticalLayout_411_label)
-        
         #
         self.verticalLayout_412 = QtWidgets.QVBoxLayout()
         self.verticalLayout_412.setObjectName("verticalLayout_412")
@@ -76,7 +72,6 @@ class Ui_result_widget(object):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_widget)
         self.verticalLayout_4.addWidget(self.scroll_area)   
-       
         #
         self.verticalLayout_431 = QtWidgets.QVBoxLayout()
         self.process_refresh_button = QtWidgets.QPushButton('Refresh datasets', self.data_group)
@@ -85,13 +80,9 @@ class Ui_result_widget(object):
         self.verticalLayout_431.addWidget(self.process_refresh_button)
         self.verticalLayout_4.addLayout(self.verticalLayout_431)
         #
-        #
-        #
-        
         spacer_vert_item = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
         self.verticalLayout_4.addItem(spacer_vert_item)
         #
-        
         self.itemselect_group = QtWidgets.QGroupBox(self.data_group)
         self.itemselect_group.setStyleSheet("QGroupBox { background-color: white; border: 0; }")
         self.itemselect_group.setSizePolicy(sizePolicy)
@@ -99,7 +90,6 @@ class Ui_result_widget(object):
         self.verticalLayout_61 = QtWidgets.QVBoxLayout()
         self.verticalLayout_61.setObjectName("verticalLayout_61")
         self.itemselect_group.setLayout(self.verticalLayout_61)
-        #'''
         # functions for fitting
         self.fit_label = QtWidgets.QLabel("Fit functions:")
         self.fit_label.setStyleSheet("font-weight: bold;")
@@ -144,31 +134,16 @@ class Ui_result_widget(object):
         self.funcA.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.funcA.setObjectName("funcA")
         self.verticalLayout_61.addWidget(self.funcA)
-        #'''
-        #####################self.verticalLayout_4.addLayout(self.verticalLayout_61)
+       
         self.verticalLayout_4.addWidget(self.itemselect_group)
-        
-        #
-        ####self.scroll_layout.addWidget(self.itemselect_group)
-        #
-        ####self.scroll_area = QtWidgets.QScrollArea()
-        ####self.scroll_area.setWidgetResizable(True)
-        ####self.scroll_area.setWidget(self.scroll_widget)
-        ####self.verticalLayout_4.addWidget(self.scroll_area)
         #
         self.verticalLayout_43 = QtWidgets.QVBoxLayout()
-        ####self.process_refresh_button = QtWidgets.QPushButton('Refresh datasets', self.data_group)
-        ####self.process_refresh_button.setObjectName("process_refresh_button")
-        ####self.process_refresh_button.setDefault(True)
-        ####self.verticalLayout_43.addWidget(self.process_refresh_button)
         self.plotitems_button = QtWidgets.QPushButton(self.data_group)
         self.plotitems_button.setDefault(True)
         self.plotitems_button.setObjectName("plotitems_button")
         self.verticalLayout_43.addWidget(self.plotitems_button)
         self.verticalLayout_4.addLayout(self.verticalLayout_43)
-
-
-
+        #
         # right
         self.groupBox_3 = QtWidgets.QGroupBox(self.splitter)
         self.groupBox_3.setStyleSheet("QGroupBox {  border: 0; }")
