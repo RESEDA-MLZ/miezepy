@@ -47,7 +47,7 @@ class PageResultWidget(Ui_result_widget):
         self.local_widget   = QtWidgets.QWidget() 
         self.env_handler    = None
         self._setup()
-        self._connect()
+        #######################self._connect()
         
     def _setup(self):
         '''
@@ -56,6 +56,7 @@ class PageResultWidget(Ui_result_widget):
         area.
         '''
         self.setupUi(self.local_widget)
+        '''
         self.env_checkbox_list = {}
         self.error_bars_list = []
         self.error_bars_logX_list = []        
@@ -69,7 +70,7 @@ class PageResultWidget(Ui_result_widget):
         if log_y:
             self.process_checkt_log_y.setChecked(True)
         self.funcA.setChecked(True)
-    
+        '''
 
     def _connect(self):
         '''
