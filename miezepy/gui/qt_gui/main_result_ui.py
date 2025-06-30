@@ -185,7 +185,8 @@ class Ui_result_widget(object):
         self.xy_label = QtWidgets.QLabel("")
         self.xy_label.setAlignment(QtCore.Qt.AlignCenter)
         self.verticalLayout_20.addWidget(self.xy_label)
-
+        #
+        #
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setContentsMargins(-1, 0, -1, -1)
         self.horizontalLayout_10.setSpacing(10)
@@ -234,8 +235,8 @@ class Ui_result_widget(object):
         self.verticalLayout_10.addWidget(self.process_check_log_y)
         #spacerItem21 = QtWidgets.QSpacerItem(75, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         #self.verticalLayout_10.addItem(spacerItem21)
-        self.horizontalLayout_10.addLayout(self
-                                           .verticalLayout_10)
+        self.horizontalLayout_10.addLayout(self.verticalLayout_10)
+        #
         spacerItem4 = QtWidgets.QSpacerItem(100, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem4)
         #
@@ -278,11 +279,23 @@ class Ui_result_widget(object):
         self.verticalLayout_11.addWidget(self.process_check_grid_y)
         #spacerItem23 = QtWidgets.QSpacerItem(25, 20, QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Minimum)
         #self.verticalLayout_11.addItem(spacerItem23)
-
         self.horizontalLayout_10.addLayout(self.verticalLayout_11)
         spacerItem3 = QtWidgets.QSpacerItem(0, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem3)
+        #
+        self.verticalLayout_12 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_12.setObjectName("verticalLayout_12")
+        spacerItem6 = QtWidgets.QSpacerItem(10, 60, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.verticalLayout_12.addItem(spacerItem6)
+        self.save_button = QtWidgets.QPushButton(self.data_group)
+        self.save_button.setDefault(True)
+        self.save_button.setObjectName("save_button")
+        self.verticalLayout_12.addWidget(self.save_button)
+        self.horizontalLayout_10.addItem(self.verticalLayout_12)
+        #
         self.verticalLayout_20.addLayout(self.horizontalLayout_10)
+        #
+        #
         self.verticalLayout.addWidget(self.splitter)
 
         self.retranslateUi(result_widget)
@@ -293,6 +306,7 @@ class Ui_result_widget(object):
         result_widget.setWindowTitle(_translate("result_widget", "Form"))
         #'''
         self.plotitems_button.setText(_translate("result_widget", "Plot"))
+        self.save_button.setText(_translate("result_widget", "Save plot"))
         self.add_errorbars.setText(_translate("result_widget", "Error bars"))
         self.func1.setText(_translate("result_widget", "Exp. "))
         self.func1.setToolTip(  "<div style='white-space: nowrap;'>"

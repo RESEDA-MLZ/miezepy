@@ -25,6 +25,9 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
+import pyqtgraph.exporters
+from pathlib import Path
+from datetime import datetime
 import matplotlib.pyplot as plt
 
 
@@ -98,6 +101,8 @@ class PageResultWidget(Ui_result_widget):
         self.func3.toggled.connect(lambda checked, checkbox=self.func3: self.func_checkbox_toggled(checkbox, checked))
         self.func4.toggled.connect(lambda checked, checkbox=self.func4: self.func_checkbox_toggled(checkbox, checked))
         self.funcA.toggled.connect(lambda checked, checkbox=self.funcA: self.funcA_checkbox_toggled(checkbox, checked))
+
+        self.save_button.clicked.connect(self.save_plot)
 
 
         self.plot_widget.setMouseTracking(True)
@@ -461,6 +466,53 @@ class PageResultWidget(Ui_result_widget):
             self.plot_widget.showGrid(y=True, alpha=0.5)
         else:
             self.plot_widget.showGrid(y=False)
+
+
+    def save_plot(self):
+        '''
+        '''
+        date_time = datetime.now()
+        default_plot_name = date_time.strftime("%Y%m%d_%H%M%S")
+
+        path, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save plot",
+            default_plot_name,
+            filter="PNG (*.png);;SVG (*.svg);;TIFF (*.tif *.tiff);;JPG (*.jpg *.jpeg);;All files (*)"
+        )
+        if not path:
+            return                                              
+
+        ext_map = {
+            "PNG":  ".png",
+            "SVG":  ".svg",
+            "TIFF": ".tif",
+            "JPG" : ".gpg",
+        }
+
+        # Grab the description part before the space:  "PNG Files (*.png)" → "PNG"
+        filter_key = selected_filter.split()[0].upper()
+
+        wanted_ext = ext_map.get(filter_key, Path(path).suffix or ".png")
+        path = str(Path(path).with_suffix(wanted_ext))
+
+        # Pick an exporter by extension
+        ext = QtCore.QFileInfo(path).suffix().lower()
+
+        if ext == "svg":
+            exporter = pg.exporters.SVGExporter(self.plot_widget.plotItem)
+        else:                                                   # default to raster
+            exporter = pg.exporters.ImageExporter(self.plot_widget.plotItem)
+
+            # Example: crank up resolution for raster exports
+            exporter.parameters()['width'] = 1600              # affects height too
+
+        try:
+            exporter.export(path)
+        except Exception as err:
+            QtWidgets.QMessageBox.critical(
+                self, "Export failed", f"Could not write file:\n{err}"
+            )
 
 
     def link(self, env_handler = None):
