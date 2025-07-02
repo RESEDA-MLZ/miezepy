@@ -28,6 +28,7 @@ import pyqtgraph as pg
 import pyqtgraph.exporters
 from pathlib import Path
 from datetime import datetime
+import csv
 import matplotlib.pyplot as plt
 
 
@@ -81,6 +82,7 @@ class PageResultWidget(Ui_result_widget):
         '''
         self.process_refresh_button.clicked.connect(self.refresh_dataset)
         self.plotitems_button.clicked.connect(self.plot_selected)   
+        self.saveitems_button.clicked.connect(self.save_plottable_data)   
 
         self.process_check_grid_x.toggled.connect(lambda checked, checkbox=self.process_check_grid_x: self.setGridX(checkbox, checked))
         self.process_check_grid_y.toggled.connect(lambda checked, checkbox=self.process_check_grid_y: self.setGridY(checkbox, checked))  
@@ -158,12 +160,39 @@ class PageResultWidget(Ui_result_widget):
                     if (result['Reference'] is None or ds not in result['Reference']) and (result['BG'] is None or ds not in result['BG']):
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__x'] = result['Curve Axis']['Exp'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__y'] = result['Curve']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__gamma'] = result['Gamma']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__gamma_error'] = result['Gamma_error']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__amplitude'] = result['Amplitude']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__amplitude_error'] = result['Amplitude_error']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__beta'] = result['Beta']['Exp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__beta_error'] = result['Beta_error']['Exp'][ds]
+
                         self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__x'] = result['Curve Axis']['StrExp'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__y'] = result['Curve']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__gamma'] = result['Gamma']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__gamma_error'] = result['Gamma_error']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__amplitude'] = result['Amplitude']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__amplitude_error'] = result['Amplitude_error']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__beta'] = result['Beta']['StrExp'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__beta_error'] = result['Beta_error']['StrExp'][ds]
+
                         self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__x'] = result['Curve Axis']['StrExp_Elast'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__y'] = result['Curve']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__gamma'] = result['Gamma']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__gamma_error'] = result['Gamma_error']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__amplitude'] = result['Amplitude']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__amplitude_error'] = result['Amplitude_error']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__beta'] = result['Beta']['StrExp_Elast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func3.objectName()+'__beta_error'] = result['Beta_error']['StrExp_Elast'][ds]
+                        
                         self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__x'] = result['Curve Axis']['StrExp_InElast'][ds]
                         self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__y'] = result['Curve']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__gamma'] = result['Gamma']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__gamma_error'] = result['Gamma_error']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__amplitude'] = result['Amplitude']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__amplitude_error'] = result['Amplitude_error']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__beta'] = result['Beta']['StrExp_InElast'][ds]
+                        self.results_to_plot.setdefault(new_key,{})[self.func4.objectName()+'__beta_error'] = result['Beta_error']['StrExp_InElast'][ds]
 
                         self.results_to_plot.setdefault(new_key,{})[self.func1.objectName()+'__to_plot'] = self.func1.isChecked()
                         self.results_to_plot.setdefault(new_key,{})[self.func2.objectName()+'__to_plot'] = self.func2.isChecked()
@@ -513,6 +542,72 @@ class PageResultWidget(Ui_result_widget):
             QtWidgets.QMessageBox.critical(
                 self, "Export failed", f"Could not write file:\n{err}"
             )
+
+
+    def save_plottable_data(self):
+        '''
+        '''
+
+        ext_map = {
+            "CSV":  ".csv",
+        }
+        date_time = datetime.now()
+        default_plot_name = date_time.strftime("%Y%m%d_%H%M%S")+"_plottable_data.csv"
+        path, selected_filter = QtWidgets.QFileDialog.getSaveFileName(
+            None,
+            "Save plot",
+            default_plot_name,
+            filter="CSV (*.csv);;All Files (*)"
+        )
+        if not path:
+            return           
+
+        filter_key = selected_filter.split()[0].upper()
+        wanted_ext = ext_map.get(filter_key, Path(path).suffix or ".png")
+        path = str(Path(path).with_suffix(wanted_ext))
+
+        with open(path, "w", newline='') as f:
+            writer = csv.writer(f)
+            for key in self.results_to_plot.keys():
+                writer.writerow(" ")
+                writer.writerow([key])                                                      # global header
+                #filtered_keys = [k for k in self.results_to_plot[key].keys() if not k.endswith("__to_plot")]
+                #writer.writerow(filtered_keys)                                                                  # header
+                #writer.writerows(zip(*(self.results_to_plot[key][k] for k in filtered_keys)))                   # rows
+                writer.writerow(["Echo time, ns", "Contrast, a.u.", "Contrast error, a.u."])
+                writer.writerows(zip(self.results_to_plot[key]['x'], self.results_to_plot[key]['y'], self.results_to_plot[key]['y_error']))
+
+                func_keys = [k for k in self.results_to_plot[key].keys() if k.startswith("func") and (k.endswith("x") or k.endswith("y"))]
+                if func_keys:
+                    writer.writerow(" ")
+                    writer.writerow(["Fit function 1: Exponential decay "
+                    "I(q, t) = A exp(-Gamma*t/hbar)"])
+                    writer.writerow(["Fit function 2: Stretched exponential decay " 
+                    "I(q, t) = A exp(-Gamma*t/hbar)^beta"])
+                    writer.writerow(["Fit function 3: Stretched exponential decay with elastic component (background) " 
+                    "I(q, t) = A + (1-A) exp(-Gamma*t/hbar)^beta"])
+                    writer.writerow(["Fit function 4: Stretched exponential decay with small inelastic contribution " 
+                    "I(q, t) = A exp(-Gamma*t/hbar)^beta cos(-Gamma*t/hbar)"])
+                    writer.writerow(" ")
+                    writer.writerow([" ", "Func 1", "Func 2", "Func 3", "Func 4"])
+                    writer.writerow(["Gamma", self.results_to_plot[key]['func1__gamma'], self.results_to_plot[key]['func2__gamma'],
+                                    self.results_to_plot[key]['func3__gamma'], self.results_to_plot[key]['func4__gamma']])
+                    writer.writerow(["Gamma error", self.results_to_plot[key]['func1__gamma_error'], self.results_to_plot[key]['func2__gamma_error'],
+                                    self.results_to_plot[key]['func3__gamma_error'], self.results_to_plot[key]['func4__gamma_error']])
+                    writer.writerow(["Amplitude", self.results_to_plot[key]['func1__amplitude'], self.results_to_plot[key]['func2__amplitude'],
+                                    self.results_to_plot[key]['func3__amplitude'], self.results_to_plot[key]['func4__amplitude']])
+                    writer.writerow(["Amplitude error", self.results_to_plot[key]['func1__amplitude_error'], self.results_to_plot[key]['func2__amplitude_error'],
+                                    self.results_to_plot[key]['func3__amplitude_error'], self.results_to_plot[key]['func4__amplitude_error']])
+                    writer.writerow(["Beta", self.results_to_plot[key]['func1__beta'], self.results_to_plot[key]['func2__beta'],
+                                    self.results_to_plot[key]['func3__beta'], self.results_to_plot[key]['func4__beta']])
+                    writer.writerow(["Beta error", self.results_to_plot[key]['func1__beta_error'], self.results_to_plot[key]['func2__beta_error'],
+                                    self.results_to_plot[key]['func3__beta_error'], self.results_to_plot[key]['func4__beta_error']])
+                    writer.writerow(" ")
+                    writer.writerow(["Func 1", " ", "Func 2", " ", "Func 3", " ", "Func 4", " "])
+                    writer.writerow(["Echo time, ns", "Contrast, a.u."]*4)
+                    writer.writerows(zip(*(self.results_to_plot[key][k] for k in func_keys))) 
+
+
 
 
     def link(self, env_handler = None):

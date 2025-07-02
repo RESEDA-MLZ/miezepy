@@ -142,6 +142,10 @@ class Ui_result_widget(object):
         self.plotitems_button.setDefault(True)
         self.plotitems_button.setObjectName("plotitems_button")
         self.verticalLayout_43.addWidget(self.plotitems_button)
+        self.saveitems_button = QtWidgets.QPushButton(self.data_group)
+        self.saveitems_button.setDefault(True)
+        self.saveitems_button.setObjectName("saveitems_button")
+        self.verticalLayout_43.addWidget(self.saveitems_button)
         self.verticalLayout_4.addLayout(self.verticalLayout_43)
         #
         # right
@@ -306,6 +310,7 @@ class Ui_result_widget(object):
         result_widget.setWindowTitle(_translate("result_widget", "Form"))
         #'''
         self.plotitems_button.setText(_translate("result_widget", "Plot"))
+        self.saveitems_button.setText(_translate("result_widget", "Save plottable data"))
         self.save_button.setText(_translate("result_widget", "Save plot"))
         self.add_errorbars.setText(_translate("result_widget", "Error bars"))
         self.func1.setText(_translate("result_widget", "Exp. "))
@@ -326,7 +331,7 @@ class Ui_result_widget(object):
         self.func4.setText(_translate("result_widget", "Str. exp. +INS"))
         self.func4.setToolTip(  "<div style='white-space: nowrap;'>"
                                 "Stretched exponential decay with small inelastic contribution<br>"
-                                " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup> cos(E &tau; / ℏ)"
+                                " I(q, &tau;) = A exp(- &Gamma; &tau; / ℏ)<sup>&beta;</sup> cos(&Gamma; &tau; / ℏ)"
                                 "</div>") 
         self.funcA.setText(_translate("result_widget", "Fix fit param. A = 1"))
         self.funcA.setToolTip(  "<div style='white-space: nowrap;'>"
