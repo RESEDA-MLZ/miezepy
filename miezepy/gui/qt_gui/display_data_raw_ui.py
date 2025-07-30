@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import pyqtgraph as pg
 
 class Ui_raw_display(object):
     def setupUi(self, raw_display):
@@ -66,15 +67,37 @@ class Ui_raw_display(object):
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem3)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.graph_widget = QtWidgets.QWidget(self.main_widget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.graph_widget.sizePolicy().hasHeightForWidth())
-        self.graph_widget.setSizePolicy(sizePolicy)
-        self.graph_widget.setStyleSheet("#graph_widget{background-color: rgb(179, 179, 179);}")
-        self.graph_widget.setObjectName("graph_widget")
-        self.verticalLayout.addWidget(self.graph_widget)
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOption('foreground', 'k')
+        self.plot_widget = pg.GraphicsLayoutWidget()
+        self.verticalLayout.addWidget(self.plot_widget)
+        self.plot_item = self.plot_widget.addPlot()
+        self.plot_item.showAxis('top')
+        self.plot_item.showAxis('right')
+        self.plot_item.getAxis('top').setStyle(showValues=False)
+        self.plot_item.getAxis('right').setStyle(showValues=False)
+        #self.image_item = pg.ImageItem()
+        self.image_view = pg.ImageView()
+        self.image_item = self.image_view.getImageItem()
+        self.plot_item.addItem(self.image_item)
+        self.colorbar = pg.ColorBarItem(
+            interactive=True,
+            width=15,
+        )
+        self.plot_widget.addItem(self.colorbar)
+        self.label = pg.LabelItem("Counts", angle=-90)
+        self.plot_widget.addItem(self.label, row=0, col=2)   
+
+        self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1))
+        self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1)) 
+        self.plot_item.addItem(self.v_line)
+        self.plot_item.addItem(self.h_line)
+
+        self.xy_label = QtWidgets.QLabel("")
+        self.xy_label.setStyleSheet("color: white;")
+        self.xy_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.xy_label)
+
         raw_display.setCentralWidget(self.main_widget)
         self.menubar = QtWidgets.QMenuBar(raw_display)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 27))

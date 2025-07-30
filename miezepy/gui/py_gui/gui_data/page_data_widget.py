@@ -34,7 +34,7 @@ from ..gui_common.dialog import dialog
 from .drag_drop_file import DropListView
 
 # private plotting library
-from simpleplot.canvas.multi_canvas import MultiCanvasItem
+#from simpleplot.canvas.multi_canvas import MultiCanvasItem
 
 
 class PageDataWidget(Ui_data_import):
@@ -103,23 +103,6 @@ class PageDataWidget(Ui_data_import):
             "QListWidget::item { border: 2px solid black ;background-color: palette(Midlight) }"
             "QListWidget::item:selected { background-color: palette(Mid)  }")
         ##############################################
-        # add the
-        self.my_canvas = MultiCanvasItem(
-            self.data_widget_graph,
-            grid=[[True]],
-            x_ratios=[1],
-            y_ratios=[1],
-            background="w",
-            highlightthickness=0)
-
-        self.ax = self.my_canvas.getSubplot(0, 0)
-        self._prev_plot = self.ax.addPlot('Surface', Name='Surface')
-
-        self.ax.axes.general_handler['Active'] = [False]*4
-        self.ax.pointer.pointer_handler['Sticky'] = 2
-        self.my_canvas.canvas_nodes[0][0][0].grid_layout.setMargin(0)
-        self.ax.draw()
-
         self._createCenterProgess()
         
     def _createCenterProgess(self):
@@ -194,7 +177,7 @@ class PageDataWidget(Ui_data_import):
         self.data_button_populate.clicked.connect(self.populate)
         self.data_button_validate.clicked.connect(self.generateDataset)
         self.data_button_files_remove.clicked.connect(self.removeFile)
-        self.data_button_prev.clicked.connect(self.hide_preview)
+        #self.data_button_prev.clicked.connect(self.hide_preview)       # IL: remove preview plot
         self.data_button_add_object.clicked.connect(self.addElement)
         self.data_button_remove_object.clicked.connect(self.removeElement)
 
@@ -226,7 +209,7 @@ class PageDataWidget(Ui_data_import):
             self._parent.window_manager.newWindow('MetaWindow')
             self._parent.window_manager.active_windows['MetaWindow'].target.link(
                 self.meta_handler)
-
+    """
     def hide_preview(self):
         '''
         This routine will launch the metadat window.
@@ -238,7 +221,7 @@ class PageDataWidget(Ui_data_import):
             self.data_button_prev.setText('Hide')
         else:
             self.data_button_prev.setText('Show')
-
+    """
     def openVisualWindow(self):
         '''
         This routine will launch the metadat window.
@@ -246,7 +229,7 @@ class PageDataWidget(Ui_data_import):
         self._parent.window_manager.newWindow('RawVisual')
         self._parent.window_manager.active_windows['RawVisual'].target.link(
             self.import_object)
-
+    """"
     def openVisualWindow4D(self):
         '''
         This routine will launch the metadat window.
@@ -254,7 +237,7 @@ class PageDataWidget(Ui_data_import):
         self._parent.window_manager.newWindow('RawVisual')
         self._parent.window_manager.active_windows['RawVisual'].target.link(
             self.import_object, mode='4D')
-
+    """
     def removeMeta(self):
         '''
         This routine will remove an element of the
@@ -324,7 +307,7 @@ class PageDataWidget(Ui_data_import):
             self.io_core.import_objects[-1].data_handler,
             parent=self.data_list_loaded))
         self.elements[-1].vis_button.clicked.connect(self.openVisualWindow)
-        self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D)
+        #self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D) # IL: remove 4D preview
         self.setCurrentElement(len(self.io_core.import_objects)-1)
 
     def addElementSilent(self, i):
@@ -336,7 +319,7 @@ class PageDataWidget(Ui_data_import):
             self.io_core.import_objects[i].data_handler,
             parent=self.data_list_loaded))
         self.elements[-1].vis_button.clicked.connect(self.openVisualWindow)
-        self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D)
+        #self.elements[-1].vis_button_2.clicked.connect(self.openVisualWindow4D) # IL: remove 4D preview
         self.setCurrentElement(i)
 
     def removeElement(self):

@@ -68,9 +68,6 @@ class Ui_dataset_widget(object):
         self.vis_button = QtWidgets.QPushButton(dataset_widget)
         self.vis_button.setObjectName("vis_button")
         self.verticalLayout.addWidget(self.vis_button)
-        self.vis_button_2 = QtWidgets.QPushButton(dataset_widget)
-        self.vis_button_2.setObjectName("vis_button_2")
-        self.verticalLayout.addWidget(self.vis_button_2)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.meta_table = QtWidgets.QTableView(dataset_widget)
         self.meta_table.setObjectName("meta_table")
@@ -91,7 +88,5 @@ class Ui_dataset_widget(object):
         self.back_radio.setText(_translate("dataset_widget", "Background"))
         self.vis_button.setToolTip(_translate("dataset_widget", "Visualize the current element (Echo can be computed)"))
         self.vis_button.setText(_translate("dataset_widget", "Visualize"))
-        self.vis_button_2.setToolTip(_translate("dataset_widget", "Visualize the current element (Echo can be computed)"))
-        self.vis_button_2.setText(_translate("dataset_widget", "Visualize 4D"))
 
 
