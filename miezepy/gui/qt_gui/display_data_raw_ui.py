@@ -76,10 +76,9 @@ class Ui_raw_display(object):
         self.plot_item.showAxis('right')
         self.plot_item.getAxis('top').setStyle(showValues=False)
         self.plot_item.getAxis('right').setStyle(showValues=False)
-        #self.image_item = pg.ImageItem()
-        self.image_view = pg.ImageView()
-        self.image_item = self.image_view.getImageItem()
+        self.image_item = pg.ImageItem()
         self.plot_item.addItem(self.image_item)
+        self.plot_item.setAspectLocked(True)
         self.colorbar = pg.ColorBarItem(
             interactive=True,
             width=15,
@@ -87,17 +86,17 @@ class Ui_raw_display(object):
         self.plot_widget.addItem(self.colorbar)
         self.label = pg.LabelItem("Counts", angle=-90)
         self.plot_widget.addItem(self.label, row=0, col=2)   
-
+        
         self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1))
         self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1)) 
-        self.plot_item.addItem(self.v_line)
-        self.plot_item.addItem(self.h_line)
-
+        self.plot_item.addItem(self.v_line, ignoreBounds=True)
+        self.plot_item.addItem(self.h_line, ignoreBounds=True)
+        
         self.xy_label = QtWidgets.QLabel("")
         self.xy_label.setStyleSheet("color: white;")
         self.xy_label.setAlignment(QtCore.Qt.AlignCenter)
         self.verticalLayout.addWidget(self.xy_label)
-
+        
         raw_display.setCentralWidget(self.main_widget)
         self.menubar = QtWidgets.QMenuBar(raw_display)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 27))

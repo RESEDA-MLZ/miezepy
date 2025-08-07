@@ -60,6 +60,7 @@ class DisplayRawWindowLayout(Ui_raw_display):
         '''
         self.setupUi(self.window)
 
+
     def link(self, import_object, mode='3D'):
         '''
         This routine will link to the io manager class
@@ -91,6 +92,7 @@ class DisplayRawWindowLayout(Ui_raw_display):
         self.draw()
         self.connect()
 
+
     def connect(self):
         '''
         This routine will link to the io manager class
@@ -104,8 +106,10 @@ class DisplayRawWindowLayout(Ui_raw_display):
         self.log_check.stateChanged.connect(self.draw)
         self.norm_check.stateChanged.connect(self.draw)
 
-        self.plot_widget.setMouseTracking(True)
+        #self.plot_widget.setMouseTracking(True)
         self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
+
+        #proxy = pg.SignalProxy(self.plot_item.scene().sigMouseMoved, rateLimit=60, slot=self.mouse_moved)
 
 
     def draw(self, stuff=None):
@@ -157,17 +161,19 @@ class DisplayRawWindowLayout(Ui_raw_display):
             self.colorbar.setLevels(low=min_val,high=max_val)
             self.colorbar.setColorMap(colorMap=colormap)
 
-
+    
     def mouse_moved(self, pos):
         '''
         '''
         if self.plot_item.getViewBox().sceneBoundingRect().contains(pos):
             mouse_point = self.plot_item.getViewBox().mapSceneToView(pos)
+            
             x = mouse_point.x()
             y = mouse_point.y()
             self.v_line.setPos(x)
             self.h_line.setPos(y)
-
+            
+            
             img_array = self.image_item.image
             rect = self.image_item.mapRectToParent(self.image_item.boundingRect())
             if img_array is not None and rect is not None:
@@ -178,6 +184,5 @@ class DisplayRawWindowLayout(Ui_raw_display):
                     val = img_array[px, py]  # Note: row, col = y, x
                     
                     self.xy_label.setText(f"x = {x:.0f},    y = {y:.0f},    value = {val:.0f}")
-
-
+            
 
