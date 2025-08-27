@@ -87,8 +87,8 @@ class Ui_raw_display(object):
         self.label = pg.LabelItem("Counts", angle=-90)
         self.plot_widget.addItem(self.label, row=0, col=2)   
         
-        self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1))
-        self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1)) 
+        self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1.5))
+        self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1.5)) 
         self.plot_item.addItem(self.v_line, ignoreBounds=True)
         self.plot_item.addItem(self.h_line, ignoreBounds=True)
         

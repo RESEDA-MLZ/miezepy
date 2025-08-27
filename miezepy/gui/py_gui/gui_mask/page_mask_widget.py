@@ -25,6 +25,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 import numpy as np
 import os
+import pyqtgraph as pg
 
 # private dependencies
 from ...qt_gui.main_mask_editor_ui import Ui_mask_editor
@@ -34,11 +35,11 @@ from .panel_worker import PanelWorker
 
 # private plotting library
 from simpleplot.canvas.multi_canvas import MultiCanvasItem
-from simpleplot.ploting.graph_items.pie_item import PieItem
-from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
-from simpleplot.ploting.graph_items.triangle_item import TriangleItem
-from simpleplot.ploting.graph_items.ellipse_item import EllipseItem
-from simpleplot.gui_main.widgets.scientific_combobox import ScientificComboBox
+#from simpleplot.ploting.graph_items.pie_item import PieItem
+#from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
+#from simpleplot.ploting.graph_items.triangle_item import TriangleItem
+#from simpleplot.ploting.graph_items.ellipse_item import EllipseItem
+#from simpleplot.gui_main.widgets.scientific_combobox import ScientificComboBox
 
 
 class PageMaskWidget(Ui_mask_editor):
@@ -98,6 +99,7 @@ class PageMaskWidget(Ui_mask_editor):
         self.combo_layout.addWidget(self.remove_mask_button)
 
         # initialise the graphs
+        '''
         self.my_canvas = MultiCanvasItem(
             self.mask_widget_visual,
             grid=[[True]],
@@ -109,7 +111,8 @@ class PageMaskWidget(Ui_mask_editor):
         self.ax.axes.general_handler['Aspect ratio'] = [True, 1.]
         self.ax.pointer.pointer_handler['Sticky'] = 2
         self.my_canvas.canvas_nodes[0][0][0].grid_layout.setMargin(0)
-        self.ax.draw()
+        #self.ax.draw()
+        '''
 
     def _initialize(self):
         '''
@@ -133,6 +136,8 @@ class PageMaskWidget(Ui_mask_editor):
         self.remove_mask_button.clicked.connect(
             self.mask_interface.removeCurrentMask)
 
+        self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
+
     def _populateSelectors(self):
         '''
         populate the window layout. The grid is the main
@@ -149,6 +154,9 @@ class PageMaskWidget(Ui_mask_editor):
         self.visual_select = QtWidgets.QHBoxLayout()
         self.visual_select.addWidget(self._visual_mask_pixel)
         self.visual_select.addWidget(self._visual_mask_data)
+
+        #todo:
+        #self._visual_mask_data.setChecked(True)
 
         self.para_vbox = QtWidgets.QVBoxLayout()
         self.para_grid = QtWidgets.QGridLayout()
@@ -187,10 +195,12 @@ class PageMaskWidget(Ui_mask_editor):
             QtWidgets.QLabel('Echo time:', parent=self.para_group),
             2, 0, 1, 1, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter])
         self.widget_list.append([
-            ScientificComboBox(parent=self.para_group),
+            #ScientificComboBox(parent=self.para_group),
+            QtWidgets.QComboBox(parent=self.para_group),
             2, 1, 1, 1, None])
         self.widget_list[-1][0].addItems(
-            self.env.current_data.get_axis('Echo Time'))
+            #self.env.current_data.get_axis('Echo Time'))
+            [str(val) for val in self.env.current_data.get_axis('Echo Time')])
         self.echo_drop = self.widget_list[-1][0]
 
         # ---
@@ -272,6 +282,7 @@ class PageMaskWidget(Ui_mask_editor):
             self.env.current_data.axes.names[3])[
                 self.widget_list[7][0].currentIndex()]
 
+
         ##############################################
         # process index
         para_idx = self.env.current_data.get_axis_idx(
@@ -288,6 +299,9 @@ class PageMaskWidget(Ui_mask_editor):
 
         if self.log_view.isChecked():
             data = np.log10(data+1)
+
+
+
 
         self.current_data = data
         self._updateGraph()
@@ -356,6 +370,7 @@ class PageMaskWidget(Ui_mask_editor):
         '''
         Check what has to be actually updated
         '''
+        '''
         if len(self._plot_item) != self.tree.model().root()._children:
             self.ax.clear()
             self.mask_plot = self.ax.addPlot('Surface', Name='Mask area')
@@ -370,28 +385,101 @@ class PageMaskWidget(Ui_mask_editor):
                     self.ax.removeItem(self._plot_item[i])
                     self._plot_item[i] = self.ax.addItem(child._value)
 
+        '''
+
     def _updateGraph(self):
         '''
         '''
-        self._checkUpdateNeed()
+        #self._checkUpdateNeed()
 
-        for i, child in enumerate(self.tree.model().root()._children):
-            self._plot_item[i].load(child.save())
+        #for i, child in enumerate(self.tree.model().root()._children):
+        #    self._plot_item[i].load(child.save())
+        ######self.plot_widget.clear()
+
+        x_mask = []
+        y_mask = []
+        x_mask, y_mask = zip(*[(i, j) for i in range(self.mask_core.mask_gen.mask.shape[0]) 
+                        for j in range(self.mask_core.mask_gen.mask.shape[1])])
+        x_mask = np.array(x_mask)
+        y_mask = np.array(y_mask)
+        mask_map, x_edges, y_edges = np.histogram2d(y_mask, x_mask, 
+                        bins=[self.mask_core.mask_gen.mask.shape[1], self.mask_core.mask_gen.mask.shape[0]], 
+                        weights=self.mask_core.mask_gen.mask.flatten())#np.flip(data.flatten()))
 
         if self._visual_button_group.checkedId() == 0:
-            self.mask_plot.setData(
-                x=np.array(
-                    [i for i in range(self.mask_core.mask_gen.mask.shape[0])]),
-                y=np.array(
-                    [i for i in range(self.mask_core.mask_gen.mask.shape[1])]),
-                z=self.mask_core.mask_gen.mask)
+            self.colorbar.hide()
+
+            self.image_item_onlymask = pg.ImageItem()
+            self.plot_item.addItem(self.image_item_onlymask)
+            cmap_mask = pg.colormap.getFromMatplotlib("Greys_r")
+            lut_mask = cmap_mask.getLookupTable()
+            self.image_item_onlymask.setImage(mask_map.T, lut=lut_mask)
+            self.image_item_onlymask.setRect([x_edges[0], y_edges[0], x_edges[-1] - x_edges[0], y_edges[-1] - y_edges[0]])
         elif not self.current_data is None:
-            self.mask_plot.setData(
-                x=np.array(
-                    [i for i in range(self.mask_core.mask_gen.mask.shape[0])]),
-                y=np.array(
-                    [i for i in range(self.mask_core.mask_gen.mask.shape[1])]),
-                z=self.current_data)
+            x_data = []
+            y_data = []
+            x_data, y_data = zip(*[(i, j) for i in range(self.current_data.shape[0]) 
+                        for j in range(self.current_data.shape[1])])
+            x_data = np.array(x_data)
+            y_data = np.array(y_data)
+            data_map, xd_edges, yd_edges = np.histogram2d(y_data, x_data, 
+                        bins=[self.current_data.shape[1], self.current_data.shape[0]], 
+                        weights=self.current_data.flatten())#np.flip(data.flatten()))
+
+            self.image_item_data = pg.ImageItem()
+            self.plot_item.addItem(self.image_item_data)
+            cmap_data = pg.colormap.get('plasma')
+            lut_data = cmap_data.getLookupTable(0.0, 1.0, 256)
+            self.image_item_data.setImage(data_map.T, lut=lut_data)
+            self.image_item_data.setRect([xd_edges[0], yd_edges[0], xd_edges[-1] - xd_edges[0], yd_edges[-1] - yd_edges[0]])
+
+            min_val = np.min(data_map)
+            max_val = np.max(data_map)
+            self.image_item_data.setLevels([min_val,max_val])
+            
+            self.colorbar.setImageItem(self.image_item_data)
+            self.colorbar.setLevels(low=min_val,high=max_val)
+            self.colorbar.setColorMap(colorMap=cmap_data)
+            self.colorbar.show()
+            
+            #
+            self.image_item_mask = pg.ImageItem()
+            self.plot_item.addItem(self.image_item_mask)
+            cmap_mask = pg.colormap.getFromMatplotlib("Greys_r")
+            lut_mask = cmap_mask.getLookupTable(alpha=True)
+            lut_mask[0, -1] = 0  
+            self.image_item_mask.setImage(mask_map.T, lut=lut_mask)
+            self.image_item_mask.setRect([x_edges[0], y_edges[0], x_edges[-1] - x_edges[0], y_edges[-1] - y_edges[0]])
+
+
+
+    def mouse_moved(self, pos):
+        '''
+        '''
+        if self.plot_item.getViewBox().sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item.getViewBox().mapSceneToView(pos)
+            
+            x = mouse_point.x()
+            y = mouse_point.y()
+            self.v_line.setPos(x)
+            self.h_line.setPos(y)
+            self.v_line.setZValue(10)  # higher number = drawn on top
+            self.h_line.setZValue(10)
+            
+            if self._visual_button_group.checkedId() == 1 and not self.current_data is None:
+                img_array = self.image_item_data.image
+                rect = self.image_item_data.mapRectToParent(self.image_item_data.boundingRect())
+                if img_array is not None and rect is not None:
+                    px = int((x - rect.left()) / rect.width() * img_array.shape[1])
+                    py = int((y - rect.top()) / rect.height() * img_array.shape[0])
+
+                    if 0 <= px < img_array.shape[1] and 0 <= py < img_array.shape[0]:
+                        val = img_array[px, py]  # Note: row, col = y, x
+                        
+                        self.xy_label.setText(f"x = {x:.0f},    y = {y:.0f},    value = {val:.0f}")
+            else:
+                self.xy_label.setText(f"x = {x:.0f},    y = {y:.0f}")
+
 
     def saveSingle(self):
         '''
@@ -638,10 +726,12 @@ class PanelPageMaskWidget(PageMaskWidget):
             QtWidgets.QLabel('Echo time:', parent=self.para_group),
             2, 0, 1, 1, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter])
         self.widget_list.append([
-            ScientificComboBox(parent=self.para_group),
+            #ScientificComboBox(parent=self.para_group),
+            QtWidgets.QComboBox(parent=self.para_group),
             2, 1, 1, 1, None])
         self.widget_list[-1][0].addItems(
-            self.env.current_data.get_axis('Echo Time'))
+            #self.env.current_data.get_axis('Echo Time'))
+            [str(val) for val in self.env.current_data.get_axis('Echo Time')])
         self.echo_drop = self.widget_list[-1][0]
 
         # ---

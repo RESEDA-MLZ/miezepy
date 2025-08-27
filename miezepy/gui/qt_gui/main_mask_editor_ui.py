@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import pyqtgraph as pg
 
 class Ui_mask_editor(object):
     def setupUi(self, mask_editor):
@@ -114,13 +115,15 @@ class Ui_mask_editor(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.mask_group_visual.sizePolicy().hasHeightForWidth())
         self.mask_group_visual.setSizePolicy(sizePolicy)
-        self.mask_group_visual.setMinimumSize(QtCore.QSize(0, 0))
+        self.mask_group_visual.setMinimumSize(QtCore.QSize(600, 600))
         self.mask_group_visual.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.mask_group_visual.setObjectName("mask_group_visual")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.mask_group_visual)
         self.verticalLayout.setContentsMargins(5, 5, 5, 5)
         self.verticalLayout.setObjectName("verticalLayout")
+        
         self.mask_widget_visual = QtWidgets.QWidget(self.mask_group_visual)
+        '''
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -129,6 +132,42 @@ class Ui_mask_editor(object):
         self.mask_widget_visual.setMinimumSize(QtCore.QSize(0, 0))
         self.mask_widget_visual.setObjectName("mask_widget_visual")
         self.verticalLayout.addWidget(self.mask_widget_visual)
+        '''
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOption('foreground', 'k')
+
+        self.plot_widget = pg.GraphicsLayoutWidget(self.mask_group_visual)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.plot_widget.sizePolicy().hasHeightForWidth())
+        self.plot_widget.setSizePolicy(sizePolicy)
+        self.verticalLayout.addWidget(self.plot_widget)
+        self.plot_item = self.plot_widget.addPlot()
+        self.plot_item.showAxis('top')
+        self.plot_item.showAxis('right')
+        self.plot_item.getAxis('top').setStyle(showValues=False)
+        self.plot_item.getAxis('right').setStyle(showValues=False)
+        self.plot_item.getAxis('bottom').setPen(pg.mkPen(color='black', width=1))  
+        self.plot_item.getAxis('left').setPen(pg.mkPen(color='black', width=1))  
+        self.plot_item.getAxis('top').setPen(pg.mkPen(color='black', width=1))  
+        self.plot_item.getAxis('right').setPen(pg.mkPen(color='black', width=1))  
+        self.plot_item.setAspectLocked(True)
+        
+        self.colorbar = pg.ColorBarItem(interactive=True, width=15)
+        self.plot_widget.addItem(self.colorbar)
+        self.colorbar.hide()
+        
+        self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1.5))
+        self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1.5)) 
+        self.plot_item.addItem(self.v_line, ignoreBounds=True)
+        self.plot_item.addItem(self.h_line, ignoreBounds=True)
+        
+        self.xy_label = QtWidgets.QLabel("")
+        self.xy_label.setStyleSheet("color: black;")
+        self.xy_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.verticalLayout.addWidget(self.xy_label)
+        
         self.mask_layout_vis.addWidget(self.mask_group_visual)
         self.verticalLayout_3.addWidget(self.splitter)
 
