@@ -12,7 +12,7 @@ import pyqtgraph as pg
 class Ui_mask_editor(object):
     def setupUi(self, mask_editor):
         mask_editor.setObjectName("mask_editor")
-        mask_editor.resize(1404, 688)
+        mask_editor.resize(1604, 688)
         mask_editor.setStyleSheet("#mask_editor{background-color: rgb(179, 179, 179);}\n"
 "QGroupBox::title{color:rgb(0, 0, 0)}\n"
 "QLabel{color:rgb(0, 0, 0)}")
@@ -29,6 +29,8 @@ class Ui_mask_editor(object):
         self.splitter.setObjectName("splitter")
         self.widget = QtWidgets.QWidget(self.splitter)
         self.widget.setObjectName("widget")
+        self.widget.setMaximumWidth(400)
+
         self.mask_layout_control = QtWidgets.QVBoxLayout(self.widget)
         self.mask_layout_control.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.mask_layout_control.setContentsMargins(0, 0, 0, 0)
@@ -63,6 +65,7 @@ class Ui_mask_editor(object):
         self.mask_tree_layout = QtWidgets.QVBoxLayout()
         self.mask_tree_layout.setObjectName("mask_tree_layout")
         self.verticalLayout_2.addLayout(self.mask_tree_layout)
+        #
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
         self.horizontalLayout_2.setContentsMargins(-1, 0, -1, -1)
@@ -121,9 +124,8 @@ class Ui_mask_editor(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(self.mask_group_visual)
         self.verticalLayout.setContentsMargins(5, 5, 5, 5)
         self.verticalLayout.setObjectName("verticalLayout")
-        
-        self.mask_widget_visual = QtWidgets.QWidget(self.mask_group_visual)
         '''
+        self.mask_widget_visual = QtWidgets.QWidget(self.mask_group_visual)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -143,7 +145,7 @@ class Ui_mask_editor(object):
         sizePolicy.setHeightForWidth(self.plot_widget.sizePolicy().hasHeightForWidth())
         self.plot_widget.setSizePolicy(sizePolicy)
         self.verticalLayout.addWidget(self.plot_widget)
-        self.plot_item = self.plot_widget.addPlot()
+        self.plot_item = self.plot_widget.addPlot(row=0, col=0)
         self.plot_item.showAxis('top')
         self.plot_item.showAxis('right')
         self.plot_item.getAxis('top').setStyle(showValues=False)
@@ -152,11 +154,19 @@ class Ui_mask_editor(object):
         self.plot_item.getAxis('left').setPen(pg.mkPen(color='black', width=1))  
         self.plot_item.getAxis('top').setPen(pg.mkPen(color='black', width=1))  
         self.plot_item.getAxis('right').setPen(pg.mkPen(color='black', width=1))  
+        self.plot_item.getAxis('left').setLabel(text='Y',**{'color': 'black', 'font-size': '12pt'})
+        self.plot_item.getAxis('bottom').setLabel(text='X',**{'color': 'black', 'font-size': '12pt'})
         self.plot_item.setAspectLocked(True)
         
         self.colorbar = pg.ColorBarItem(interactive=True, width=15)
-        self.plot_widget.addItem(self.colorbar)
+        self.plot_widget.addItem(self.colorbar, row=0, col=1)
         self.colorbar.hide()
+        #self.colorbar.layout.setContentsMargins(5, 0, 0, 0)
+        self.colorbar.axis.setWidth(25)
+
+        self.label1 = pg.LabelItem('<span style="font-size:10pt;">Counts</span>', angle=-90)
+        self.plot_widget.addItem(self.label1, row=0, col=2) 
+        self.label1.hide()
         
         self.v_line = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1.5))
         self.h_line = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1.5)) 

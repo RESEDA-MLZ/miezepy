@@ -34,7 +34,7 @@ from ...qt_gui.new_mask_ui import Ui_new_msk
 from .panel_worker import PanelWorker
 
 # private plotting library
-from simpleplot.canvas.multi_canvas import MultiCanvasItem
+#from simpleplot.canvas.multi_canvas import MultiCanvasItem
 #from simpleplot.ploting.graph_items.pie_item import PieItem
 #from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
 #from simpleplot.ploting.graph_items.triangle_item import TriangleItem
@@ -136,7 +136,7 @@ class PageMaskWidget(Ui_mask_editor):
         self.remove_mask_button.clicked.connect(
             self.mask_interface.removeCurrentMask)
 
-        self.plot_widget.scene().sigMouseMoved.connect(self.mouse_moved)
+        self.plot_widget.scene().sigMouseMoved.connect(self._mouse_moved)
 
     def _populateSelectors(self):
         '''
@@ -408,6 +408,7 @@ class PageMaskWidget(Ui_mask_editor):
 
         if self._visual_button_group.checkedId() == 0:
             self.colorbar.hide()
+            self.label1.hide()
 
             self.image_item_onlymask = pg.ImageItem()
             self.plot_item.addItem(self.image_item_onlymask)
@@ -428,7 +429,8 @@ class PageMaskWidget(Ui_mask_editor):
 
             self.image_item_data = pg.ImageItem()
             self.plot_item.addItem(self.image_item_data)
-            cmap_data = pg.colormap.get('plasma')
+            #cmap_data = pg.colormap.get('plasma')
+            cmap_data = pg.colormap.getFromMatplotlib('rainbow')
             lut_data = cmap_data.getLookupTable(0.0, 1.0, 256)
             self.image_item_data.setImage(data_map.T, lut=lut_data)
             self.image_item_data.setRect([xd_edges[0], yd_edges[0], xd_edges[-1] - xd_edges[0], yd_edges[-1] - yd_edges[0]])
@@ -441,6 +443,7 @@ class PageMaskWidget(Ui_mask_editor):
             self.colorbar.setLevels(low=min_val,high=max_val)
             self.colorbar.setColorMap(colorMap=cmap_data)
             self.colorbar.show()
+            self.label1.show()
             
             #
             self.image_item_mask = pg.ImageItem()
@@ -453,7 +456,7 @@ class PageMaskWidget(Ui_mask_editor):
 
 
 
-    def mouse_moved(self, pos):
+    def _mouse_moved(self, pos):
         '''
         '''
         if self.plot_item.getViewBox().sceneBoundingRect().contains(pos):
@@ -463,7 +466,7 @@ class PageMaskWidget(Ui_mask_editor):
             y = mouse_point.y()
             self.v_line.setPos(x)
             self.h_line.setPos(y)
-            self.v_line.setZValue(10)  # higher number = drawn on top
+            self.v_line.setZValue(10)  
             self.h_line.setZValue(10)
             
             if self._visual_button_group.checkedId() == 1 and not self.current_data is None:
@@ -543,6 +546,7 @@ class PanelPageMaskWidget(PageMaskWidget):
         self.local_widget.setStyleSheet(
             "#mask_editor{background:transparent;}")
         self._threads = []
+        self._connect()
 
     def link(self, mask_core, env):
         '''
@@ -575,6 +579,51 @@ class PanelPageMaskWidget(PageMaskWidget):
         self.para_group.setSizePolicy(sizePolicy)
         self.mask_layout_control.addWidget(self.para_group)
 
+    def _setup_plotitem(self, plotitem, vl, hl):
+        '''
+        '''
+        plotitem.showAxis('top')
+        plotitem.showAxis('right')
+        plotitem.getAxis('top').setStyle(showValues=False)
+        plotitem.getAxis('right').setStyle(showValues=False)
+        plotitem.getAxis('bottom').setPen(pg.mkPen(color='black', width=1))  
+        plotitem.getAxis('left').setPen(pg.mkPen(color='black', width=1))  
+        plotitem.getAxis('top').setPen(pg.mkPen(color='black', width=1))  
+        plotitem.getAxis('right').setPen(pg.mkPen(color='black', width=1))  
+        #plotitem.setAspectLocked(True)
+
+        plotitem.addItem(vl, ignoreBounds=True)
+        plotitem.addItem(hl, ignoreBounds=True)
+
+    def move_crosshairs(self, mouse_point, vl, hl):
+        '''
+        '''
+        vl.setPos(mouse_point.x())
+        hl.setPos(mouse_point.y())
+        vl.setZValue(100)  
+        hl.setZValue(100)
+
+    def _mouse_moved(self, pos):
+        '''
+        '''
+        if self.plot_item.getViewBox().sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item.getViewBox().mapSceneToView(pos)
+            self.move_crosshairs(mouse_point, self.v_line, self.h_line)
+            self.xy_label.setText(f"x = {mouse_point.x():.0f},    y = {mouse_point.y():.0f}")
+        elif self.plot_item2.getViewBox().sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item2.getViewBox().mapSceneToView(pos)
+            self.move_crosshairs(mouse_point, self.v_line2, self.h_line2)
+            self.xy_label.setText(f"x = {mouse_point.x():.0f},    y = {mouse_point.y():.0f}")
+        elif self.plot_item3.getViewBox().sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item3.getViewBox().mapSceneToView(pos)
+            self.move_crosshairs(mouse_point, self.v_line3, self.h_line3)  
+            self.xy_label.setText(f"x = {mouse_point.x():.0f},    y = {mouse_point.y():.1f}") 
+        elif self.plot_item4.getViewBox().sceneBoundingRect().contains(pos):
+            mouse_point = self.plot_item4.getViewBox().mapSceneToView(pos)
+            self.move_crosshairs(mouse_point, self.v_line4, self.h_line4)     
+            self.xy_label.setText(f"x = {10 ** (mouse_point.x()):.4e},    y = {mouse_point.y():.2f}")        
+            
+
     def _setup(self):
         '''
         This is the initial setup method that will
@@ -598,6 +647,43 @@ class PanelPageMaskWidget(PageMaskWidget):
         self.combo_layout.addWidget(self.add_mask_button)
         self.combo_layout.addWidget(self.remove_mask_button)
 
+        self.colorbar.show()
+        self.label1.show()
+
+        self.plot_item2 = self.plot_widget.addPlot(row=0, col=3)
+        self.plot_item2.getAxis('left').setLabel(text='Y',**{'color': 'black', 'font-size': '12pt'})
+        self.plot_item2.getAxis('bottom').setLabel(text='X',**{'color': 'black', 'font-size': '12pt'})
+        self.v_line2 = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'white', width=1.5))
+        self.h_line2 = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'white', width=1.5))
+        self.plot_item2.setAspectLocked(True) 
+        self._setup_plotitem(self.plot_item2, self.v_line2, self.h_line2)
+        self.colorbar_mask = pg.ColorBarItem(interactive=True, width=15)
+        self.colorbar_mask.axis.setWidth(25)
+        self.plot_widget.addItem(self.colorbar_mask, row=0, col=4)
+        label2 = pg.LabelItem('<span style="font-size:10pt;">A.U.</span>', angle=-90)
+        self.plot_widget.addItem(label2, row=0, col=5) 
+
+        self.plot_item3 = self.plot_widget.addPlot(row=1, col=0)
+        self.plot_item3.getAxis('left').setLabel(text='Intensity',**{'color': 'black', 'font-size': '12pt'})
+        self.plot_item3.getAxis('bottom').setLabel(text='Time channel',**{'color': 'black', 'font-size': '12pt'})
+        self.v_line3 = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'black', width=1))
+        self.h_line3 = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'black', width=1)) 
+        self._setup_plotitem(self.plot_item3, self.v_line3, self.h_line3)
+
+        self.plot_item4 = self.plot_widget.addPlot(row=1, col=3)
+        self.plot_item4.getAxis('left').setLabel(text='Contrast per foil',**{'color': 'black', 'font-size': '12pt'})
+        self.plot_item4.getAxis('bottom').setLabel(text='Echo time (ns)',**{'color': 'black', 'font-size': '12pt'})
+        self.plot_item4.setLogMode(x=True)
+        self.v_line4 = pg.InfiniteLine(angle=90, movable=False, pen=pg.mkPen(color = 'black', width=1))
+        self.h_line4 = pg.InfiniteLine(angle=0, movable=False, pen=pg.mkPen(color = 'black', width=1)) 
+        self._setup_plotitem(self.plot_item4, self.v_line4, self.h_line4)
+
+        plots = [self.plot_item, self.plot_item2, self.plot_item3, self.plot_item4]
+        max_width = max(p.getAxis("left").width() for p in plots)
+        for p in plots:
+            p.getAxis("left").setWidth(max_width)
+
+        '''
         # initialise the graphs
         self.my_canvas = MultiCanvasItem(
             self.mask_widget_visual,
@@ -611,7 +697,8 @@ class PanelPageMaskWidget(PageMaskWidget):
         self.ax = self.my_canvas.getSubplot(0, 0)
         self.ax.axes.label_handler['Active'] = [True, True, True, True]
         self.ax.axes.label_handler['Text'] = ['py', 'px', 'None', 'None']
-
+        self.colorbar = pg.ColorBarItem(interactive=True, width=15)
+        self.plot_widget.addItem(self.colorbar, row=0, col=1)
         self.bx = self.my_canvas.getSubplot(0, 1)
         self.bx.axes.label_handler['Active'] = [True, True, True, True]
         self.bx.axes.label_handler['Text'] = ['py', 'px', 'None', 'None']
@@ -632,8 +719,7 @@ class PanelPageMaskWidget(PageMaskWidget):
 
         # set the two bin
         self.first_surface_plot = self.ax.addPlot('Surface', Name='Data area')
-        self.second_surface_plot = self.bx.addPlot(
-            'Surface', Name='Mask and Data area')
+        self.second_surface_plot = self.bx.addPlot('Surface', Name='Mask and Data area')
         histogram_0 = self.first_surface_plot.childFromName(
             'Surface').childFromName('Shader').getHistogramItem()
         self.ax.addHistogramItem('right', histogram_0)
@@ -671,6 +757,7 @@ class PanelPageMaskWidget(PageMaskWidget):
         self.my_canvas.canvas_nodes[0][1][0].grid_layout.setMargin(0)
         self.my_canvas.canvas_nodes[1][0][0].grid_layout.setMargin(0)
         self.my_canvas.canvas_nodes[1][1][0].grid_layout.setMargin(0)
+        '''
 
     def _populateSelectors(self):
         '''
@@ -774,6 +861,12 @@ class PanelPageMaskWidget(PageMaskWidget):
             if not element[5] is None:
                 element[0].setAlignment(element[5])
 
+    def _connect(self):
+        '''
+        '''
+        self.plot_widget.scene().sigMouseMoved.connect(self._mouse_moved)
+
+
     def _connectSelectors(self):
         '''
         Set the selectors to their methods
@@ -868,8 +961,8 @@ class PanelPageMaskWidget(PageMaskWidget):
         results.setComplete()
 
         return [
-            self.data[self.widget_list[1][0].currentText()][int(float(self.widget_list[3][0].currentText(
-            )))][float(self.widget_list[5][0].currentData())][int(self.widget_list[7][0].currentText())],
+            self.data[self.widget_list[1][0].currentText()][int(float(self.widget_list[3][0].currentText()))]
+            [float(self.widget_list[5][0].currentText())][int(self.widget_list[7][0].currentText())],
             self.widget_list[1][0].currentText(),
             int(self.widget_list[7][0].currentText()),
             self.env.mask.mask, self.env.results,
@@ -884,7 +977,6 @@ class PanelPageMaskWidget(PageMaskWidget):
                 self.worker = self._threads[i][1]
                 break
         try:
-
             para = self.worker.para
             data = self.worker.data
             process = self.worker.process
@@ -894,6 +986,110 @@ class PanelPageMaskWidget(PageMaskWidget):
         except:
             return None
 
+        
+        plotdata = np.sum(data, axis=(0))
+
+        x_data = []
+        y_data = []
+        x_data, y_data = zip(*[(i, j) for i in range(plotdata.shape[0]) 
+                        for j in range(plotdata.shape[1])])
+        data_map, xd_edges, yd_edges = np.histogram2d(np.array(y_data), np.array(x_data), 
+                    bins=[plotdata.shape[1], plotdata.shape[0]], weights=plotdata.flatten())#np.flip(data.flatten()))
+
+        image_item_data = pg.ImageItem()
+        self.plot_item.addItem(image_item_data)
+        cmap_data = pg.colormap.getFromMatplotlib('rainbow')
+        lut_data = cmap_data.getLookupTable(0.0, 1.0, 256)
+
+        image_item_data.setImage(data_map.T, lut=lut_data)
+        image_item_data.setRect([xd_edges[0], yd_edges[0], 
+                    xd_edges[-1] - xd_edges[0], yd_edges[-1] - yd_edges[0]])
+        image_item_data.setLevels([np.min(data_map),np.max(data_map)])
+            
+        self.colorbar.setImageItem(image_item_data)
+        self.colorbar.setLevels(low=np.min(data_map), high=np.max(data_map))
+        self.colorbar.setColorMap(colorMap=cmap_data)
+        self.colorbar.show()
+        #
+        plotdata_mask = np.log10(self.env.mask.mask * plotdata +1)
+        data_map_mask, xdm_edges, ydm_edges = np.histogram2d(np.array(y_data), np.array(x_data), 
+                    bins=[plotdata.shape[1], plotdata.shape[0]], weights=plotdata_mask.flatten())
+
+        image_item_mask = pg.ImageItem()
+        self.plot_item2.addItem(image_item_mask)
+        cmap_mask = pg.colormap.getFromMatplotlib('rainbow')
+        lut_mask = cmap_mask.getLookupTable(0.0, 1.0, 256)
+
+        image_item_mask.setImage(data_map_mask.T, lut=lut_mask)
+        image_item_mask.setRect([xd_edges[0], yd_edges[0], 
+                    xd_edges[-1] - xd_edges[0], yd_edges[-1] - yd_edges[0]])
+        image_item_mask.setLevels([np.min(data_map_mask),np.max(data_map_mask)])
+
+        self.colorbar_mask.setImageItem(image_item_mask)
+        self.colorbar_mask.setLevels(low=np.min(data_map_mask), high=np.max(data_map_mask))
+        self.colorbar_mask.setColorMap(colorMap=cmap_mask)
+        self.colorbar_mask.show()
+        #
+        self.plot_item3.clear()
+        intensity_scatter = pg.ScatterPlotItem(x=np.array([i for i in range(len(counts))]), y=np.array(counts),
+                    size=10, pen=pg.mkPen('b', width=1), brush=pg.mkBrush('b'), symbol='o')
+        intensity_errorbr = pg.ErrorBarItem(x=np.array([i for i in range(len(counts))]), y=np.array(counts),
+                    top=np.sqrt(counts), bottom=np.sqrt(counts), 
+                    beam=0.5, pen=pg.mkPen(color='b', width=1))
+        
+        self.plot_item3.addItem(intensity_scatter)
+        self.plot_item3.addItem(intensity_errorbr)
+        self.plot_item3.setXRange(-1, 16)
+        
+        if not fit == None:
+            x_fit = np.arange(0, 15, 0.01)
+            fit_curve = pg.PlotDataItem(x=x_fit, 
+                    y=fit['amplitude']*np.cos(x_fit/16.*2*np.pi+fit['phase'])+fit['mean'], 
+                    pen=pg.mkPen('b', width=1))
+            self.plot_item3.addItem(fit_curve)
+
+        self.plot_item3.addItem(self.v_line3, ignoreBounds=True)
+        self.plot_item3.addItem(self.h_line3, ignoreBounds=True)
+        #
+        self.plot_item4.clear()
+        if not process == None:
+            x = 0
+            temp_x = np.array(list(process['Axis'][para]))
+            if not np.isnan(temp_x).any():
+                x = temp_x
+
+            y = np.zeros_like(x)
+            y_err = np.zeros_like(x)
+            temp_foil = int(process['Foil'])
+            temp_y = np.array(list(process['Contrast'][para].values()))
+            temp_y_err = np.array(list(process['Contrast_error'][para].values()))
+
+            if not np.isnan(temp_y[:,temp_foil]).any():
+                y = temp_y[:,temp_foil]
+            if not np.isnan(temp_y_err[:,temp_foil]).any():
+                y_err = temp_y_err[:,temp_foil]
+
+            contrast_plot = pg.PlotDataItem(x=x, y=y, 
+                    pen=pg.mkPen('b', width=1), symbol='o', symbolSize=8, symbolBrush=('b'), 
+                    symbolPen=pg.mkPen('b', width=1))
+
+            contrast_errorbr = pg.ErrorBarItem(x=np.log10(np.array(x)), y=np.array(y),
+                    top=np.array(y_err), bottom=np.array(y_err), 
+                    beam=0.2, pen=pg.mkPen(color='b', width=1))
+            self.plot_item4.addItem(contrast_errorbr)
+            self.plot_item4.addItem(contrast_plot)
+
+        self.plot_item4.addItem(self.v_line4, ignoreBounds=True)
+        self.plot_item4.addItem(self.h_line4, ignoreBounds=True)
+
+
+        plots = [self.plot_item, self.plot_item2, self.plot_item3, self.plot_item4]
+        max_width = max(p.getAxis("left").width() for p in plots)
+        for p in plots:
+            p.getAxis("left").setWidth(max_width)
+
+        
+        '''
         x = np.arange(0, 128, 1)
         y = np.arange(0, 128, 1)
         x_1 = np.arange(0, 15, 0.01)
@@ -933,8 +1129,9 @@ class PanelPageMaskWidget(PageMaskWidget):
                 y = temp_y[:,temp_foil])
             
             self.dx.zoomer['Zoom fixed range'] = [0, 1, 0, max(temp_y[:,temp_foil])+0.2]
-
+        
         self.ax.zoomer.zoom()
         self.bx.zoomer.zoom()
         self.cx.zoomer.zoom()
         self.dx.zoomer.zoom()
+        '''
