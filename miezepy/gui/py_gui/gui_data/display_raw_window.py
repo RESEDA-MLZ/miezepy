@@ -148,7 +148,8 @@ class DisplayRawWindowLayout(Ui_raw_display):
 
             heatmap, xedges, yedges = np.histogram2d(y, x, bins=[data.shape[1], data.shape[0]], weights=data.flatten())#np.flip(data.flatten()))
 
-            colormap = pg.colormap.get('plasma')  # or 'viridis', 'thermal', etc.
+            #colormap = pg.colormap.get('plasma')  # or 'viridis', 'thermal', etc.
+            colormap = pg.colormap.getFromMatplotlib('rainbow')
             lut = colormap.getLookupTable(0.0, 1.0, 256)
             self.image_item.setImage(heatmap.T, lut=lut)
             self.image_item.setRect([xedges[0], yedges[0], xedges[-1] - xedges[0], yedges[-1] - yedges[0]])

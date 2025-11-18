@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MIEZETool(object):
     def setupUi(self, MIEZETool):
         MIEZETool.setObjectName("MIEZETool")
-        MIEZETool.resize(1337, 1060)
+        MIEZETool.resize(1600, 1000)
         MIEZETool.setStyleSheet("#main_widget{\n"
 "background-color: rgb(98, 12, 53);}")
         self.main_widget = QtWidgets.QWidget(MIEZETool)
