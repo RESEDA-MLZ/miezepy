@@ -1,4 +1,9 @@
-[![Nosetests](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml/badge.svg)](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml)
+ <! -- [![Nosetests](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml/badge.svg)](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml) -->
+
+🚨🚨 <strong>This repository was forked from https://github.com/scgmlz/NSE_Soft.
+
+However, development has ceased there, and this is now the main repository. </strong> 🚨🚨
+
 # Mieze data management and reduction tool
 Neutron Spin Echo software package
 
