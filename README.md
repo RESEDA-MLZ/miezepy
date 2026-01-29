@@ -1,4 +1,8 @@
- <! -- [![Nosetests](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml/badge.svg)](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml) -->
+<!-- 
+[![Nosetests](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml/badge.svg)](https://github.com/RESEDA-MLZ/MIEZEPY/actions/workflows/miezepy_tests.yml)
+This is a hidden comment
+-->
+
 
 🚨🚨 <strong>This repository was forked from https://github.com/scgmlz/NSE_Soft.
 
