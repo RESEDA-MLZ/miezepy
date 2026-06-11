@@ -21,14 +21,19 @@
 #
 # *****************************************************************************
 
-from simpleplot.ploting.graph_items.pie_item import PieItem
-from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
-from simpleplot.ploting.graph_items.triangle_item import TriangleItem
-from simpleplot.ploting.graph_items.ellipse_item import EllipseItem
+#from simpleplot.ploting.graph_items.pie_item import PieItem
+#from simpleplot.ploting.graph_items.rectangle_item import RectangleItem
+#from simpleplot.ploting.graph_items.triangle_item import TriangleItem
+#from simpleplot.ploting.graph_items.ellipse_item import EllipseItem
 
+from .sp_qt_rectangle_item import RectangleItem
+from .sp_qt_pie_item import PieItem
+from .sp_qt_triangle_item import TriangleItem
+from .sp_qt_ellipse_item import EllipseItem
 
 class RectangleHandler(RectangleItem):
     def __init__(self):
+        print("RectangleHandler")
         super().__init__('Rectangle')
 
     def refresh(self):

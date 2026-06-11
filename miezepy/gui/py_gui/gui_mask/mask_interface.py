@@ -23,11 +23,12 @@
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from simpleplot.models.session_node import SessionNode
-from simpleplot.models.parameter_class import ParameterHandler
-from simpleplot.models.delegates import ParameterDelegate
-from simpleplot.models.widget_constructors import comboBoxConstructor
+#from simpleplot.models.session_node import SessionNode
+###from simpleplot.models.parameter_class import ParameterHandler
+###from simpleplot.models.delegates import ParameterDelegate
+###from simpleplot.models.widget_constructors import comboBoxConstructor
 
+from .sp_qt_session_node import SessionNode
 from .mask_tree_view import MaskTreeView
 from .mask_model import MaskModel
 from .mask_node import MaskNode

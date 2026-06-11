@@ -21,9 +21,11 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtCore
-from simpleplot.models.plot_model import PlotModel
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+#from simpleplot.models.plot_model import PlotModel
+from .sp_qt_plot_model import PlotModel
 
 class MaskModel(PlotModel):
     mask_updated = QtCore.pyqtSignal()
@@ -31,3 +33,6 @@ class MaskModel(PlotModel):
     def __init__(self, root_node):
         PlotModel.__init__(self, root_node)
         self._update = True
+
+
+

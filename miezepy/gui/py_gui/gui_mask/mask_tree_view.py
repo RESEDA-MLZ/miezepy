@@ -21,12 +21,14 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore, QtWidgets
 
-from simpleplot.models.delegates import ParameterDelegate
-from simpleplot.models.session_node import SessionNode
+#from simpleplot.models.delegates import ParameterDelegate
+#from simpleplot.models.session_node import SessionNode
+
+from .sp_qt_delegates import ParameterDelegate
+from .sp_qt_session_node import SessionNode
 from .mask_model import MaskModel
-
 
 class MaskTreeView(QtWidgets.QTreeView):
     def __init__(self, parent=None):

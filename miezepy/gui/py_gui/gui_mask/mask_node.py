@@ -21,17 +21,20 @@
 #
 # *****************************************************************************
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 
-from simpleplot.models.session_node import SessionNode
-from simpleplot.models.parameter_class import ParameterHandler
-from simpleplot.models.widget_constructors import comboBoxConstructor
+#from simpleplot.models.session_node import SessionNode
+#from simpleplot.models.parameter_class import ParameterHandler
+#from simpleplot.models.widget_constructors import comboBoxConstructor
+
+from .sp_qt_session_node import SessionNode
+from .sp_qt_parameter_class import ParameterHandler
+from .sp_qt_widget_constructors import comboBoxConstructor
 
 from .parameter_handlers import RectangleHandler
 from .parameter_handlers import TriangleHandler
 from .parameter_handlers import PieHandler
 from .parameter_handlers import EllipseHandler
-
 
 class MaskElementNode(ParameterHandler):
     def __init__(self, name='Mask Element', parent=None, value='arc'):
@@ -155,3 +158,4 @@ class MaskNode(MaskElementNode):
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         else:
             return QtCore.Qt.ItemIsEnabled
+
